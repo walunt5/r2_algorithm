@@ -1,0 +1,107 @@
+maps:
+  # Odin1 重定位使用的 .bin 地图
+  relocalization_bin_file: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/map_20260526_171423.bin"
+
+  # RViz / Web 可视化用的 .pcd 地图
+  relocalization_pcd_file: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/Relocation Map.pcd"
+
+  # jie_octomap 加载的 OctoMap 地图包目录
+  map_package_dir: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/Relocation Map"
+
+ui:
+  show_rviz: true
+  show_map_gui: false
+  launch_web: true
+  launch_rosbridge: true
+  web_http_port: "8080"
+
+frames:
+  map_frame: "map"
+
+  # 推荐使用机器人底盘中心作为控制基准
+  base_frame: "chassis_base_link"
+
+  # d1_controller 会按顺序尝试这些 frame
+  base_frame_candidates: "chassis_base_link,odin1_base_link,base_link,base_footprint"
+
+static_tf:
+  # 这里表示 chassis_base_link 在 odin1_base_link 坐标系下的位置
+  # 如果 Odin1 安装在机器人中心正前方 0.18m，
+  # 那么 chassis_base_link 相对 odin1_base_link 大约是 x=-0.18
+  odin_to_chassis:
+    x: -0.18
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+    pitch: 0.0
+    roll: 0.0
+
+planner:
+  robot_radius: 0.25
+  max_iterations: 500000
+  snap_search_radius_cells: 12
+
+  require_ground_support: true
+  strict_direct_ground_support: false
+  ground_support_xy_radius_cells: 1
+  ground_support_depth_cells: 1
+
+  enable_preblocked_costmap: true
+  preblocked_costmap_radius_cells: 3
+  preblocked_costmap_weight: 2.5
+
+d1_controller:
+  ros__parameters:
+    # 是否允许三舵轮横移
+    enable_lateral_motion: true
+
+    # 路径跟踪速度上限，单位：m/s 和 rad/s
+    max_linear_speed: 0.08
+    max_lateral_speed: 0.08
+    max_angular_speed: 0.10
+
+    # 跟踪增益，先保守
+    linear_gain: 0.8
+    lateral_gain: 0.8
+    heading_gain: 0.8
+    cross_track_angular_gain: 0.5
+    final_yaw_gain: 0.3
+
+    # 目标点判断容差
+    goal_position_tolerance: 0.10
+    goal_yaw_tolerance: 0.20
+    tracking_point_reached_xy_tolerance: 0.30
+
+    # 是否最终对齐目标姿态
+    align_final_yaw: true
+
+    # 死区，防止非常小的速度抖动
+    linear_deadband: 0.03
+    lateral_deadband: 0.03
+    angular_deadband: 0.03
+
+    # 调试窗口
+    enable_tracking_debug_view: false
+    tracking_debug_view_size_px: 640
+    tracking_debug_view_pixels_per_meter: 80.0
+    tracking_debug_view_frequency: 10.0
+
+    # 如果你使用 chassis_base_link 作为 base_frame，这里可以先不启用偏移
+    robot_center_offset_frame: "odin1_base_link"
+    robot_center_offset_x: 0.0
+    robot_center_offset_y: 0.0
+    robot_center_offset_z: 0.0
+
+action_server:
+  ros__parameters:
+    action_name: "/r2_navigate_to_pose"
+
+    # 等待 map -> chassis_base_link 这条 TF 出现的最长时间
+    # Odin 刚启动或刚重定位时，TF 可能不会立刻出现
+    tf_wait_timeout_sec: 5.0
+
+    # 等待 jie_path_node 发布 /planned_path 的最长时间
+    path_wait_timeout_sec: 20.0
+
+    # Action feedback 发布频率
+    feedback_rate_hz: 10.0

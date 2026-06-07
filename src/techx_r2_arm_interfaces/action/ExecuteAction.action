@@ -1,0 +1,13 @@
+uint8 target_id
+uint16 action_id
+uint16 timeout_ms
+int16 param
+uint8 flags
+---
+bool success
+uint8 final_state
+uint16 error_code
+string message
+---
+uint8 state
+string message

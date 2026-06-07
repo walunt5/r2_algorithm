@@ -1,0 +1,13 @@
+uint8 io_id
+uint8 state
+uint16 hold_ms
+---
+bool success
+uint8 final_state
+uint16 error_code
+bool feedback_ok
+string message
+---
+uint8 state
+bool feedback_ok
+string message

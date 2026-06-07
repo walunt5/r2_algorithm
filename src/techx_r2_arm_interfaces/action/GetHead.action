@@ -1,0 +1,8 @@
+---
+bool success
+uint8 final_state
+uint16 error_code
+string message
+---
+uint8 state
+string message

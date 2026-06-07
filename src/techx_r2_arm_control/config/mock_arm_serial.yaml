@@ -1,0 +1,16 @@
+arm_serial_node:
+  ros__parameters:
+    port: /tmp/r2_arm_upper
+    baudrate: 115200
+    ack_timeout_ms: 300
+    max_retries: 3
+    take_head_timeout_ms: 8000
+    debug_log_frames: true
+
+mock_arm_stm32:
+  ros__parameters:
+    port: /tmp/r2_arm_lower
+    baudrate: 115200
+    done_delay_s: 1.0
+    result_mode: success
+    debug_log_frames: true

@@ -1,0 +1,8 @@
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Sequence name="test_groot2_sequence">
+      <R2WaitForever/>
+      <R2ForceSuccess/>
+    </Sequence>
+  </BehaviorTree>
+</root>
