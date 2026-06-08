@@ -8,6 +8,7 @@
 #include <behaviortree_cpp/loggers/groot2_publisher.h>
 
 #include "r2_bt_nodes/basic_nodes.hpp"
+#include "r2_bt_nodes/arm_nodes.hpp"
 
 using namespace std::chrono_literals;
 
@@ -25,6 +26,14 @@ int main(int argc, char ** argv)
   // 3. 注册自定义节点
   factory.registerNodeType<r2_bt_nodes::R2ForceSuccess>("R2ForceSuccess");
   factory.registerNodeType<r2_bt_nodes::R2WaitForever>("R2WaitForever");
+  factory.registerBuilder<r2_bt_nodes::R2GetHeadActionNode>(
+    "R2GetHeadActionNode",
+    [node](const std::string & name, const BT::NodeConfig & config) {
+      return std::make_unique<r2_bt_nodes::R2GetHeadActionNode>(
+        name,
+        config,
+        node);
+    });
 
   // 4. 从 ROS 参数读取 XML 文件路径
   node->declare_parameter<std::string>("xml_file_path", "");

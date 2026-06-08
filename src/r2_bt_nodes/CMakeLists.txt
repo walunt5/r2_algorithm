@@ -8,10 +8,13 @@ endif()
 # find dependencies
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(rclcpp_action REQUIRED)
 find_package(behaviortree_cpp REQUIRED)
+find_package(techx_r2_arm_interfaces REQUIRED)
 
 add_library(${PROJECT_NAME}
   src/basic_nodes.cpp
+  src/arm_nodes.cpp
 )
 
 target_include_directories(${PROJECT_NAME}
@@ -22,7 +25,9 @@ target_include_directories(${PROJECT_NAME}
 
 ament_target_dependencies(${PROJECT_NAME}
   rclcpp
+  rclcpp_action
   behaviortree_cpp
+  techx_r2_arm_interfaces
 )
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
@@ -43,7 +48,13 @@ install(
 ament_export_include_directories(include)
 ament_export_libraries(${PROJECT_NAME})
 ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
-ament_export_dependencies(rclcpp behaviortree_cpp)
+
+ament_export_dependencies(
+  rclcpp
+  rclcpp_action 
+  behaviortree_cpp
+  techx_r2_arm_interfaces
+)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
