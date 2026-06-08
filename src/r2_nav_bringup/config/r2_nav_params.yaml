@@ -29,15 +29,15 @@ static_tf:
   # 如果 Odin1 安装在机器人中心正前方 0.18m，
   # 那么 chassis_base_link 相对 odin1_base_link 大约是 x=-0.18
   odin_to_chassis:
-    x: -0.18
-    y: 0.0
-    z: 0.0
+    x: -0.15689
+    y: 0.11541
+    z: -0.12233
     yaw: 0.0
     pitch: 0.0
     roll: 0.0
 
 planner:
-  robot_radius: 0.25
+  robot_radius: 0.290
   max_iterations: 500000
   snap_search_radius_cells: 12
 
