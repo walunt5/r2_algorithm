@@ -21,7 +21,7 @@ class SaveBinMapWindow(QMainWindow):
         self.setWindowTitle("Save Bin Map")
         self.resize(760, 420)
 
-        self._workdir = "/home/robot/ros2_ws/src/odin_ros_driver"
+        self._workdir = "/home/xie/techx_R2_algorithm/r2_algorithm/src/odin_ros_driver"
         self._process = QProcess(self)
         self._process.setProgram("/bin/bash")
         self._process.setArguments(["-lc", "./set_param.sh save_map 1"])
