@@ -8,8 +8,8 @@ def generate_launch_description():
     host_port = LaunchConfiguration('host_port')
     stm32_port = LaunchConfiguration('stm32_port')
     baudrate = LaunchConfiguration('baudrate')
-    simulate_error = LaunchConfiguration('simulate_error')
     drop_first_ack = LaunchConfiguration('drop_first_ack')
+    result_mode = LaunchConfiguration('result_mode')
 
     socat_process = ExecuteProcess(
         cmd=[
@@ -47,8 +47,8 @@ def generate_launch_description():
         parameters=[{
             'port': stm32_port,
             'baudrate': baudrate,
-            'simulate_error': simulate_error,
             'drop_first_ack': drop_first_ack,
+            'result_mode': result_mode,
         }]
     )
 
@@ -68,11 +68,13 @@ def generate_launch_description():
             default_value='115200',
             description='Serial baudrate'
         ),
+
         DeclareLaunchArgument(
-            'simulate_error',
-            default_value='false',
-            description='Mock returns ERROR instead of DONE'
+            'result_mode',
+            default_value='success',
+            description='Mock result mode: success, error, no_ack, timeout'
         ),
+
         DeclareLaunchArgument(
             'drop_first_ack',
             default_value='false',

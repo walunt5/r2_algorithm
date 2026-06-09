@@ -1,0 +1,22 @@
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Sequence name="test_chassis_step_command_sequence">
+      <R2ChassisStepCommandNode
+        action_name="/r2_chassis/step_command"
+        cmd_type="MOVE_FLAT"
+        from_block="A"
+        target_block="B"
+        current_h="0"
+        target_h="0"
+        edge_id="A_B"
+        timeout_sec="10.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="15000"/>
+      <R2ChassisStepCommandNode cmd_type="CLIMB_200" timeout_sec="10.0"/>
+      <R2ChassisStepCommandNode cmd_type="CLIMB_400" timeout_sec="12.0"/>
+      <R2ChassisStepCommandNode cmd_type="DESCEND_200" timeout_sec="10.0"/>
+      <R2ChassisStepCommandNode cmd_type="DESCEND_400" timeout_sec="12.0"/>
+      
+    </Sequence>
+  </BehaviorTree>
+</root>

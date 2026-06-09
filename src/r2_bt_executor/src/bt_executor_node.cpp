@@ -9,6 +9,7 @@
 
 #include "r2_bt_nodes/basic_nodes.hpp"
 #include "r2_bt_nodes/arm_nodes.hpp"
+#include "r2_bt_nodes/chassis_nodes.hpp"
 
 using namespace std::chrono_literals;
 
@@ -49,6 +50,15 @@ int main(int argc, char ** argv)
     "R2ExecuteArmActionNode",
     [node](const std::string & name, const BT::NodeConfig & config) {
       return std::make_unique<r2_bt_nodes::R2ExecuteArmActionNode>(
+        name,
+        config,
+        node);
+    });
+
+  factory.registerBuilder<r2_bt_nodes::R2ChassisStepCommandNode>(
+    "R2ChassisStepCommandNode",
+    [node](const std::string & name, const BT::NodeConfig & config) {
+      return std::make_unique<r2_bt_nodes::R2ChassisStepCommandNode>(
         name,
         config,
         node);

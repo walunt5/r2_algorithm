@@ -18,7 +18,6 @@ mock_chassis_stm32:
     port: /tmp/r2_chassis_stm32
     baudrate: 115200
     serial_timeout_sec: 0.02
-    simulate_error: false
     drop_first_ack: false
     running_delay_sec: 0.3
     done_delay_sec: 1.0
