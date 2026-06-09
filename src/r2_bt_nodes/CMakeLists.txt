@@ -12,11 +12,14 @@ find_package(rclcpp_action REQUIRED)
 find_package(behaviortree_cpp REQUIRED)
 find_package(techx_r2_arm_interfaces REQUIRED)
 find_package(techx_r2_chassis_interfaces REQUIRED)
+find_package(r2_nav_interfaces REQUIRED)
+find_package(geometry_msgs REQUIRED)
 
 add_library(${PROJECT_NAME}
   src/basic_nodes.cpp
   src/arm_nodes.cpp
   src/chassis_nodes.cpp
+  src/nav_nodes.cpp
 )
 
 target_include_directories(${PROJECT_NAME}
@@ -31,6 +34,8 @@ ament_target_dependencies(${PROJECT_NAME}
   behaviortree_cpp
   techx_r2_arm_interfaces
   techx_r2_chassis_interfaces
+  r2_nav_interfaces
+  geometry_msgs
 )
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
@@ -58,6 +63,8 @@ ament_export_dependencies(
   behaviortree_cpp
   techx_r2_arm_interfaces
   techx_r2_chassis_interfaces
+  r2_nav_interfaces
+  geometry_msgs
 )
 
 if(BUILD_TESTING)

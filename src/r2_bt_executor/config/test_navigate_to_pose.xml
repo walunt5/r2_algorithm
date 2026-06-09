@@ -1,0 +1,18 @@
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Sequence name="test_navigate_to_pose_sequence">
+      <!-- <R2NavigateToPoseActionNode
+        frame_id="map"
+        x="1.0"
+        y="0.0"
+        z="0.0"
+        yaw="0.0"
+        timeout_sec="60.0"
+        result_timeout_ms="70000"/> -->
+      <R2NavigateToPoseActionNode
+        goal_name="TEST_PASSABLE_POINT"
+        timeout_sec="60.0"
+        result_timeout_ms="70000"/>
+    </Sequence>
+  </BehaviorTree>
+</root>
