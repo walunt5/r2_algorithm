@@ -26,10 +26,20 @@ int main(int argc, char ** argv)
   // 3. 注册自定义节点
   factory.registerNodeType<r2_bt_nodes::R2ForceSuccess>("R2ForceSuccess");
   factory.registerNodeType<r2_bt_nodes::R2WaitForever>("R2WaitForever");
+
   factory.registerBuilder<r2_bt_nodes::R2GetHeadActionNode>(
     "R2GetHeadActionNode",
     [node](const std::string & name, const BT::NodeConfig & config) {
       return std::make_unique<r2_bt_nodes::R2GetHeadActionNode>(
+        name,
+        config,
+        node);
+    });
+
+  factory.registerBuilder<r2_bt_nodes::R2SetEndEffectorNode>(
+    "R2SetEndEffectorNode",
+    [node](const std::string & name, const BT::NodeConfig & config) {
+      return std::make_unique<r2_bt_nodes::R2SetEndEffectorNode>(
         name,
         config,
         node);

@@ -12,6 +12,7 @@
 #include <behaviortree_cpp/bt_factory.h>
 
 #include "techx_r2_arm_interfaces/action/get_head.hpp"
+#include "techx_r2_arm_interfaces/action/set_end_effector.hpp"
 
 namespace r2_bt_nodes
 {
@@ -54,6 +55,49 @@ private:
   std::shared_future<GoalHandleGetHead::SharedPtr> goal_handle_future_;
   GoalHandleGetHead::SharedPtr goal_handle_;
   std::shared_future<GoalHandleGetHead::WrappedResult> result_future_;
+
+  std::chrono::steady_clock::time_point start_time_;
+  std::chrono::milliseconds result_timeout_;
+};
+
+class R2SetEndEffectorNode : public BT::StatefulActionNode
+{
+public:
+  using SetEndEffector = techx_r2_arm_interfaces::action::SetEndEffector;
+  using GoalHandleSetEndEffector = rclcpp_action::ClientGoalHandle<SetEndEffector>;
+
+  R2SetEndEffectorNode(
+    const std::string & name,
+    const BT::NodeConfig & config,
+    const rclcpp::Node::SharedPtr & node);
+
+  static BT::PortsList providedPorts();
+
+  BT::NodeStatus onStart() override;
+
+  BT::NodeStatus onRunning() override;
+
+  void onHalted() override;
+
+private:
+  enum class Stage
+  {
+    IDLE,
+    WAIT_GOAL_ACCEPTED,
+    WAIT_RESULT
+  };
+
+  bool isTimeout() const;
+
+  rclcpp::Node::SharedPtr node_;
+  rclcpp_action::Client<SetEndEffector>::SharedPtr client_;
+
+  std::string action_name_;
+  Stage stage_;
+
+  std::shared_future<GoalHandleSetEndEffector::SharedPtr> goal_handle_future_;
+  GoalHandleSetEndEffector::SharedPtr goal_handle_;
+  std::shared_future<GoalHandleSetEndEffector::WrappedResult> result_future_;
 
   std::chrono::steady_clock::time_point start_time_;
   std::chrono::milliseconds result_timeout_;

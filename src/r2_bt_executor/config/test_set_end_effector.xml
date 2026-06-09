@@ -1,0 +1,18 @@
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Sequence name="Dual_Arm_Basic_Test">
+      <ReactiveFallback name="debug_set_end_effector_failure">
+        <R2SetEndEffectorNode
+          action_name="/r2_arm/set_end_effector"
+          io_id="2"
+          state="1"
+          hold_ms="0"
+          server_timeout_ms="3000"
+          result_timeout_ms="3000"/>
+        <R2ForceSuccess/>
+      </ReactiveFallback>
+      <R2WaitForever/>
+      <R2ForceSuccess/>
+    </Sequence>
+  </BehaviorTree>
+</root>
