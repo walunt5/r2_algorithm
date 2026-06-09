@@ -64,6 +64,15 @@ int main(int argc, char ** argv)
         node);
     });
 
+  factory.registerBuilder<r2_bt_nodes::R2LiftControlNode>(
+    "R2LiftControlNode",
+    [node](const std::string & name, const BT::NodeConfig & config) {
+      return std::make_unique<r2_bt_nodes::R2LiftControlNode>(
+        name,
+        config,
+        node);
+    });
+
   // 4. 从 ROS 参数读取 XML 文件路径
   node->declare_parameter<std::string>("xml_file_path", "");
   std::string xml_file_path;

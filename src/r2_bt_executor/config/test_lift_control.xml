@@ -1,0 +1,17 @@
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Sequence name="test_lift_control_sequence">
+      <R2LiftControlNode
+        action_name="/r2_chassis/lift_control"
+        target_h_mm="200"
+        mask="7"
+        timeout_sec="10.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="15000"/>
+        <R2LiftControlNode target_h_mm="0" mask="7" timeout_sec="10.0"/>
+        <R2LiftControlNode target_h_mm="200" mask="1" timeout_sec="10.0"/>
+        <R2LiftControlNode target_h_mm="200" mask="2" timeout_sec="10.0"/>
+        <R2LiftControlNode target_h_mm="200" mask="4" timeout_sec="10.0"/>
+    </Sequence>
+  </BehaviorTree>
+</root>
