@@ -11,6 +11,7 @@
 #include "r2_bt_nodes/arm_nodes.hpp"
 #include "r2_bt_nodes/chassis_nodes.hpp"
 #include "r2_bt_nodes/nav_nodes.hpp"
+#include "r2_bt_nodes/meilin_logic_nodes.hpp"
 
 using namespace std::chrono_literals;
 
@@ -28,6 +29,27 @@ int main(int argc, char ** argv)
   // 3. 注册自定义节点
   factory.registerNodeType<r2_bt_nodes::R2ForceSuccess>("R2ForceSuccess");
   factory.registerNodeType<r2_bt_nodes::R2WaitForever>("R2WaitForever");
+
+  factory.registerNodeType<r2_bt_nodes::R2CalculateHeightDeltaNode>(
+    "R2CalculateHeightDeltaNode");
+
+  factory.registerNodeType<r2_bt_nodes::R2BuildMeilinChassisCmdTypeNode>(
+    "R2BuildMeilinChassisCmdTypeNode");
+
+  factory.registerNodeType<r2_bt_nodes::R2BuildKfsPickActionIdByDeltaNode>(
+    "R2BuildKfsPickActionIdByDeltaNode");
+
+  factory.registerNodeType<r2_bt_nodes::R2BlackboardCheckStringNode>(
+    "R2BlackboardCheckStringNode");
+
+  factory.registerNodeType<r2_bt_nodes::R2BlackboardCheckBoolNode>(
+    "R2BlackboardCheckBoolNode");
+
+  factory.registerNodeType<r2_bt_nodes::R2CheckListNotEmptyNode>(
+    "R2CheckListNotEmptyNode");
+
+  factory.registerNodeType<r2_bt_nodes::R2GetBlockHeightNode>(
+    "R2GetBlockHeightNode");
 
   factory.registerBuilder<r2_bt_nodes::R2GetHeadActionNode>(
     "R2GetHeadActionNode",

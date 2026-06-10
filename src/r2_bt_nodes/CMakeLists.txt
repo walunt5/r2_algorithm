@@ -20,6 +20,7 @@ add_library(${PROJECT_NAME}
   src/arm_nodes.cpp
   src/chassis_nodes.cpp
   src/nav_nodes.cpp
+  src/meilin_logic_nodes.cpp
 )
 
 target_include_directories(${PROJECT_NAME}
