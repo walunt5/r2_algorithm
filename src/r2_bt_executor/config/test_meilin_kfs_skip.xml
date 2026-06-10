@@ -1,0 +1,26 @@
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+
+    <Fallback name="test_meilin_kfs_skip">
+
+      <Sequence name="try_pick_kfs">
+
+        <R2CheckBlockHasKfsNode
+          block="B2"
+          has_kfs="{next_block_has_kfs}" />
+
+        <R2BlackboardCheckBoolNode
+          value="{next_block_has_kfs}"
+          expected="true" />
+
+        <R2GetBlockKfsHeightNode
+          block="B2"
+          kfs_height="{kfs_target_h}" />
+      </Sequence>
+
+      <R2ForceSuccess />
+
+    </Fallback>
+
+  </BehaviorTree>
+</root>

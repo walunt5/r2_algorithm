@@ -395,4 +395,127 @@ BT::NodeStatus R2GetBlockHeightNode::tick()
   return BT::NodeStatus::SUCCESS;
 }
 
+R2CheckBlockHasKfsNode::R2CheckBlockHasKfsNode(
+  const std::string & name,
+  const BT::NodeConfig & config)
+: BT::SyncActionNode(name, config)
+{
+}
+
+BT::PortsList R2CheckBlockHasKfsNode::providedPorts()
+{
+  return {
+    BT::InputPort<std::string>("block", "Block name"),
+    BT::OutputPort<bool>("has_kfs", "Whether this block has KFS")
+  };
+}
+
+BT::NodeStatus R2CheckBlockHasKfsNode::tick()
+{
+  std::string block;
+
+  if (!getInput("block", block)) {
+    std::cerr << "[R2CheckBlockHasKfsNode] Missing input: block" << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+
+  // 第一版先硬编码。
+  // 后面可以替换成读取 Meilin_12_Block_Map.yaml 或视觉输出。
+  static const std::unordered_map<std::string, bool> block_kfs_map = {
+    {"ENTRY", false},
+    {"B1", false},
+    {"B2", false},
+    {"B3", true},
+    {"B4", false},
+    {"B5", true},
+    {"B6", false},
+    {"B7", false},
+    {"B8", true},
+    {"B9", false},
+    {"B10", true},
+    {"B11", false},
+    {"B12", false},
+    {"EXIT_ZONE", false}
+  };
+
+  const auto iter = block_kfs_map.find(block);
+
+  if (iter == block_kfs_map.end()) {
+    std::cerr
+      << "[R2CheckBlockHasKfsNode] Unknown block="
+      << block
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+
+  const bool has_kfs = iter->second;
+  setOutput("has_kfs", has_kfs);
+
+  std::cout
+    << "[R2CheckBlockHasKfsNode] block="
+    << block
+    << " has_kfs="
+    << (has_kfs ? "true" : "false")
+    << std::endl;
+
+  return BT::NodeStatus::SUCCESS;
+}
+
+
+R2GetBlockKfsHeightNode::R2GetBlockKfsHeightNode(
+  const std::string & name,
+  const BT::NodeConfig & config)
+: BT::SyncActionNode(name, config)
+{
+}
+
+BT::PortsList R2GetBlockKfsHeightNode::providedPorts()
+{
+  return {
+    BT::InputPort<std::string>("block", "Block name"),
+    BT::OutputPort<int>("kfs_height", "KFS target height in mm")
+  };
+}
+
+BT::NodeStatus R2GetBlockKfsHeightNode::tick()
+{
+  std::string block;
+
+  if (!getInput("block", block)) {
+    std::cerr << "[R2GetBlockKfsHeightNode] Missing input: block" << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+
+  // 第一版先硬编码。
+  // 注意：这里只给“有 KFS 的方块”配置高度。
+  static const std::unordered_map<std::string, int> block_kfs_height_map = {
+    {"B3", 200},
+    {"B5", 400},
+    {"B8", 200},
+    {"B10", 400}
+  };
+
+  const auto iter = block_kfs_height_map.find(block);
+
+  if (iter == block_kfs_height_map.end()) {
+    std::cerr
+      << "[R2GetBlockKfsHeightNode] Block has no configured KFS height: "
+      << block
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+
+  const int kfs_height = iter->second;
+  setOutput("kfs_height", kfs_height);
+
+  std::cout
+    << "[R2GetBlockKfsHeightNode] block="
+    << block
+    << " kfs_height="
+    << kfs_height
+    << std::endl;
+
+  return BT::NodeStatus::SUCCESS;
+}
+
 }  // namespace r2_bt_nodes
