@@ -13,6 +13,7 @@
 #include "r2_bt_nodes/nav_nodes.hpp"
 #include "r2_bt_nodes/meilin_logic_nodes.hpp"
 #include "r2_bt_nodes/odin_mock_nodes.hpp"
+#include "r2_bt_nodes/blackboard_nodes.hpp"
 
 using namespace std::chrono_literals;
 
@@ -72,6 +73,15 @@ int main(int argc, char ** argv)
   
   factory.registerNodeType<r2_bt_nodes::R2OdinPosePidAlignMockNode>(
     "R2OdinPosePidAlignMockNode");
+
+  factory.registerNodeType<r2_bt_nodes::R2SetBlackboardStringNode>(
+    "R2SetBlackboardStringNode");
+  
+  factory.registerNodeType<r2_bt_nodes::R2SetBlackboardIntNode>(
+    "R2SetBlackboardIntNode");
+  
+  factory.registerNodeType<r2_bt_nodes::R2IncrementIntNode>(
+    "R2IncrementIntNode");
 
   factory.registerBuilder<r2_bt_nodes::R2GetHeadActionNode>(
     "R2GetHeadActionNode",
