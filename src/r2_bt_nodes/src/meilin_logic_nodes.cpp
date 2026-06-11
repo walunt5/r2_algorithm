@@ -680,4 +680,117 @@ BT::NodeStatus R2GetNextManualBlockNode::tick()
   return BT::NodeStatus::SUCCESS;
 }
 
+struct TransitionInfo
+{
+  std::string edge_id;
+  std::string approach_goal_name;
+  std::string landing_goal_name;
+};
+
+
+R2GetTransitionInfoNode::R2GetTransitionInfoNode(
+  const std::string & name,
+  const BT::NodeConfig & config)
+: BT::SyncActionNode(name, config)
+{
+}
+
+BT::PortsList R2GetTransitionInfoNode::providedPorts()
+{
+  return {
+    BT::InputPort<std::string>(
+      "from_block",
+      "Current block name"),
+    BT::InputPort<std::string>(
+      "to_block",
+      "Target block name"),
+    BT::OutputPort<std::string>(
+      "edge_id",
+      "Transition edge id, for example: ENTRY_TO_B2"),
+    BT::OutputPort<std::string>(
+      "approach_goal_name",
+      "Navigation goal name before climbing"),
+    BT::OutputPort<std::string>(
+      "landing_goal_name",
+      "Navigation or alignment goal name after climbing")
+  };
+}
+
+BT::NodeStatus R2GetTransitionInfoNode::tick()
+{
+  std::string from_block;
+  std::string to_block;
+
+  if (!getInput("from_block", from_block)) {
+    std::cerr << "[R2GetTransitionInfoNode] Missing input: from_block" << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+
+  if (!getInput("to_block", to_block)) {
+    std::cerr << "[R2GetTransitionInfoNode] Missing input: to_block" << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+
+  const std::string key = from_block + "->" + to_block;
+
+  // 第一版先硬编码。后面再替换成读取 Meilin_12_Block_Map.yaml。
+  static const std::unordered_map<std::string, TransitionInfo> transition_map = {
+    {
+      "ENTRY->B2",
+      {
+        "ENTRY_TO_B2",
+        "ENTRY_TO_B2_APPROACH",
+        "B2_LANDING"
+      }
+    },
+    {
+      "B2->B3",
+      {
+        "B2_TO_B3",
+        "B2_TO_B3_APPROACH",
+        "B3_LANDING"
+      }
+    },
+    {
+      "B3->EXIT_ZONE",
+      {
+        "B3_TO_EXIT_ZONE",
+        "B3_TO_EXIT_ZONE_APPROACH",
+        "EXIT_ZONE_LANDING"
+      }
+    }
+  };
+
+  const auto iter = transition_map.find(key);
+
+  if (iter == transition_map.end()) {
+    std::cerr
+      << "[R2GetTransitionInfoNode] Unknown transition: "
+      << key
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+
+  const auto & info = iter->second;
+
+  setOutput("edge_id", info.edge_id);
+  setOutput("approach_goal_name", info.approach_goal_name);
+  setOutput("landing_goal_name", info.landing_goal_name);
+
+  std::cout
+    << "[R2GetTransitionInfoNode] from_block="
+    << from_block
+    << " to_block="
+    << to_block
+    << " edge_id="
+    << info.edge_id
+    << " approach_goal_name="
+    << info.approach_goal_name
+    << " landing_goal_name="
+    << info.landing_goal_name
+    << std::endl;
+
+  return BT::NodeStatus::SUCCESS;
+}
+
 }  // namespace r2_bt_nodes

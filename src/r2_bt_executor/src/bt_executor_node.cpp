@@ -63,6 +63,9 @@ int main(int argc, char ** argv)
   factory.registerNodeType<r2_bt_nodes::R2GetNextManualBlockNode>(
     "R2GetNextManualBlockNode");
 
+  factory.registerNodeType<r2_bt_nodes::R2GetTransitionInfoNode>(
+    "R2GetTransitionInfoNode");
+
   factory.registerBuilder<r2_bt_nodes::R2GetHeadActionNode>(
     "R2GetHeadActionNode",
     [node](const std::string & name, const BT::NodeConfig & config) {
