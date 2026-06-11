@@ -21,6 +21,7 @@ add_library(${PROJECT_NAME}
   src/chassis_nodes.cpp
   src/nav_nodes.cpp
   src/meilin_logic_nodes.cpp
+  src/odin_mock_nodes.cpp
 )
 
 target_include_directories(${PROJECT_NAME}

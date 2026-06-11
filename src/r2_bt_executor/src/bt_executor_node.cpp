@@ -12,6 +12,7 @@
 #include "r2_bt_nodes/chassis_nodes.hpp"
 #include "r2_bt_nodes/nav_nodes.hpp"
 #include "r2_bt_nodes/meilin_logic_nodes.hpp"
+#include "r2_bt_nodes/odin_mock_nodes.hpp"
 
 using namespace std::chrono_literals;
 
@@ -65,6 +66,12 @@ int main(int argc, char ** argv)
 
   factory.registerNodeType<r2_bt_nodes::R2GetTransitionInfoNode>(
     "R2GetTransitionInfoNode");
+
+  factory.registerNodeType<r2_bt_nodes::R2CheckOdinLocalizationOkMockNode>(
+    "R2CheckOdinLocalizationOkMockNode");
+  
+  factory.registerNodeType<r2_bt_nodes::R2OdinPosePidAlignMockNode>(
+    "R2OdinPosePidAlignMockNode");
 
   factory.registerBuilder<r2_bt_nodes::R2GetHeadActionNode>(
     "R2GetHeadActionNode",
