@@ -122,6 +122,31 @@ public:
   BT::NodeStatus tick() override;
 };
 
+class R2PeekFirstManualBlockNode : public BT::SyncActionNode
+{
+public:
+  R2PeekFirstManualBlockNode(
+    const std::string & name,
+    const BT::NodeConfig & config);
+
+  static BT::PortsList providedPorts();
+
+  BT::NodeStatus tick() override;
+};
+
+
+class R2GetNextManualBlockNode : public BT::SyncActionNode
+{
+public:
+  R2GetNextManualBlockNode(
+    const std::string & name,
+    const BT::NodeConfig & config);
+
+  static BT::PortsList providedPorts();
+
+  BT::NodeStatus tick() override;
+};
+
 }  // namespace r2_bt_nodes
 
 #endif  // R2_BT_NODES__MEILIN_LOGIC_NODES_HPP_

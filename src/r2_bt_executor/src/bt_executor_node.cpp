@@ -57,6 +57,12 @@ int main(int argc, char ** argv)
   factory.registerNodeType<r2_bt_nodes::R2GetBlockKfsHeightNode>(
     "R2GetBlockKfsHeightNode");
 
+  factory.registerNodeType<r2_bt_nodes::R2PeekFirstManualBlockNode>(
+    "R2PeekFirstManualBlockNode");
+  
+  factory.registerNodeType<r2_bt_nodes::R2GetNextManualBlockNode>(
+    "R2GetNextManualBlockNode");
+
   factory.registerBuilder<r2_bt_nodes::R2GetHeadActionNode>(
     "R2GetHeadActionNode",
     [node](const std::string & name, const BT::NodeConfig & config) {

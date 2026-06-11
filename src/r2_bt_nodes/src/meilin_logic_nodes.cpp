@@ -5,6 +5,8 @@
 #include <iostream>
 #include <string>
 #include <unordered_map>
+#include <sstream>
+#include <vector>
 
 namespace r2_bt_nodes
 {
@@ -513,6 +515,166 @@ BT::NodeStatus R2GetBlockKfsHeightNode::tick()
     << block
     << " kfs_height="
     << kfs_height
+    << std::endl;
+
+  return BT::NodeStatus::SUCCESS;
+}
+
+static std::vector<std::string> splitRouteString(const std::string & route_text)
+{
+  std::vector<std::string> blocks;
+
+  std::stringstream ss(route_text);
+  std::string item;
+
+  while (std::getline(ss, item, ',')) {
+    const std::string trimmed = trimCopy(item);
+
+    if (!trimmed.empty()) {
+      blocks.push_back(trimmed);
+    }
+  }
+
+  return blocks;
+}
+
+
+R2PeekFirstManualBlockNode::R2PeekFirstManualBlockNode(
+  const std::string & name,
+  const BT::NodeConfig & config)
+: BT::SyncActionNode(name, config)
+{
+}
+
+BT::PortsList R2PeekFirstManualBlockNode::providedPorts()
+{
+  return {
+    BT::InputPort<std::string>(
+      "manual_block_sequence",
+      "Manual block route string, for example: B2,B3,EXIT_ZONE"),
+    BT::OutputPort<std::string>(
+      "first_block",
+      "First block in manual route")
+  };
+}
+
+BT::NodeStatus R2PeekFirstManualBlockNode::tick()
+{
+  std::string manual_block_sequence;
+
+  if (!getInput("manual_block_sequence", manual_block_sequence)) {
+    std::cerr
+      << "[R2PeekFirstManualBlockNode] Missing input: manual_block_sequence"
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+
+  const auto blocks = splitRouteString(manual_block_sequence);
+
+  if (blocks.empty()) {
+    std::cerr
+      << "[R2PeekFirstManualBlockNode] Route is empty. manual_block_sequence="
+      << manual_block_sequence
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+
+  const std::string first_block = blocks.front();
+
+  setOutput("first_block", first_block);
+
+  std::cout
+    << "[R2PeekFirstManualBlockNode] manual_block_sequence="
+    << manual_block_sequence
+    << " first_block="
+    << first_block
+    << std::endl;
+
+  return BT::NodeStatus::SUCCESS;
+}
+
+
+R2GetNextManualBlockNode::R2GetNextManualBlockNode(
+  const std::string & name,
+  const BT::NodeConfig & config)
+: BT::SyncActionNode(name, config)
+{
+}
+
+BT::PortsList R2GetNextManualBlockNode::providedPorts()
+{
+  return {
+    BT::InputPort<std::string>(
+      "manual_block_sequence",
+      "Manual block route string, for example: B2,B3,EXIT_ZONE"),
+    BT::InputPort<int>(
+      "route_index",
+      "Current route index, starting from 0"),
+    BT::OutputPort<std::string>(
+      "to_block",
+      "Target block at route_index")
+  };
+}
+
+BT::NodeStatus R2GetNextManualBlockNode::tick()
+{
+  std::string manual_block_sequence;
+  int route_index = 0;
+
+  if (!getInput("manual_block_sequence", manual_block_sequence)) {
+    std::cerr
+      << "[R2GetNextManualBlockNode] Missing input: manual_block_sequence"
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+
+  if (!getInput("route_index", route_index)) {
+    std::cerr
+      << "[R2GetNextManualBlockNode] Missing input: route_index"
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+
+  const auto blocks = splitRouteString(manual_block_sequence);
+
+  if (blocks.empty()) {
+    std::cerr
+      << "[R2GetNextManualBlockNode] Route is empty. manual_block_sequence="
+      << manual_block_sequence
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+
+  if (route_index < 0) {
+    std::cerr
+      << "[R2GetNextManualBlockNode] Invalid route_index="
+      << route_index
+      << ". route_index must be >= 0."
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+
+  if (static_cast<size_t>(route_index) >= blocks.size()) {
+    std::cerr
+      << "[R2GetNextManualBlockNode] route_index out of range. route_index="
+      << route_index
+      << " route_len="
+      << blocks.size()
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+
+  const std::string to_block = blocks[route_index];
+
+  setOutput("to_block", to_block);
+
+  std::cout
+    << "[R2GetNextManualBlockNode] manual_block_sequence="
+    << manual_block_sequence
+    << " route_index="
+    << route_index
+    << " to_block="
+    << to_block
     << std::endl;
 
   return BT::NodeStatus::SUCCESS;
