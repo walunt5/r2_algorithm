@@ -147,6 +147,30 @@ public:
   BT::NodeStatus tick() override;
 };
 
+class R2CheckRouteIndexValidNode : public BT::SyncActionNode
+{
+public:
+  R2CheckRouteIndexValidNode(
+    const std::string & name,
+    const BT::NodeConfig & config);
+
+  static BT::PortsList providedPorts();
+
+  BT::NodeStatus tick() override;
+};
+
+class R2CheckRouteFinishedNode : public BT::SyncActionNode
+{
+public:
+  R2CheckRouteFinishedNode(
+    const std::string & name,
+    const BT::NodeConfig & config);
+
+  static BT::PortsList providedPorts();
+
+  BT::NodeStatus tick() override;
+};
+
 class R2GetTransitionInfoNode : public BT::SyncActionNode
 {
 public:
@@ -158,6 +182,8 @@ public:
 
   BT::NodeStatus tick() override;
 };
+
+
 
 }  // namespace r2_bt_nodes
 

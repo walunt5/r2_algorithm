@@ -1,0 +1,200 @@
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+
+  <BehaviorTree ID="MainTree">
+    <Sequence name="test_meilin_auto_route_three_steps">
+
+      <!-- 初始化全局状态 -->
+      <R2SetBlackboardStringNode
+        value="ENTRY"
+        output="{current_block}" />
+
+      <R2SetBlackboardIntNode
+        value="0"
+        output="{current_h}" />
+
+      <R2SetBlackboardIntNode
+        value="0"
+        output="{route_index}" />
+
+      <!-- ===================================================== -->
+      <!-- 第 1 次自动执行：此时 route_index=0，路线未结束，应执行 ENTRY -> B2 -->
+      <!-- ===================================================== -->
+      <SubTree
+        ID="MeilinAutoRouteTick"
+        manual_block_sequence="B2,B3,EXIT_ZONE"
+        expected_cmd_type="CLIMB_200"
+        expected_current_block_after_step="B2"
+        current_block="{current_block}"
+        current_h="{current_h}"
+        route_index="{route_index}" />
+
+      <!-- ===================================================== -->
+      <!-- 第 2 次自动执行：此时 route_index=1，路线未结束，应执行 B2 -> B3 -->
+      <!-- ===================================================== -->
+      <SubTree
+        ID="MeilinAutoRouteTick"
+        manual_block_sequence="B2,B3,EXIT_ZONE"
+        expected_cmd_type="MOVE_FLAT"
+        expected_current_block_after_step="B3"
+        current_block="{current_block}"
+        current_h="{current_h}"
+        route_index="{route_index}" />
+
+      <!-- ===================================================== -->
+      <!-- 第 3 次自动执行：此时 route_index=2，路线未结束，应执行 B3 -> EXIT_ZONE -->
+      <!-- ===================================================== -->
+      <SubTree
+        ID="MeilinAutoRouteTick"
+        manual_block_sequence="B2,B3,EXIT_ZONE"
+        expected_cmd_type="DESCEND_200"
+        expected_current_block_after_step="EXIT_ZONE"
+        current_block="{current_block}"
+        current_h="{current_h}"
+        route_index="{route_index}" />
+
+      <!-- ===================================================== -->
+      <!-- 第 4 次自动执行：此时 route_index=3，路线已结束，不应再发底盘命令 -->
+      <!-- ===================================================== -->
+      <SubTree
+        ID="MeilinAutoRouteTick"
+        manual_block_sequence="B2,B3,EXIT_ZONE"
+        expected_cmd_type="ROUTE_ALREADY_DONE"
+        expected_current_block_after_step="EXIT_ZONE"
+        current_block="{current_block}"
+        current_h="{current_h}"
+        route_index="{route_index}" />
+
+      <!-- 最终确认已经在 EXIT_ZONE -->
+      <R2BlackboardCheckStringNode
+        value="{current_block}"
+        expected="EXIT_ZONE" />
+
+      <R2ForceSuccess />
+
+    </Sequence>
+  </BehaviorTree>
+
+
+  <!-- ===================================================== -->
+  <!-- 自动路线 Tick：每调用一次，先判断路线是否结束。
+       如果已结束，直接成功；
+       如果未结束，执行一段 MeilinOneStep。
+       ===================================================== -->
+  <BehaviorTree ID="MeilinAutoRouteTick">
+    <Fallback name="meilin_auto_route_tick">
+
+      <!-- 分支 1：路线已经结束，直接成功 -->
+      <Sequence name="route_finished">
+        <R2CheckRouteFinishedNode
+          manual_block_sequence="{manual_block_sequence}"
+          route_index="{route_index}"
+          route_len="{route_len}" />
+
+        <R2BlackboardCheckStringNode
+          value="{current_block}"
+          expected="{expected_current_block_after_step}" />
+      </Sequence>
+
+      <!-- 分支 2：路线没结束，执行一段 -->
+      <SubTree
+        ID="MeilinOneStep"
+        manual_block_sequence="{manual_block_sequence}"
+        expected_cmd_type="{expected_cmd_type}"
+        expected_current_block_after_step="{expected_current_block_after_step}"
+        current_block="{current_block}"
+        current_h="{current_h}"
+        route_index="{route_index}" />
+
+    </Fallback>
+  </BehaviorTree>
+
+
+  <!-- ===================================================== -->
+  <!-- 一段路线执行子树 -->
+  <!-- ===================================================== -->
+  <BehaviorTree ID="MeilinOneStep">
+    <Sequence name="meilin_one_step">
+
+      <!-- 1. 根据 route_index 从路线中取目标方块 -->
+      <R2GetNextManualBlockNode
+        manual_block_sequence="{manual_block_sequence}"
+        route_index="{route_index}"
+        to_block="{to_block}" />
+
+      <!-- 2. 根据 current_block -> to_block 查 transition -->
+      <R2GetTransitionInfoNode
+        from_block="{current_block}"
+        to_block="{to_block}"
+        edge_id="{edge_id}"
+        approach_goal_name="{approach_goal_name}"
+        landing_goal_name="{landing_goal_name}" />
+
+      <!-- 3. Odin 定位检查，当前是 mock -->
+      <R2CheckOdinLocalizationOkMockNode
+        source_frame="map"
+        target_frame="odin"
+        timeout_ms="1000" />
+
+      <!-- 4. Odin 对准 approach 点，当前是 mock -->
+      <R2OdinPosePidAlignMockNode
+        edge_id="{edge_id}"
+        goal_name="{approach_goal_name}"
+        timeout_ms="3000" />
+
+      <!-- 5. 查目标方块高度 -->
+      <R2GetBlockHeightNode
+        block="{to_block}"
+        height="{next_h}" />
+
+      <!-- 6. 计算高度差 -->
+      <R2CalculateHeightDeltaNode
+        current_h="{current_h}"
+        next_h="{next_h}"
+        delta_h="{delta_h}" />
+
+      <!-- 7. 根据高度差生成底盘命令 -->
+      <R2BuildMeilinChassisCmdTypeNode
+        delta_h="{delta_h}"
+        cmd_type="{chassis_cmd_type}" />
+
+      <!-- 8. 检查本段底盘命令是否符合预期 -->
+      <R2BlackboardCheckStringNode
+        value="{chassis_cmd_type}"
+        expected="{expected_cmd_type}" />
+
+      <!-- 9. 发送底盘动作 -->
+      <R2ChassisStepCommandNode
+        action_name="/r2_chassis/step_command"
+        cmd_type="{chassis_cmd_type}"
+        from_block="{current_block}"
+        target_block="{to_block}"
+        current_h="{current_h}"
+        target_h="{next_h}"
+        edge_id="{edge_id}"
+        timeout_sec="10.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="15000" />
+
+      <!-- 10. 一段结束后更新状态 -->
+      <R2SetBlackboardStringNode
+        value="{to_block}"
+        output="{current_block}" />
+
+      <R2SetBlackboardIntNode
+        value="{next_h}"
+        output="{current_h}" />
+
+      <R2IncrementIntNode
+        input="{route_index}"
+        step="1"
+        output="{route_index}" />
+
+      <!-- 11. 检查本段结束后的 current_block -->
+      <R2BlackboardCheckStringNode
+        value="{current_block}"
+        expected="{expected_current_block_after_step}" />
+
+    </Sequence>
+  </BehaviorTree>
+
+</root>

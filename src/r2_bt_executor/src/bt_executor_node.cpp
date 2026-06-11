@@ -65,6 +65,12 @@ int main(int argc, char ** argv)
   factory.registerNodeType<r2_bt_nodes::R2GetNextManualBlockNode>(
     "R2GetNextManualBlockNode");
 
+  factory.registerNodeType<r2_bt_nodes::R2CheckRouteIndexValidNode>(
+    "R2CheckRouteIndexValidNode");
+
+  factory.registerNodeType<r2_bt_nodes::R2CheckRouteFinishedNode>(
+    "R2CheckRouteFinishedNode");
+
   factory.registerNodeType<r2_bt_nodes::R2GetTransitionInfoNode>(
     "R2GetTransitionInfoNode");
 

@@ -680,6 +680,187 @@ BT::NodeStatus R2GetNextManualBlockNode::tick()
   return BT::NodeStatus::SUCCESS;
 }
 
+R2CheckRouteIndexValidNode::R2CheckRouteIndexValidNode(
+  const std::string & name,
+  const BT::NodeConfig & config)
+: BT::SyncActionNode(name, config)
+{
+}
+
+BT::PortsList R2CheckRouteIndexValidNode::providedPorts()
+{
+  return {
+    BT::InputPort<std::string>(
+      "manual_block_sequence",
+      "Manual block route string, for example: B2,B3,EXIT_ZONE"),
+    BT::InputPort<int>(
+      "route_index",
+      "Current route index, starting from 0"),
+    BT::OutputPort<int>(
+      "route_len",
+      "Route length")
+  };
+}
+
+BT::NodeStatus R2CheckRouteIndexValidNode::tick()
+{
+  std::string manual_block_sequence;
+  int route_index = 0;
+
+  if (!getInput("manual_block_sequence", manual_block_sequence)) {
+    std::cerr
+      << "[R2CheckRouteIndexValidNode] Missing input: manual_block_sequence"
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+
+  if (!getInput("route_index", route_index)) {
+    std::cerr
+      << "[R2CheckRouteIndexValidNode] Missing input: route_index"
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+
+  const auto blocks = splitRouteString(manual_block_sequence);
+  const int route_len = static_cast<int>(blocks.size());
+
+  setOutput("route_len", route_len);
+
+  if (blocks.empty()) {
+    std::cout
+      << "[R2CheckRouteIndexValidNode] FAILURE. route is empty. "
+      << "manual_block_sequence="
+      << manual_block_sequence
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+
+  if (route_index < 0) {
+    std::cout
+      << "[R2CheckRouteIndexValidNode] FAILURE. route_index="
+      << route_index
+      << " route_len="
+      << route_len
+      << ". route_index must be >= 0."
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+
+  if (route_index >= route_len) {
+    std::cout
+      << "[R2CheckRouteIndexValidNode] FAILURE. route_index="
+      << route_index
+      << " route_len="
+      << route_len
+      << ". route is finished."
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+
+  std::cout
+    << "[R2CheckRouteIndexValidNode] SUCCESS. manual_block_sequence="
+    << manual_block_sequence
+    << " route_index="
+    << route_index
+    << " route_len="
+    << route_len
+    << " current_target="
+    << blocks[route_index]
+    << std::endl;
+
+  return BT::NodeStatus::SUCCESS;
+}
+
+R2CheckRouteFinishedNode::R2CheckRouteFinishedNode(
+  const std::string & name,
+  const BT::NodeConfig & config)
+: BT::SyncActionNode(name, config)
+{
+}
+
+BT::PortsList R2CheckRouteFinishedNode::providedPorts()
+{
+  return {
+    BT::InputPort<std::string>(
+      "manual_block_sequence",
+      "Manual block route string, for example: B2,B3,EXIT_ZONE"),
+    BT::InputPort<int>(
+      "route_index",
+      "Current route index, starting from 0"),
+    BT::OutputPort<int>(
+      "route_len",
+      "Route length")
+  };
+}
+
+BT::NodeStatus R2CheckRouteFinishedNode::tick()
+{
+  std::string manual_block_sequence;
+  int route_index = 0;
+
+  if (!getInput("manual_block_sequence", manual_block_sequence)) {
+    std::cerr
+      << "[R2CheckRouteFinishedNode] Missing input: manual_block_sequence"
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+
+  if (!getInput("route_index", route_index)) {
+    std::cerr
+      << "[R2CheckRouteFinishedNode] Missing input: route_index"
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+
+  const auto blocks = splitRouteString(manual_block_sequence);
+  const int route_len = static_cast<int>(blocks.size());
+
+  setOutput("route_len", route_len);
+
+  if (blocks.empty()) {
+    std::cout
+      << "[R2CheckRouteFinishedNode] SUCCESS. route is empty, treat as finished. "
+      << "manual_block_sequence="
+      << manual_block_sequence
+      << std::endl;
+    return BT::NodeStatus::SUCCESS;
+  }
+
+  if (route_index < 0) {
+    std::cout
+      << "[R2CheckRouteFinishedNode] FAILURE. route_index="
+      << route_index
+      << " route_len="
+      << route_len
+      << ". negative route_index is invalid, not treated as finished."
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+
+  if (route_index >= route_len) {
+    std::cout
+      << "[R2CheckRouteFinishedNode] SUCCESS. route_index="
+      << route_index
+      << " route_len="
+      << route_len
+      << ". route is finished."
+      << std::endl;
+    return BT::NodeStatus::SUCCESS;
+  }
+
+  std::cout
+    << "[R2CheckRouteFinishedNode] FAILURE. route_index="
+    << route_index
+    << " route_len="
+    << route_len
+    << " current_target="
+    << blocks[route_index]
+    << ". route is not finished."
+    << std::endl;
+
+  return BT::NodeStatus::FAILURE;
+}
+
 struct TransitionInfo
 {
   std::string edge_id;
