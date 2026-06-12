@@ -1353,4 +1353,289 @@ BT::NodeStatus R2GetTransitionInfoNode::tick()
   return BT::NodeStatus::SUCCESS;
 }
 
+R2GetRouteFromYamlNode::R2GetRouteFromYamlNode(
+  const std::string & name,
+  const BT::NodeConfig & config)
+: BT::SyncActionNode(name, config)
+{
+}
+
+BT::PortsList R2GetRouteFromYamlNode::providedPorts()
+{
+  return {
+    BT::InputPort<std::string>(
+      "map_package",
+      "r2_bt_executor",
+      "Package name that installs meilin_map.yaml"),
+    BT::InputPort<std::string>(
+      "map_file",
+      "meilin_map.yaml",
+      "YAML file name or absolute path"),
+    BT::InputPort<std::string>(
+      "route_name",
+      "zone2_main",
+      "Route name in YAML"),
+    BT::OutputPort<std::string>(
+      "start_block",
+      "Start block name"),
+    BT::OutputPort<int>(
+      "start_height",
+      "Start height in mm"),
+    BT::OutputPort<std::string>(
+      "manual_block_sequence",
+      "Comma separated route blocks, for example B2,B3,EXIT_ZONE")
+  };
+}
+
+BT::NodeStatus R2GetRouteFromYamlNode::tick()
+{
+  std::string map_package = "r2_bt_executor";
+  std::string map_file = "meilin_map.yaml";
+  std::string route_name = "zone2_main";
+
+  getInput("map_package", map_package);
+  getInput("map_file", map_file);
+  getInput("route_name", route_name);
+
+  std::string yaml_path;
+
+  try {
+    if (!map_file.empty() && map_file.front() == '/') {
+      yaml_path = map_file;
+    } else {
+      const std::string share_dir =
+        ament_index_cpp::get_package_share_directory(map_package);
+      yaml_path = share_dir + "/config/" + map_file;
+    }
+
+    const YAML::Node root = YAML::LoadFile(yaml_path);
+
+    if (!root["routes"]) {
+      std::cerr
+        << "[R2GetRouteFromYamlNode] Missing routes in yaml="
+        << yaml_path
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    const YAML::Node routes = root["routes"];
+
+    if (!routes[route_name]) {
+      std::cerr
+        << "[R2GetRouteFromYamlNode] Unknown route_name="
+        << route_name
+        << " in yaml="
+        << yaml_path
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    const YAML::Node route = routes[route_name];
+
+    if (!route["start_block"] || !route["start_height"] || !route["blocks"]) {
+      std::cerr
+        << "[R2GetRouteFromYamlNode] route="
+        << route_name
+        << " must contain start_block, start_height, blocks."
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    const std::string start_block = route["start_block"].as<std::string>();
+    const int start_height = route["start_height"].as<int>();
+
+    const YAML::Node blocks = route["blocks"];
+
+    if (!blocks.IsSequence() || blocks.size() == 0) {
+      std::cerr
+        << "[R2GetRouteFromYamlNode] route blocks must be non-empty sequence. route="
+        << route_name
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    std::string manual_block_sequence;
+
+    for (std::size_t i = 0; i < blocks.size(); ++i) {
+      if (i > 0) {
+        manual_block_sequence += ",";
+      }
+      manual_block_sequence += blocks[i].as<std::string>();
+    }
+
+    setOutput("start_block", start_block);
+    setOutput("start_height", start_height);
+    setOutput("manual_block_sequence", manual_block_sequence);
+
+    std::cout
+      << "[R2GetRouteFromYamlNode] yaml="
+      << yaml_path
+      << " route_name="
+      << route_name
+      << " start_block="
+      << start_block
+      << " start_height="
+      << start_height
+      << " manual_block_sequence="
+      << manual_block_sequence
+      << std::endl;
+
+    return BT::NodeStatus::SUCCESS;
+  } catch (const std::exception & e) {
+    std::cerr
+      << "[R2GetRouteFromYamlNode] Exception while reading yaml. "
+      << "yaml_path="
+      << yaml_path
+      << " error="
+      << e.what()
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+}
+
+R2GetTransitionInfoFromYamlNode::R2GetTransitionInfoFromYamlNode(
+  const std::string & name,
+  const BT::NodeConfig & config)
+: BT::SyncActionNode(name, config)
+{
+}
+
+BT::PortsList R2GetTransitionInfoFromYamlNode::providedPorts()
+{
+  return {
+    BT::InputPort<std::string>(
+      "map_package",
+      "r2_bt_executor",
+      "Package name that installs meilin_map.yaml"),
+    BT::InputPort<std::string>(
+      "map_file",
+      "meilin_map.yaml",
+      "YAML file name or absolute path"),
+    BT::InputPort<std::string>(
+      "from_block",
+      "Current block name"),
+    BT::InputPort<std::string>(
+      "to_block",
+      "Target block name"),
+    BT::OutputPort<std::string>(
+      "edge_id",
+      "Transition edge id"),
+    BT::OutputPort<std::string>(
+      "approach_goal_name",
+      "Approach goal name"),
+    BT::OutputPort<std::string>(
+      "landing_goal_name",
+      "Landing goal name")
+  };
+}
+
+BT::NodeStatus R2GetTransitionInfoFromYamlNode::tick()
+{
+  std::string map_package = "r2_bt_executor";
+  std::string map_file = "meilin_map.yaml";
+  std::string from_block;
+  std::string to_block;
+
+  getInput("map_package", map_package);
+  getInput("map_file", map_file);
+
+  if (!getInput("from_block", from_block)) {
+    std::cerr
+      << "[R2GetTransitionInfoFromYamlNode] Missing input: from_block"
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+
+  if (!getInput("to_block", to_block)) {
+    std::cerr
+      << "[R2GetTransitionInfoFromYamlNode] Missing input: to_block"
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+
+  std::string yaml_path;
+
+  try {
+    if (!map_file.empty() && map_file.front() == '/') {
+      yaml_path = map_file;
+    } else {
+      const std::string share_dir =
+        ament_index_cpp::get_package_share_directory(map_package);
+      yaml_path = share_dir + "/config/" + map_file;
+    }
+
+    const YAML::Node root = YAML::LoadFile(yaml_path);
+
+    if (!root["transitions"]) {
+      std::cerr
+        << "[R2GetTransitionInfoFromYamlNode] Missing transitions in yaml="
+        << yaml_path
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    const std::string key = from_block + "->" + to_block;
+    const YAML::Node transitions = root["transitions"];
+
+    if (!transitions[key]) {
+      std::cerr
+        << "[R2GetTransitionInfoFromYamlNode] Unknown transition="
+        << key
+        << " in yaml="
+        << yaml_path
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    const YAML::Node transition = transitions[key];
+
+    if (!transition["edge_id"] ||
+        !transition["approach_goal_name"] ||
+        !transition["landing_goal_name"]) {
+      std::cerr
+        << "[R2GetTransitionInfoFromYamlNode] transition="
+        << key
+        << " must contain edge_id, approach_goal_name, landing_goal_name."
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    const std::string edge_id = transition["edge_id"].as<std::string>();
+    const std::string approach_goal_name =
+      transition["approach_goal_name"].as<std::string>();
+    const std::string landing_goal_name =
+      transition["landing_goal_name"].as<std::string>();
+
+    setOutput("edge_id", edge_id);
+    setOutput("approach_goal_name", approach_goal_name);
+    setOutput("landing_goal_name", landing_goal_name);
+
+    std::cout
+      << "[R2GetTransitionInfoFromYamlNode] yaml="
+      << yaml_path
+      << " from_block="
+      << from_block
+      << " to_block="
+      << to_block
+      << " edge_id="
+      << edge_id
+      << " approach_goal_name="
+      << approach_goal_name
+      << " landing_goal_name="
+      << landing_goal_name
+      << std::endl;
+
+    return BT::NodeStatus::SUCCESS;
+  } catch (const std::exception & e) {
+    std::cerr
+      << "[R2GetTransitionInfoFromYamlNode] Exception while reading yaml. "
+      << "yaml_path="
+      << yaml_path
+      << " error="
+      << e.what()
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+}
+
 }  // namespace r2_bt_nodes

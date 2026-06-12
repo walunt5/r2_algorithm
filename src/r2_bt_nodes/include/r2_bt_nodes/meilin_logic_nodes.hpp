@@ -220,7 +220,29 @@ public:
   BT::NodeStatus tick() override;
 };
 
+class R2GetRouteFromYamlNode : public BT::SyncActionNode
+{
+public:
+  R2GetRouteFromYamlNode(
+    const std::string & name,
+    const BT::NodeConfig & config);
 
+  static BT::PortsList providedPorts();
+
+  BT::NodeStatus tick() override;
+};
+
+class R2GetTransitionInfoFromYamlNode : public BT::SyncActionNode
+{
+public:
+  R2GetTransitionInfoFromYamlNode(
+    const std::string & name,
+    const BT::NodeConfig & config);
+
+  static BT::PortsList providedPorts();
+
+  BT::NodeStatus tick() override;
+};
 
 }  // namespace r2_bt_nodes
 

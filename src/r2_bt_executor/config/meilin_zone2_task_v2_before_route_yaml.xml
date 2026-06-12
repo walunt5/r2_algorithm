@@ -1,27 +1,11 @@
 <root BTCPP_format="4" main_tree_to_execute="MainTree">
 
   <BehaviorTree ID="MainTree">
-    <Sequence name="meilin_zone2_task">
+    <Sequence name="test_meilin_repeat_route_until_done_with_kfs_transfer_yaml">
 
-      <R2GetRouteFromYamlNode
-        map_package="r2_bt_executor"
-        map_file="meilin_map.yaml"
-        route_name="zone2_main"
-        start_block="{start_block}"
-        start_height="{start_height}"
-        manual_block_sequence="{manual_block_sequence}" />
-
-      <R2SetBlackboardStringNode
-        value="{start_block}"
-        output="{current_block}" />
-
-      <R2SetBlackboardIntNode
-        value="{start_height}"
-        output="{current_h}" />
-
-      <R2SetBlackboardIntNode
-        value="0"
-        output="{route_index}" />
+      <R2SetBlackboardStringNode value="ENTRY" output="{current_block}" />
+      <R2SetBlackboardIntNode value="0" output="{current_h}" />
+      <R2SetBlackboardIntNode value="0" output="{route_index}" />
 
       <Fallback name="repeat_route_until_done_or_success">
 
@@ -31,14 +15,14 @@
 
             <Inverter>
               <R2CheckRouteFinishedNode
-                manual_block_sequence="{manual_block_sequence}"
+                manual_block_sequence="B2,B3,EXIT_ZONE"
                 route_index="{route_index}"
                 route_len="{route_len}" />
             </Inverter>
 
             <SubTree
               ID="MeilinOneStepWithKfsTransferYaml"
-              manual_block_sequence="{manual_block_sequence}"
+              manual_block_sequence="B2,B3,EXIT_ZONE"
               current_block="{current_block}"
               current_h="{current_h}"
               route_index="{route_index}" />
@@ -56,7 +40,7 @@
         expected="EXIT_ZONE" />
 
       <R2CheckRouteFinishedNode
-        manual_block_sequence="{manual_block_sequence}"
+        manual_block_sequence="B2,B3,EXIT_ZONE"
         route_index="{route_index}"
         route_len="{final_route_len}" />
 
@@ -74,9 +58,7 @@
         route_index="{route_index}"
         to_block="{to_block}" />
 
-      <R2GetTransitionInfoFromYamlNode
-        map_package="r2_bt_executor"
-        map_file="meilin_map.yaml"
+      <R2GetTransitionInfoNode
         from_block="{current_block}"
         to_block="{to_block}"
         edge_id="{edge_id}"
@@ -111,7 +93,6 @@
           <R2BlackboardCheckBoolNode
             value="{has_kfs}"
             expected="false" />
-
           <R2ForceSuccess />
         </Sequence>
 

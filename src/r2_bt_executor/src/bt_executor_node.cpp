@@ -98,6 +98,12 @@ int main(int argc, char ** argv)
   factory.registerNodeType<r2_bt_nodes::R2IncrementIntNode>(
     "R2IncrementIntNode");
 
+  factory.registerNodeType<r2_bt_nodes::R2GetRouteFromYamlNode>(
+    "R2GetRouteFromYamlNode");
+
+  factory.registerNodeType<r2_bt_nodes::R2GetTransitionInfoFromYamlNode>(
+    "R2GetTransitionInfoFromYamlNode");
+
   factory.registerBuilder<r2_bt_nodes::R2GetHeadActionNode>(
     "R2GetHeadActionNode",
     [node](const std::string & name, const BT::NodeConfig & config) {

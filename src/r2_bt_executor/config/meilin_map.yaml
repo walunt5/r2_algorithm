@@ -60,6 +60,16 @@ blocks:
     has_kfs: false
 
 
+routes:
+  zone2_main:
+    start_block: ENTRY
+    start_height: 0
+    blocks:
+      - B2
+      - B3
+      - EXIT_ZONE
+
+
 transitions:
   ENTRY->B2:
     edge_id: ENTRY_TO_B2
@@ -75,3 +85,31 @@ transitions:
     edge_id: B3_TO_EXIT_ZONE
     approach_goal_name: B3_TO_EXIT_ZONE_APPROACH
     landing_goal_name: EXIT_ZONE_LANDING
+
+
+arm_actions:
+  target_ids:
+    kfs_suction_arm: 2
+
+  kfs_pick_by_delta:
+    "0": 528
+    "200": 529
+    "-200": 530
+    "400": 531
+    "-400": 532
+
+  kfs_lift_up: 544
+  kfs_transfer_to_storage: 560
+
+  end_effectors:
+    arm_suction_pump: 2
+    rear_storage_pump: 3
+
+
+chassis_cmds:
+  by_delta:
+    "0": MOVE_FLAT
+    "200": CLIMB_200
+    "400": CLIMB_400
+    "-200": DESCEND_200
+    "-400": DESCEND_400
