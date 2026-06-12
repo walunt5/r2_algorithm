@@ -16,6 +16,8 @@
   <depend>techx_r2_chassis_interfaces</depend>
   <depend>r2_nav_interfaces</depend>
   <depend>geometry_msgs</depend>
+  <depend>ament_index_cpp</depend>
+  <depend>yaml-cpp</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

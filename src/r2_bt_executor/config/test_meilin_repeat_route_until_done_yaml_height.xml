@@ -1,0 +1,162 @@
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+
+  <BehaviorTree ID="MainTree">
+    <Sequence name="test_meilin_repeat_route_until_done">
+
+      <!-- 初始化路线状态 -->
+      <R2SetBlackboardStringNode
+        value="ENTRY"
+        output="{current_block}" />
+
+      <R2SetBlackboardIntNode
+        value="0"
+        output="{current_h}" />
+
+      <R2SetBlackboardIntNode
+        value="0"
+        output="{route_index}" />
+
+      <!-- ===================================================== -->
+      <!-- 自动循环执行路线，直到 route_index 越界，也就是路线走完 -->
+      <!-- ===================================================== -->
+      <Fallback name="repeat_route_until_done_or_success">
+        <KeepRunningUntilFailure name="repeat_until_route_finished">
+
+            <Sequence name="one_loop_body">
+
+                <!-- 
+                    R2CheckRouteFinishedNode:
+                    路线没走完 -> FAILURE
+                    路线走完了 -> SUCCESS
+
+                    外面加 Inverter 后：
+                    路线没走完 -> SUCCESS
+                    路线走完了 -> FAILURE
+
+                    所以：
+                    只要路线没走完，就继续往下执行一步
+                    如果路线走完，这个 Sequence 失败，KeepRunningUntilFailure 退出循环
+                -->
+                <Inverter>
+                    <R2CheckRouteFinishedNode
+                    manual_block_sequence="B2,B3,EXIT_ZONE"
+                    route_index="{route_index}"
+                    route_len="{route_len}" />
+                </Inverter>
+
+                <!-- 路线没结束时，执行一段 -->
+                <SubTree
+                    ID="MeilinOneStepNoExpectedCheck"
+                    manual_block_sequence="B2,B3,EXIT_ZONE"
+                    current_block="{current_block}"
+                    current_h="{current_h}"
+                    route_index="{route_index}" />
+
+            </Sequence>
+
+        </KeepRunningUntilFailure>
+
+        <R2ForceSuccess />
+
+      </Fallback>
+      
+
+      <!-- 循环退出后，应该已经到 EXIT_ZONE -->
+      <R2BlackboardCheckStringNode
+        value="{current_block}"
+        expected="EXIT_ZONE" />
+
+      <!-- 循环退出后，route_index 应该已经是 3。
+           这里用 R2CheckRouteFinishedNode 再确认路线确实结束。 -->
+      <R2CheckRouteFinishedNode
+        manual_block_sequence="B2,B3,EXIT_ZONE"
+        route_index="{route_index}"
+        route_len="{final_route_len}" />
+
+      <R2ForceSuccess />
+
+    </Sequence>
+  </BehaviorTree>
+
+
+  <!-- ===================================================== -->
+  <!-- 不带 expected_cmd_type 检查的一段路线执行子树 -->
+  <!-- ===================================================== -->
+  <BehaviorTree ID="MeilinOneStepNoExpectedCheck">
+    <Sequence name="meilin_one_step_no_expected_check">
+
+      <!-- 1. 根据 route_index 从路线中取目标方块 -->
+      <R2GetNextManualBlockNode
+        manual_block_sequence="{manual_block_sequence}"
+        route_index="{route_index}"
+        to_block="{to_block}" />
+
+      <!-- 2. 根据 current_block -> to_block 查 transition -->
+      <R2GetTransitionInfoNode
+        from_block="{current_block}"
+        to_block="{to_block}"
+        edge_id="{edge_id}"
+        approach_goal_name="{approach_goal_name}"
+        landing_goal_name="{landing_goal_name}" />
+
+      <!-- 3. Odin 定位检查，当前是 mock -->
+      <R2CheckOdinLocalizationOkMockNode
+        source_frame="map"
+        target_frame="odin"
+        timeout_ms="1000" />
+
+      <!-- 4. Odin 对准 approach 点，当前是 mock -->
+      <R2OdinPosePidAlignMockNode
+        edge_id="{edge_id}"
+        goal_name="{approach_goal_name}"
+        timeout_ms="3000" />
+
+      <!-- 5. 从 YAML 查目标方块高度 -->
+      <R2GetBlockHeightFromYamlNode
+        map_package="r2_bt_executor"
+        map_file="meilin_map.yaml"
+        block="{to_block}"
+        height="{next_h}" />
+
+      <!-- 6. 计算高度差 -->
+      <R2CalculateHeightDeltaNode
+        current_h="{current_h}"
+        next_h="{next_h}"
+        delta_h="{delta_h}" />
+
+      <!-- 7. 根据高度差生成底盘命令 -->
+      <R2BuildMeilinChassisCmdTypeNode
+        delta_h="{delta_h}"
+        cmd_type="{chassis_cmd_type}" />
+
+      <!-- 8. 发送底盘动作 -->
+      <R2ChassisStepCommandNode
+        action_name="/r2_chassis/step_command"
+        cmd_type="{chassis_cmd_type}"
+        from_block="{current_block}"
+        target_block="{to_block}"
+        current_h="{current_h}"
+        target_h="{next_h}"
+        edge_id="{edge_id}"
+        timeout_sec="10.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="15000" />
+
+      <!-- 9. 一段结束后更新状态 -->
+      <R2SetBlackboardStringNode
+        value="{to_block}"
+        output="{current_block}" />
+
+      <R2SetBlackboardIntNode
+        value="{next_h}"
+        output="{current_h}" />
+
+      <R2IncrementIntNode
+        input="{route_index}"
+        step="1"
+        output="{route_index}" />
+
+    </Sequence>
+  </BehaviorTree>
+
+</root>

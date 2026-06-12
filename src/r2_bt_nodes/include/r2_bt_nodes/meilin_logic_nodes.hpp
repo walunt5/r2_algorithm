@@ -122,6 +122,43 @@ public:
   BT::NodeStatus tick() override;
 };
 
+class R2CheckBlockHasKfsFromYamlNode : public BT::SyncActionNode
+{
+public:
+  R2CheckBlockHasKfsFromYamlNode(
+    const std::string & name,
+    const BT::NodeConfig & config);
+
+  static BT::PortsList providedPorts();
+
+  BT::NodeStatus tick() override;
+};
+
+
+class R2GetBlockKfsHeightFromYamlNode : public BT::SyncActionNode
+{
+public:
+  R2GetBlockKfsHeightFromYamlNode(
+    const std::string & name,
+    const BT::NodeConfig & config);
+
+  static BT::PortsList providedPorts();
+
+  BT::NodeStatus tick() override;
+};
+
+class R2GetBlockHeightFromYamlNode : public BT::SyncActionNode
+{
+public:
+  R2GetBlockHeightFromYamlNode(
+    const std::string & name,
+    const BT::NodeConfig & config);
+
+  static BT::PortsList providedPorts();
+
+  BT::NodeStatus tick() override;
+};
+
 class R2PeekFirstManualBlockNode : public BT::SyncActionNode
 {
 public:

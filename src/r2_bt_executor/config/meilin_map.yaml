@@ -1,0 +1,77 @@
+blocks:
+  ENTRY:
+    height: 0
+    has_kfs: false
+
+  B1:
+    height: 0
+    has_kfs: false
+
+  B2:
+    height: 200
+    has_kfs: false
+
+  B3:
+    height: 200
+    has_kfs: true
+    kfs_height: 200
+
+  B4:
+    height: 400
+    has_kfs: false
+
+  B5:
+    height: 400
+    has_kfs: true
+    kfs_height: 400
+
+  B6:
+    height: 200
+    has_kfs: false
+
+  B7:
+    height: 0
+    has_kfs: false
+
+  B8:
+    height: 200
+    has_kfs: true
+    kfs_height: 200
+
+  B9:
+    height: 400
+    has_kfs: false
+
+  B10:
+    height: 200
+    has_kfs: true
+    kfs_height: 400
+
+  B11:
+    height: 0
+    has_kfs: false
+
+  B12:
+    height: 0
+    has_kfs: false
+
+  EXIT_ZONE:
+    height: 0
+    has_kfs: false
+
+
+transitions:
+  ENTRY->B2:
+    edge_id: ENTRY_TO_B2
+    approach_goal_name: ENTRY_TO_B2_APPROACH
+    landing_goal_name: B2_LANDING
+
+  B2->B3:
+    edge_id: B2_TO_B3
+    approach_goal_name: B2_TO_B3_APPROACH
+    landing_goal_name: B3_LANDING
+
+  B3->EXIT_ZONE:
+    edge_id: B3_TO_EXIT_ZONE
+    approach_goal_name: B3_TO_EXIT_ZONE_APPROACH
+    landing_goal_name: EXIT_ZONE_LANDING

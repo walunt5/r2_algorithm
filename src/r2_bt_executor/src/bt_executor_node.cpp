@@ -53,11 +53,20 @@ int main(int argc, char ** argv)
   factory.registerNodeType<r2_bt_nodes::R2GetBlockHeightNode>(
     "R2GetBlockHeightNode");
 
+  factory.registerNodeType<r2_bt_nodes::R2GetBlockHeightFromYamlNode>(
+    "R2GetBlockHeightFromYamlNode");
+
   factory.registerNodeType<r2_bt_nodes::R2CheckBlockHasKfsNode>(
     "R2CheckBlockHasKfsNode");
 
   factory.registerNodeType<r2_bt_nodes::R2GetBlockKfsHeightNode>(
     "R2GetBlockKfsHeightNode");
+
+  factory.registerNodeType<r2_bt_nodes::R2CheckBlockHasKfsFromYamlNode>(
+    "R2CheckBlockHasKfsFromYamlNode");
+
+  factory.registerNodeType<r2_bt_nodes::R2GetBlockKfsHeightFromYamlNode>(
+    "R2GetBlockKfsHeightFromYamlNode");
 
   factory.registerNodeType<r2_bt_nodes::R2PeekFirstManualBlockNode>(
     "R2PeekFirstManualBlockNode");

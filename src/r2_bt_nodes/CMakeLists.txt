@@ -14,6 +14,8 @@ find_package(techx_r2_arm_interfaces REQUIRED)
 find_package(techx_r2_chassis_interfaces REQUIRED)
 find_package(r2_nav_interfaces REQUIRED)
 find_package(geometry_msgs REQUIRED)
+find_package(ament_index_cpp REQUIRED)
+find_package(yaml-cpp REQUIRED)
 
 add_library(${PROJECT_NAME}
   src/basic_nodes.cpp
@@ -39,9 +41,14 @@ ament_target_dependencies(${PROJECT_NAME}
   techx_r2_chassis_interfaces
   r2_nav_interfaces
   geometry_msgs
+  ament_index_cpp
 )
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
+
+target_link_libraries(${PROJECT_NAME}
+  yaml-cpp
+)
 
 install(
   TARGETS ${PROJECT_NAME}
@@ -68,6 +75,7 @@ ament_export_dependencies(
   techx_r2_chassis_interfaces
   r2_nav_interfaces
   geometry_msgs
+  ament_index_cpp
 )
 
 if(BUILD_TESTING)

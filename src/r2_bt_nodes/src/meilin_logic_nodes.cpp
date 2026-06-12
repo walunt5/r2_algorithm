@@ -7,6 +7,8 @@
 #include <unordered_map>
 #include <sstream>
 #include <vector>
+#include <ament_index_cpp/get_package_share_directory.hpp>
+#include <yaml-cpp/yaml.h>
 
 namespace r2_bt_nodes
 {
@@ -397,6 +399,125 @@ BT::NodeStatus R2GetBlockHeightNode::tick()
   return BT::NodeStatus::SUCCESS;
 }
 
+R2GetBlockHeightFromYamlNode::R2GetBlockHeightFromYamlNode(
+  const std::string & name,
+  const BT::NodeConfig & config)
+: BT::SyncActionNode(name, config)
+{
+}
+
+BT::PortsList R2GetBlockHeightFromYamlNode::providedPorts()
+{
+  return {
+    BT::InputPort<std::string>(
+      "map_package",
+      "r2_bt_executor",
+      "Package name that installs meilin_map.yaml"),
+    BT::InputPort<std::string>(
+      "map_file",
+      "meilin_map.yaml",
+      "YAML file name or absolute path"),
+    BT::InputPort<std::string>(
+      "block",
+      "Block name, for example B3"),
+    BT::OutputPort<int>(
+      "height",
+      "Block height in mm from YAML")
+  };
+}
+
+BT::NodeStatus R2GetBlockHeightFromYamlNode::tick()
+{
+  std::string map_package = "r2_bt_executor";
+  std::string map_file = "meilin_map.yaml";
+  std::string block;
+
+  getInput("map_package", map_package);
+  getInput("map_file", map_file);
+
+  if (!getInput("block", block)) {
+    std::cerr
+      << "[R2GetBlockHeightFromYamlNode] Missing input: block"
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+
+  std::string yaml_path;
+
+  try {
+    if (!map_file.empty() && map_file.front() == '/') {
+      yaml_path = map_file;
+    } else {
+      const std::string share_dir =
+        ament_index_cpp::get_package_share_directory(map_package);
+
+      yaml_path = share_dir + "/config/" + map_file;
+    }
+
+    const YAML::Node root = YAML::LoadFile(yaml_path);
+
+    if (!root["blocks"]) {
+      std::cerr
+        << "[R2GetBlockHeightFromYamlNode] Missing 'blocks' in yaml: "
+        << yaml_path
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    const YAML::Node blocks = root["blocks"];
+
+    if (!blocks[block]) {
+      std::cerr
+        << "[R2GetBlockHeightFromYamlNode] Unknown block="
+        << block
+        << " in yaml="
+        << yaml_path
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    const YAML::Node block_node = blocks[block];
+
+    if (!block_node["height"]) {
+      std::cerr
+        << "[R2GetBlockHeightFromYamlNode] Missing height for block="
+        << block
+        << " in yaml="
+        << yaml_path
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    const int height = block_node["height"].as<int>();
+    setOutput("height", height);
+
+    std::cout
+      << "[R2GetBlockHeightFromYamlNode] yaml="
+      << yaml_path
+      << " block="
+      << block
+      << " height="
+      << height
+      << std::endl;
+
+    return BT::NodeStatus::SUCCESS;
+  } catch (const std::exception & e) {
+    std::cerr
+      << "[R2GetBlockHeightFromYamlNode] Exception while reading yaml. "
+      << "map_package="
+      << map_package
+      << " map_file="
+      << map_file
+      << " yaml_path="
+      << yaml_path
+      << " error="
+      << e.what()
+      << std::endl;
+
+    return BT::NodeStatus::FAILURE;
+  }
+}
+
 R2CheckBlockHasKfsNode::R2CheckBlockHasKfsNode(
   const std::string & name,
   const BT::NodeConfig & config)
@@ -463,6 +584,124 @@ BT::NodeStatus R2CheckBlockHasKfsNode::tick()
   return BT::NodeStatus::SUCCESS;
 }
 
+R2CheckBlockHasKfsFromYamlNode::R2CheckBlockHasKfsFromYamlNode(
+  const std::string & name,
+  const BT::NodeConfig & config)
+: BT::SyncActionNode(name, config)
+{
+}
+
+BT::PortsList R2CheckBlockHasKfsFromYamlNode::providedPorts()
+{
+  return {
+    BT::InputPort<std::string>(
+      "map_package",
+      "r2_bt_executor",
+      "Package name that installs meilin_map.yaml"),
+    BT::InputPort<std::string>(
+      "map_file",
+      "meilin_map.yaml",
+      "YAML file name or absolute path"),
+    BT::InputPort<std::string>(
+      "block",
+      "Block name, for example B3"),
+    BT::OutputPort<bool>(
+      "has_kfs",
+      "Whether this block has KFS from YAML")
+  };
+}
+
+BT::NodeStatus R2CheckBlockHasKfsFromYamlNode::tick()
+{
+  std::string map_package = "r2_bt_executor";
+  std::string map_file = "meilin_map.yaml";
+  std::string block;
+
+  getInput("map_package", map_package);
+  getInput("map_file", map_file);
+
+  if (!getInput("block", block)) {
+    std::cerr
+      << "[R2CheckBlockHasKfsFromYamlNode] Missing input: block"
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+
+  std::string yaml_path;
+
+  try {
+    if (!map_file.empty() && map_file.front() == '/') {
+      yaml_path = map_file;
+    } else {
+      const std::string share_dir =
+        ament_index_cpp::get_package_share_directory(map_package);
+
+      yaml_path = share_dir + "/config/" + map_file;
+    }
+
+    const YAML::Node root = YAML::LoadFile(yaml_path);
+
+    if (!root["blocks"]) {
+      std::cerr
+        << "[R2CheckBlockHasKfsFromYamlNode] Missing 'blocks' in yaml: "
+        << yaml_path
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    const YAML::Node blocks = root["blocks"];
+
+    if (!blocks[block]) {
+      std::cerr
+        << "[R2CheckBlockHasKfsFromYamlNode] Unknown block="
+        << block
+        << " in yaml="
+        << yaml_path
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    const YAML::Node block_node = blocks[block];
+
+    if (!block_node["has_kfs"]) {
+      std::cerr
+        << "[R2CheckBlockHasKfsFromYamlNode] Missing has_kfs for block="
+        << block
+        << " in yaml="
+        << yaml_path
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    const bool has_kfs = block_node["has_kfs"].as<bool>();
+    setOutput("has_kfs", has_kfs);
+
+    std::cout
+      << "[R2CheckBlockHasKfsFromYamlNode] yaml="
+      << yaml_path
+      << " block="
+      << block
+      << " has_kfs="
+      << (has_kfs ? "true" : "false")
+      << std::endl;
+
+    return BT::NodeStatus::SUCCESS;
+  } catch (const std::exception & e) {
+    std::cerr
+      << "[R2CheckBlockHasKfsFromYamlNode] Exception while reading yaml. "
+      << "map_package="
+      << map_package
+      << " map_file="
+      << map_file
+      << " yaml_path="
+      << yaml_path
+      << " error="
+      << e.what()
+      << std::endl;
+
+    return BT::NodeStatus::FAILURE;
+  }
+}
 
 R2GetBlockKfsHeightNode::R2GetBlockKfsHeightNode(
   const std::string & name,
@@ -518,6 +757,146 @@ BT::NodeStatus R2GetBlockKfsHeightNode::tick()
     << std::endl;
 
   return BT::NodeStatus::SUCCESS;
+}
+
+R2GetBlockKfsHeightFromYamlNode::R2GetBlockKfsHeightFromYamlNode(
+  const std::string & name,
+  const BT::NodeConfig & config)
+: BT::SyncActionNode(name, config)
+{
+}
+
+BT::PortsList R2GetBlockKfsHeightFromYamlNode::providedPorts()
+{
+  return {
+    BT::InputPort<std::string>(
+      "map_package",
+      "r2_bt_executor",
+      "Package name that installs meilin_map.yaml"),
+    BT::InputPort<std::string>(
+      "map_file",
+      "meilin_map.yaml",
+      "YAML file name or absolute path"),
+    BT::InputPort<std::string>(
+      "block",
+      "Block name, for example B3"),
+    BT::OutputPort<int>(
+      "kfs_height",
+      "KFS height in mm from YAML")
+  };
+}
+
+BT::NodeStatus R2GetBlockKfsHeightFromYamlNode::tick()
+{
+  std::string map_package = "r2_bt_executor";
+  std::string map_file = "meilin_map.yaml";
+  std::string block;
+
+  getInput("map_package", map_package);
+  getInput("map_file", map_file);
+
+  if (!getInput("block", block)) {
+    std::cerr
+      << "[R2GetBlockKfsHeightFromYamlNode] Missing input: block"
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+
+  std::string yaml_path;
+
+  try {
+    if (!map_file.empty() && map_file.front() == '/') {
+      yaml_path = map_file;
+    } else {
+      const std::string share_dir =
+        ament_index_cpp::get_package_share_directory(map_package);
+
+      yaml_path = share_dir + "/config/" + map_file;
+    }
+
+    const YAML::Node root = YAML::LoadFile(yaml_path);
+
+    if (!root["blocks"]) {
+      std::cerr
+        << "[R2GetBlockKfsHeightFromYamlNode] Missing 'blocks' in yaml: "
+        << yaml_path
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    const YAML::Node blocks = root["blocks"];
+
+    if (!blocks[block]) {
+      std::cerr
+        << "[R2GetBlockKfsHeightFromYamlNode] Unknown block="
+        << block
+        << " in yaml="
+        << yaml_path
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    const YAML::Node block_node = blocks[block];
+
+    if (!block_node["has_kfs"]) {
+      std::cerr
+        << "[R2GetBlockKfsHeightFromYamlNode] Missing has_kfs for block="
+        << block
+        << " in yaml="
+        << yaml_path
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    const bool has_kfs = block_node["has_kfs"].as<bool>();
+
+    if (!has_kfs) {
+      std::cerr
+        << "[R2GetBlockKfsHeightFromYamlNode] block="
+        << block
+        << " has_kfs=false, no kfs_height should be read."
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    if (!block_node["kfs_height"]) {
+      std::cerr
+        << "[R2GetBlockKfsHeightFromYamlNode] Missing kfs_height for block="
+        << block
+        << " in yaml="
+        << yaml_path
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    const int kfs_height = block_node["kfs_height"].as<int>();
+    setOutput("kfs_height", kfs_height);
+
+    std::cout
+      << "[R2GetBlockKfsHeightFromYamlNode] yaml="
+      << yaml_path
+      << " block="
+      << block
+      << " kfs_height="
+      << kfs_height
+      << std::endl;
+
+    return BT::NodeStatus::SUCCESS;
+  } catch (const std::exception & e) {
+    std::cerr
+      << "[R2GetBlockKfsHeightFromYamlNode] Exception while reading yaml. "
+      << "map_package="
+      << map_package
+      << " map_file="
+      << map_file
+      << " yaml_path="
+      << yaml_path
+      << " error="
+      << e.what()
+      << std::endl;
+
+    return BT::NodeStatus::FAILURE;
+  }
 }
 
 static std::vector<std::string> splitRouteString(const std::string & route_text)

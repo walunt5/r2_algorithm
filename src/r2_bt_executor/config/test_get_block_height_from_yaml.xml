@@ -1,0 +1,29 @@
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Sequence name="test_get_block_height_from_yaml">
+
+      <!-- 从 r2_bt_executor/config/meilin_map.yaml 读取 B3 高度 -->
+      <R2GetBlockHeightFromYamlNode
+        map_package="r2_bt_executor"
+        map_file="meilin_map.yaml"
+        block="B3"
+        height="{b3_h}" />
+
+      <R2CalculateHeightDeltaNode
+        current_h="0"
+        next_h="{b3_h}"
+        delta_h="{delta_h}" />
+
+      <R2BuildMeilinChassisCmdTypeNode
+        delta_h="{delta_h}"
+        cmd_type="{cmd_type}" />
+
+      <R2BlackboardCheckStringNode
+        value="{cmd_type}"
+        expected="CLIMB_200" />
+
+      <R2ForceSuccess />
+
+    </Sequence>
+  </BehaviorTree>
+</root>

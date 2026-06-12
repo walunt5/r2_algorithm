@@ -1,0 +1,59 @@
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Sequence name="test_kfs_from_yaml">
+
+      <!-- 1. B3 应该有 KFS -->
+      <R2CheckBlockHasKfsFromYamlNode
+        map_package="r2_bt_executor"
+        map_file="meilin_map.yaml"
+        block="B3"
+        has_kfs="{b3_has_kfs}" />
+
+      <R2BlackboardCheckBoolNode
+        value="{b3_has_kfs}"
+        expected="true" />
+
+      <!-- 2. B3 的 KFS 高度应该是 200 -->
+      <R2GetBlockKfsHeightFromYamlNode
+        map_package="r2_bt_executor"
+        map_file="meilin_map.yaml"
+        block="B3"
+        kfs_height="{b3_kfs_h}" />
+
+      <!-- 假设机器人当前高度是 200，B3 KFS 高度也是 200，高度差应该是 0 -->
+      <R2CalculateHeightDeltaNode
+        current_h="200"
+        next_h="{b3_kfs_h}"
+        delta_h="{b3_kfs_delta}" />
+
+      <!-- delta_h=0 时，机械臂 KFS 动作应该是 528，也就是 0x0210 -->
+      <R2BuildKfsPickActionIdByDeltaNode
+        delta_h="{b3_kfs_delta}"
+        action_id="{b3_pick_action_id}" />
+
+      <!-- 3. B2 应该没有 KFS -->
+      <R2CheckBlockHasKfsFromYamlNode
+        map_package="r2_bt_executor"
+        map_file="meilin_map.yaml"
+        block="B2"
+        has_kfs="{b2_has_kfs}" />
+
+      <R2BlackboardCheckBoolNode
+        value="{b2_has_kfs}"
+        expected="false" />
+
+      <!-- 4. B2 没有 KFS，所以读取 B2 的 kfs_height 应该失败。
+             外面加 Inverter，把这个失败变成测试成功。 -->
+      <Inverter>
+        <R2GetBlockKfsHeightFromYamlNode
+          map_package="r2_bt_executor"
+          map_file="meilin_map.yaml"
+          block="B2"
+          kfs_height="{b2_kfs_h}" />
+      </Inverter>
+
+      <R2ForceSuccess />
+
+    </Sequence>
+  </BehaviorTree>
+</root>
