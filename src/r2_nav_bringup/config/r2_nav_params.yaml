@@ -10,7 +10,7 @@ maps:
 
 ui:
   show_rviz: true
-  show_map_gui: false
+  show_map_gui: true
   launch_web: true
   launch_rosbridge: true
   web_http_port: "8080"
@@ -53,7 +53,7 @@ planner:
 d1_controller:
   ros__parameters:
     # 是否允许三舵轮横移
-    enable_lateral_motion: true
+    enable_lateral_motion: false
 
     # 路径跟踪速度上限，单位：m/s 和 rad/s
     max_linear_speed: 0.08
@@ -81,7 +81,7 @@ d1_controller:
     angular_deadband: 0.03
 
     # 调试窗口
-    enable_tracking_debug_view: false
+    enable_tracking_debug_view: true
     tracking_debug_view_size_px: 640
     tracking_debug_view_pixels_per_meter: 80.0
     tracking_debug_view_frequency: 10.0

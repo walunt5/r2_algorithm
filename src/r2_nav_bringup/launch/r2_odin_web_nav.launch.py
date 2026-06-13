@@ -394,10 +394,10 @@ def generate_launch_description():
                 "cmd_vel_topic": "/cmd_vel",
                 "manual_cmd_vel_topic": "/web_cmd_vel",
                 "tracking_point_marker_topic": "/tracking_point_marker",
-                "enable_tracking_debug_view": ParameterValue(
-                    LaunchConfiguration("launch_map_gui"),
-                    value_type=bool,
-                ),
+                # "enable_tracking_debug_view": ParameterValue(
+                #     LaunchConfiguration("launch_map_gui"),
+                #     value_type=bool,
+                # ),
                 "map_frame": frames.get("map_frame", "map"),
                 "base_frame": frames.get("base_frame", "chassis_base_link"),
                 "base_frame_candidates": frames.get(
