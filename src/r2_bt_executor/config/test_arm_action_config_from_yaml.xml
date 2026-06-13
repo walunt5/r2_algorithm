@@ -1,0 +1,18 @@
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Sequence name="test_arm_action_config_from_yaml">
+
+      <R2GetArmActionConfigFromYamlNode
+        map_package="r2_bt_executor"
+        map_file="meilin_map.yaml"
+        kfs_suction_arm_target_id="{kfs_suction_arm_target_id}"
+        arm_suction_pump_io_id="{arm_suction_pump_io_id}"
+        rear_storage_pump_io_id="{rear_storage_pump_io_id}"
+        kfs_lift_up_action_id="{kfs_lift_up_action_id}"
+        kfs_transfer_to_storage_action_id="{kfs_transfer_to_storage_action_id}" />
+
+      <R2ForceSuccess />
+
+    </Sequence>
+  </BehaviorTree>
+</root>

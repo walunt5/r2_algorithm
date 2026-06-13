@@ -33,11 +33,47 @@ public:
   BT::NodeStatus tick() override;
 };
 
+class R2BuildChassisCmdTypeFromYamlNode : public BT::SyncActionNode
+{
+public:
+  R2BuildChassisCmdTypeFromYamlNode(
+    const std::string & name,
+    const BT::NodeConfig & config);
+
+  static BT::PortsList providedPorts();
+
+  BT::NodeStatus tick() override;
+};
+
 
 class R2BuildKfsPickActionIdByDeltaNode : public BT::SyncActionNode
 {
 public:
   R2BuildKfsPickActionIdByDeltaNode(
+    const std::string & name,
+    const BT::NodeConfig & config);
+
+  static BT::PortsList providedPorts();
+
+  BT::NodeStatus tick() override;
+};
+
+class R2BuildKfsPickActionIdFromYamlNode : public BT::SyncActionNode
+{
+public:
+  R2BuildKfsPickActionIdFromYamlNode(
+    const std::string & name,
+    const BT::NodeConfig & config);
+
+  static BT::PortsList providedPorts();
+
+  BT::NodeStatus tick() override;
+};
+
+class R2GetArmActionConfigFromYamlNode : public BT::SyncActionNode
+{
+public:
+  R2GetArmActionConfigFromYamlNode(
     const std::string & name,
     const BT::NodeConfig & config);
 
@@ -243,6 +279,8 @@ public:
 
   BT::NodeStatus tick() override;
 };
+
+
 
 }  // namespace r2_bt_nodes
 

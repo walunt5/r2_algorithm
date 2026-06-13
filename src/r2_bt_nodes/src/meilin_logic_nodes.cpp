@@ -112,6 +112,406 @@ BT::NodeStatus R2BuildMeilinChassisCmdTypeNode::tick()
   return BT::NodeStatus::SUCCESS;
 }
 
+R2BuildChassisCmdTypeFromYamlNode::R2BuildChassisCmdTypeFromYamlNode(
+  const std::string & name,
+  const BT::NodeConfig & config)
+: BT::SyncActionNode(name, config)
+{
+}
+
+BT::PortsList R2BuildChassisCmdTypeFromYamlNode::providedPorts()
+{
+  return {
+    BT::InputPort<std::string>(
+      "map_package",
+      "r2_bt_executor",
+      "Package name that installs meilin_map.yaml"),
+    BT::InputPort<std::string>(
+      "map_file",
+      "meilin_map.yaml",
+      "YAML file name or absolute path"),
+    BT::InputPort<int>(
+      "delta_h",
+      "Height delta in mm"),
+    BT::OutputPort<std::string>(
+      "cmd_type",
+      "Chassis command type from YAML")
+  };
+}
+
+BT::NodeStatus R2BuildChassisCmdTypeFromYamlNode::tick()
+{
+  std::string map_package = "r2_bt_executor";
+  std::string map_file = "meilin_map.yaml";
+  int delta_h = 0;
+
+  getInput("map_package", map_package);
+  getInput("map_file", map_file);
+
+  if (!getInput("delta_h", delta_h)) {
+    std::cerr
+      << "[R2BuildChassisCmdTypeFromYamlNode] Missing input: delta_h"
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+
+  std::string yaml_path;
+
+  try {
+    if (!map_file.empty() && map_file.front() == '/') {
+      yaml_path = map_file;
+    } else {
+      const std::string share_dir =
+        ament_index_cpp::get_package_share_directory(map_package);
+      yaml_path = share_dir + "/config/" + map_file;
+    }
+
+    const YAML::Node root = YAML::LoadFile(yaml_path);
+
+    if (!root["chassis_cmds"]) {
+      std::cerr
+        << "[R2BuildChassisCmdTypeFromYamlNode] Missing chassis_cmds in yaml="
+        << yaml_path
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    const YAML::Node chassis_cmds = root["chassis_cmds"];
+
+    if (!chassis_cmds["by_delta"]) {
+      std::cerr
+        << "[R2BuildChassisCmdTypeFromYamlNode] Missing chassis_cmds.by_delta in yaml="
+        << yaml_path
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    const YAML::Node by_delta = chassis_cmds["by_delta"];
+    const std::string delta_key = std::to_string(delta_h);
+
+    if (!by_delta[delta_key]) {
+      std::cerr
+        << "[R2BuildChassisCmdTypeFromYamlNode] Missing cmd_type for delta_h="
+        << delta_h
+        << " key="
+        << delta_key
+        << " in yaml="
+        << yaml_path
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    const std::string cmd_type = by_delta[delta_key].as<std::string>();
+    setOutput("cmd_type", cmd_type);
+
+    std::cout
+      << "[R2BuildChassisCmdTypeFromYamlNode] yaml="
+      << yaml_path
+      << " delta_h="
+      << delta_h
+      << " cmd_type="
+      << cmd_type
+      << std::endl;
+
+    return BT::NodeStatus::SUCCESS;
+  } catch (const std::exception & e) {
+    std::cerr
+      << "[R2BuildChassisCmdTypeFromYamlNode] Exception while reading yaml. "
+      << "yaml_path="
+      << yaml_path
+      << " error="
+      << e.what()
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+}
+
+R2BuildKfsPickActionIdFromYamlNode::R2BuildKfsPickActionIdFromYamlNode(
+  const std::string & name,
+  const BT::NodeConfig & config)
+: BT::SyncActionNode(name, config)
+{
+}
+
+BT::PortsList R2BuildKfsPickActionIdFromYamlNode::providedPorts()
+{
+  return {
+    BT::InputPort<std::string>(
+      "map_package",
+      "r2_bt_executor",
+      "Package name that installs meilin_map.yaml"),
+    BT::InputPort<std::string>(
+      "map_file",
+      "meilin_map.yaml",
+      "YAML file name or absolute path"),
+    BT::InputPort<int>(
+      "delta_h",
+      "KFS height delta in mm"),
+    BT::OutputPort<int>(
+      "action_id",
+      "Arm action id for KFS pick from YAML")
+  };
+}
+
+BT::NodeStatus R2BuildKfsPickActionIdFromYamlNode::tick()
+{
+  std::string map_package = "r2_bt_executor";
+  std::string map_file = "meilin_map.yaml";
+  int delta_h = 0;
+
+  getInput("map_package", map_package);
+  getInput("map_file", map_file);
+
+  if (!getInput("delta_h", delta_h)) {
+    std::cerr
+      << "[R2BuildKfsPickActionIdFromYamlNode] Missing input: delta_h"
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+
+  std::string yaml_path;
+
+  try {
+    if (!map_file.empty() && map_file.front() == '/') {
+      yaml_path = map_file;
+    } else {
+      const std::string share_dir =
+        ament_index_cpp::get_package_share_directory(map_package);
+      yaml_path = share_dir + "/config/" + map_file;
+    }
+
+    const YAML::Node root = YAML::LoadFile(yaml_path);
+
+    if (!root["arm_actions"]) {
+      std::cerr
+        << "[R2BuildKfsPickActionIdFromYamlNode] Missing arm_actions in yaml="
+        << yaml_path
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    const YAML::Node arm_actions = root["arm_actions"];
+
+    if (!arm_actions["kfs_pick_by_delta"]) {
+      std::cerr
+        << "[R2BuildKfsPickActionIdFromYamlNode] Missing kfs_pick_by_delta in yaml="
+        << yaml_path
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    const YAML::Node pick_map = arm_actions["kfs_pick_by_delta"];
+    const std::string delta_key = std::to_string(delta_h);
+
+    if (!pick_map[delta_key]) {
+      std::cerr
+        << "[R2BuildKfsPickActionIdFromYamlNode] Missing action_id for delta_h="
+        << delta_h
+        << " key="
+        << delta_key
+        << " in yaml="
+        << yaml_path
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    const int action_id = pick_map[delta_key].as<int>();
+    setOutput("action_id", action_id);
+
+    std::cout
+      << "[R2BuildKfsPickActionIdFromYamlNode] yaml="
+      << yaml_path
+      << " delta_h="
+      << delta_h
+      << " action_id="
+      << action_id
+      << std::endl;
+
+    return BT::NodeStatus::SUCCESS;
+  } catch (const std::exception & e) {
+    std::cerr
+      << "[R2BuildKfsPickActionIdFromYamlNode] Exception while reading yaml. "
+      << "yaml_path="
+      << yaml_path
+      << " error="
+      << e.what()
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+}
+
+R2GetArmActionConfigFromYamlNode::R2GetArmActionConfigFromYamlNode(
+  const std::string & name,
+  const BT::NodeConfig & config)
+: BT::SyncActionNode(name, config)
+{
+}
+
+BT::PortsList R2GetArmActionConfigFromYamlNode::providedPorts()
+{
+  return {
+    BT::InputPort<std::string>(
+      "map_package",
+      "r2_bt_executor",
+      "Package name that installs meilin_map.yaml"),
+    BT::InputPort<std::string>(
+      "map_file",
+      "meilin_map.yaml",
+      "YAML file name or absolute path"),
+
+    BT::OutputPort<int>(
+      "kfs_suction_arm_target_id",
+      "Target id of KFS suction arm"),
+    BT::OutputPort<int>(
+      "arm_suction_pump_io_id",
+      "IO id of arm suction pump"),
+    BT::OutputPort<int>(
+      "rear_storage_pump_io_id",
+      "IO id of rear storage pump"),
+    BT::OutputPort<int>(
+      "kfs_lift_up_action_id",
+      "Action id of KFS lift up"),
+    BT::OutputPort<int>(
+      "kfs_transfer_to_storage_action_id",
+      "Action id of KFS transfer to storage")
+  };
+}
+
+BT::NodeStatus R2GetArmActionConfigFromYamlNode::tick()
+{
+  std::string map_package = "r2_bt_executor";
+  std::string map_file = "meilin_map.yaml";
+
+  getInput("map_package", map_package);
+  getInput("map_file", map_file);
+
+  std::string yaml_path;
+
+  try {
+    if (!map_file.empty() && map_file.front() == '/') {
+      yaml_path = map_file;
+    } else {
+      const std::string share_dir =
+        ament_index_cpp::get_package_share_directory(map_package);
+      yaml_path = share_dir + "/config/" + map_file;
+    }
+
+    const YAML::Node root = YAML::LoadFile(yaml_path);
+
+    if (!root["arm_actions"]) {
+      std::cerr
+        << "[R2GetArmActionConfigFromYamlNode] Missing arm_actions in yaml="
+        << yaml_path
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    const YAML::Node arm_actions = root["arm_actions"];
+
+    if (!arm_actions["target_ids"]) {
+      std::cerr
+        << "[R2GetArmActionConfigFromYamlNode] Missing target_ids in yaml="
+        << yaml_path
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    if (!arm_actions["end_effectors"]) {
+      std::cerr
+        << "[R2GetArmActionConfigFromYamlNode] Missing end_effectors in yaml="
+        << yaml_path
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    const YAML::Node target_ids = arm_actions["target_ids"];
+    const YAML::Node end_effectors = arm_actions["end_effectors"];
+
+    if (!target_ids["kfs_suction_arm"]) {
+      std::cerr
+        << "[R2GetArmActionConfigFromYamlNode] Missing target_ids.kfs_suction_arm"
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    if (!end_effectors["arm_suction_pump"]) {
+      std::cerr
+        << "[R2GetArmActionConfigFromYamlNode] Missing end_effectors.arm_suction_pump"
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    if (!end_effectors["rear_storage_pump"]) {
+      std::cerr
+        << "[R2GetArmActionConfigFromYamlNode] Missing end_effectors.rear_storage_pump"
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    if (!arm_actions["kfs_lift_up"]) {
+      std::cerr
+        << "[R2GetArmActionConfigFromYamlNode] Missing arm_actions.kfs_lift_up"
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    if (!arm_actions["kfs_transfer_to_storage"]) {
+      std::cerr
+        << "[R2GetArmActionConfigFromYamlNode] Missing arm_actions.kfs_transfer_to_storage"
+        << std::endl;
+      return BT::NodeStatus::FAILURE;
+    }
+
+    const int kfs_suction_arm_target_id =
+      target_ids["kfs_suction_arm"].as<int>();
+
+    const int arm_suction_pump_io_id =
+      end_effectors["arm_suction_pump"].as<int>();
+
+    const int rear_storage_pump_io_id =
+      end_effectors["rear_storage_pump"].as<int>();
+
+    const int kfs_lift_up_action_id =
+      arm_actions["kfs_lift_up"].as<int>();
+
+    const int kfs_transfer_to_storage_action_id =
+      arm_actions["kfs_transfer_to_storage"].as<int>();
+
+    setOutput("kfs_suction_arm_target_id", kfs_suction_arm_target_id);
+    setOutput("arm_suction_pump_io_id", arm_suction_pump_io_id);
+    setOutput("rear_storage_pump_io_id", rear_storage_pump_io_id);
+    setOutput("kfs_lift_up_action_id", kfs_lift_up_action_id);
+    setOutput(
+      "kfs_transfer_to_storage_action_id",
+      kfs_transfer_to_storage_action_id);
+
+    std::cout
+      << "[R2GetArmActionConfigFromYamlNode] yaml="
+      << yaml_path
+      << " kfs_suction_arm_target_id="
+      << kfs_suction_arm_target_id
+      << " arm_suction_pump_io_id="
+      << arm_suction_pump_io_id
+      << " rear_storage_pump_io_id="
+      << rear_storage_pump_io_id
+      << " kfs_lift_up_action_id="
+      << kfs_lift_up_action_id
+      << " kfs_transfer_to_storage_action_id="
+      << kfs_transfer_to_storage_action_id
+      << std::endl;
+
+    return BT::NodeStatus::SUCCESS;
+  } catch (const std::exception & e) {
+    std::cerr
+      << "[R2GetArmActionConfigFromYamlNode] Exception while reading yaml. "
+      << "yaml_path="
+      << yaml_path
+      << " error="
+      << e.what()
+      << std::endl;
+    return BT::NodeStatus::FAILURE;
+  }
+}
 
 R2BuildKfsPickActionIdByDeltaNode::R2BuildKfsPickActionIdByDeltaNode(
   const std::string & name,

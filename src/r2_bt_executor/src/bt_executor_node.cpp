@@ -35,11 +35,20 @@ int main(int argc, char ** argv)
   factory.registerNodeType<r2_bt_nodes::R2CalculateHeightDeltaNode>(
     "R2CalculateHeightDeltaNode");
 
+  factory.registerNodeType<r2_bt_nodes::R2BuildChassisCmdTypeFromYamlNode>(
+    "R2BuildChassisCmdTypeFromYamlNode");
+
   factory.registerNodeType<r2_bt_nodes::R2BuildMeilinChassisCmdTypeNode>(
     "R2BuildMeilinChassisCmdTypeNode");
 
   factory.registerNodeType<r2_bt_nodes::R2BuildKfsPickActionIdByDeltaNode>(
     "R2BuildKfsPickActionIdByDeltaNode");
+
+  factory.registerNodeType<r2_bt_nodes::R2BuildKfsPickActionIdFromYamlNode>(
+    "R2BuildKfsPickActionIdFromYamlNode");
+
+  factory.registerNodeType<r2_bt_nodes::R2GetArmActionConfigFromYamlNode>(
+    "R2GetArmActionConfigFromYamlNode");  
 
   factory.registerNodeType<r2_bt_nodes::R2BlackboardCheckStringNode>(
     "R2BlackboardCheckStringNode");

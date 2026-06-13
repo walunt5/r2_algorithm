@@ -132,13 +132,24 @@
             next_h="{kfs_h}"
             delta_h="{kfs_delta_h}" />
 
-          <R2BuildKfsPickActionIdByDeltaNode
+          <R2BuildKfsPickActionIdFromYamlNode
+            map_package="r2_bt_executor"
+            map_file="meilin_map.yaml"
             delta_h="{kfs_delta_h}"
             action_id="{kfs_pick_action_id}" />
 
+          <R2GetArmActionConfigFromYamlNode
+            map_package="r2_bt_executor"
+            map_file="meilin_map.yaml"
+            kfs_suction_arm_target_id="{kfs_suction_arm_target_id}"
+            arm_suction_pump_io_id="{arm_suction_pump_io_id}"
+            rear_storage_pump_io_id="{rear_storage_pump_io_id}"
+            kfs_lift_up_action_id="{kfs_lift_up_action_id}"
+            kfs_transfer_to_storage_action_id="{kfs_transfer_to_storage_action_id}" />
+
           <R2SetEndEffectorNode
             action_name="/r2_arm/set_end_effector"
-            io_id="2"
+            io_id="{arm_suction_pump_io_id}"
             state="1"
             hold_ms="0"
             server_timeout_ms="3000"
@@ -146,7 +157,7 @@
 
           <R2ExecuteArmActionNode
             action_name="/r2_arm/execute_action"
-            target_id="2"
+            target_id="{kfs_suction_arm_target_id}"
             action_id="{kfs_pick_action_id}"
             timeout_ms="8000"
             param="0"
@@ -156,8 +167,8 @@
 
           <R2ExecuteArmActionNode
             action_name="/r2_arm/execute_action"
-            target_id="2"
-            action_id="544"
+            target_id="{kfs_suction_arm_target_id}"
+            action_id="{kfs_lift_up_action_id}"
             timeout_ms="8000"
             param="0"
             flags="0"
@@ -166,7 +177,7 @@
 
           <R2SetEndEffectorNode
             action_name="/r2_arm/set_end_effector"
-            io_id="3"
+            io_id="{rear_storage_pump_io_id}"
             state="1"
             hold_ms="0"
             server_timeout_ms="3000"
@@ -174,8 +185,8 @@
 
           <R2ExecuteArmActionNode
             action_name="/r2_arm/execute_action"
-            target_id="2"
-            action_id="560"
+            target_id="{kfs_suction_arm_target_id}"
+            action_id="{kfs_transfer_to_storage_action_id}"
             timeout_ms="8000"
             param="0"
             flags="0"
@@ -184,7 +195,7 @@
 
           <R2SetEndEffectorNode
             action_name="/r2_arm/set_end_effector"
-            io_id="2"
+            io_id="{arm_suction_pump_io_id}"
             state="0"
             hold_ms="0"
             server_timeout_ms="3000"
@@ -199,7 +210,9 @@
         next_h="{next_h}"
         delta_h="{delta_h}" />
 
-      <R2BuildMeilinChassisCmdTypeNode
+      <R2BuildChassisCmdTypeFromYamlNode
+        map_package="r2_bt_executor"
+        map_file="meilin_map.yaml"
         delta_h="{delta_h}"
         cmd_type="{chassis_cmd_type}" />
 
