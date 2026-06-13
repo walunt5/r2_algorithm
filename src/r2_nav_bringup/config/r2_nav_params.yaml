@@ -53,7 +53,15 @@ planner:
 d1_controller:
   ros__parameters:
     # 是否允许三舵轮横移
-    enable_lateral_motion: false
+    enable_lateral_motion: true
+
+    # 是否启用“平移/旋转互斥”控制
+    # true: 同一时刻只允许平移或旋转，不允许 vx 和 omega 同时有值
+    exclusive_motion_mode: true
+
+    # 当目标点相对机器人前方偏角超过这个值时，只原地旋转
+    # 单位 rad，0.25rad 约等于 14.3 度
+    rotate_only_heading_threshold: 0.25
 
     # 路径跟踪速度上限，单位：m/s 和 rad/s
     max_linear_speed: 0.08
