@@ -16,6 +16,7 @@ find_package(r2_nav_interfaces REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(yaml-cpp REQUIRED)
+find_package(r2_odin_interfaces REQUIRED)
 
 add_library(${PROJECT_NAME}
   src/basic_nodes.cpp
@@ -25,6 +26,7 @@ add_library(${PROJECT_NAME}
   src/meilin_logic_nodes.cpp
   src/odin_mock_nodes.cpp
   src/blackboard_nodes.cpp
+  src/odin_nodes.cpp
 )
 
 target_include_directories(${PROJECT_NAME}
@@ -42,6 +44,7 @@ ament_target_dependencies(${PROJECT_NAME}
   r2_nav_interfaces
   geometry_msgs
   ament_index_cpp
+  r2_odin_interfaces
 )
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
@@ -76,6 +79,7 @@ ament_export_dependencies(
   r2_nav_interfaces
   geometry_msgs
   ament_index_cpp
+  r2_odin_interfaces
 )
 
 if(BUILD_TESTING)

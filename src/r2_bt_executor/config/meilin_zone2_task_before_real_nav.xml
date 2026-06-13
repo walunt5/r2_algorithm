@@ -88,10 +88,13 @@
         target_frame="odin"
         timeout_ms="1000" />
 
-      <R2OdinPosePidAlignMockNode
-        edge_id="{edge_id}"
+      <R2OdinPosePidAlignActionNode
+        action_name="/r2_odin_pose_pid/align"
         goal_name="{approach_goal_name}"
-        timeout_ms="3000" />
+        use_goal_name="true"
+        timeout_sec="5.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="8000" />
 
       <R2GetBlockHeightFromYamlNode
         map_package="r2_bt_executor"

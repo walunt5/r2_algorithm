@@ -14,6 +14,7 @@
 #include "r2_bt_nodes/meilin_logic_nodes.hpp"
 #include "r2_bt_nodes/odin_mock_nodes.hpp"
 #include "r2_bt_nodes/blackboard_nodes.hpp"
+#include "r2_bt_nodes/odin_nodes.hpp"
 
 using namespace std::chrono_literals;
 
@@ -162,6 +163,15 @@ int main(int argc, char ** argv)
     "R2NavigateToPoseActionNode",
     [node](const std::string & name, const BT::NodeConfig & config) {
       return std::make_unique<r2_bt_nodes::R2NavigateToPoseActionNode>(
+        name,
+        config,
+        node);
+    });
+
+  factory.registerBuilder<r2_bt_nodes::R2OdinPosePidAlignActionNode>(
+    "R2OdinPosePidAlignActionNode",
+    [node](const std::string & name, const BT::NodeConfig & config) {
+      return std::make_unique<r2_bt_nodes::R2OdinPosePidAlignActionNode>(
         name,
         config,
         node);
