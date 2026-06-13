@@ -32,3 +32,44 @@ goals:
     y: 0.4948465767010584
     z: 0.20000000298023046
     yaw: 1.7786
+  ENTRY_TO_B2_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B2_LANDING:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B2_TO_B3_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B3_LANDING:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B3_TO_EXIT_ZONE_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  EXIT_ZONE_LANDING:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
