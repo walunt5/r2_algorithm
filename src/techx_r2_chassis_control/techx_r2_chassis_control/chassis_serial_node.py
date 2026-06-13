@@ -93,6 +93,9 @@ class ChassisSerialNode(Node):
         self.declare_parameter("serial_timeout_sec", 0.02)
         self.declare_parameter("velocity_rate_hz", 30.0)
         self.declare_parameter("cmd_vel_timeout_sec", 0.2)
+        self.declare_parameter("max_vx_m_s", 0.08)
+        self.declare_parameter("max_vy_m_s", 0.08)
+        self.declare_parameter("max_wz_rad_s", 0.10)
         self.declare_parameter("task_ack_timeout_sec", 0.1)
         self.declare_parameter("task_max_retries", 3)
         self.declare_parameter("task_default_timeout_sec", 10.0)
@@ -189,12 +192,24 @@ class ChassisSerialNode(Node):
         frame = build_chassis_vel_cmd(self._vel_seq, 0, 0, 0)
         self._write_frame(frame, "zero_vel")
 
+    def _clamp(self, value: float, limit: float) -> float:
+        limit = abs(float(limit))
+        return max(-limit, min(limit, value))
+    
     def _on_cmd_vel(self, msg: Twist) -> None:
+        max_vx = float(self.get_parameter("max_vx_m_s").value)
+        max_vy = float(self.get_parameter("max_vy_m_s").value)
+        max_wz = float(self.get_parameter("max_wz_rad_s").value)
+
+        vx = self._clamp(msg.linear.x, max_vx)
+        vy = self._clamp(msg.linear.y, max_vy)
+        wz = self._clamp(msg.angular.z, max_wz)
+
         with self._state_lock:
             self._latest_velocity = LatestVelocity(
-                vx_mm_s=int(round(msg.linear.x * 1000.0)),
-                vy_mm_s=int(round(msg.linear.y * 1000.0)),
-                omega_mrad_s=int(round(msg.angular.z * 1000.0)),
+                vx_mm_s=int(round(vx * 1000.0)),
+                vy_mm_s=int(round(vy * 1000.0)),
+                omega_mrad_s=int(round(wz * 1000.0)),
                 last_time_sec=self._now_monotonic(),
             )
 

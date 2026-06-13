@@ -12,3 +12,6 @@ chassis_serial_node:
     log_velocity_frames: false
     log_rx_frames: false
     estop_repeat_count: 3
+    max_vx_m_s: 0.08
+    max_vy_m_s: 0.08
+    max_wz_rad_s: 0.10
