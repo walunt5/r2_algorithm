@@ -185,7 +185,7 @@ class ChassisSerialNode(Node):
             self._serial.write(frame)
             self._serial.flush()
         if reason:
-            self.get_logger().debug(f"TX {reason}: {frame_to_hex(frame)}")
+            self.get_logger().info(f"TX {reason}: {frame_to_hex(frame)}")
 
     def _send_zero_velocity(self) -> None:
         self._vel_seq = (self._vel_seq + 1) & 0xFF

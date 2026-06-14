@@ -1,3 +1,5 @@
+import os
+from glob import glob
 from setuptools import find_packages, setup
 
 package_name = 'r2_odin_pose_pid'
@@ -10,6 +12,10 @@ setup(
         ('share/ament_index/resource_index/packages',
             ['resource/' + package_name]),
         ('share/' + package_name, ['package.xml']),
+        (os.path.join('share', package_name, 'config'),
+            glob('config/*.yaml')),
+        (os.path.join('share', package_name, 'launch'),
+            glob('launch/*.launch.py')),
     ],
     install_requires=['setuptools'],
     zip_safe=True,
@@ -25,6 +31,7 @@ setup(
     entry_points={
         'console_scripts': [
             'odin_pose_pid_mock_server = r2_odin_pose_pid.odin_pose_pid_mock_server:main',
+            'odin_pose_pid_server = r2_odin_pose_pid.odin_pose_pid_server:main',
         ],
     },
 )
