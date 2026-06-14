@@ -58,16 +58,20 @@ d1_controller:
 
     # 是否启用“平移/旋转互斥”控制
     # true: 同一时刻只允许平移或旋转，不允许 vx 和 omega 同时有值
-    exclusive_motion_mode: true
+    exclusive_motion_mode: false
+
+    # 新增：导航过程中只平移，到终点附近才调 yaw
+    translate_then_final_yaw_mode: true
 
     # 当目标点相对机器人前方偏角超过这个值时，只原地旋转
     # 单位 rad，0.25rad 约等于 14.3 度
+    # 旧模式参数，新模式 translate_then_final_yaw_mode=true 时不使用
     rotate_only_heading_threshold: 0.25
 
     # 路径跟踪速度上限，单位：m/s 和 rad/s
-    max_linear_speed: 0.01
-    max_lateral_speed: 0.01
-    max_angular_speed: 0.005
+    max_linear_speed: 0.08
+    max_lateral_speed: 0.08
+    max_angular_speed: 0.08
 
     # 跟踪增益，先保守
     linear_gain: 0.8

@@ -64,6 +64,7 @@ public:
     declare_parameter<bool>("enable_lateral_motion", true);
     declare_parameter<bool>("exclusive_motion_mode", false);
     declare_parameter<double>("rotate_only_heading_threshold", 0.25);
+    declare_parameter<bool>("translate_then_final_yaw_mode", false);
     declare_parameter<double>("max_linear_speed", 0.60);
     declare_parameter<double>("max_lateral_speed", 0.60);
     declare_parameter<double>("max_angular_speed", 1.50);
@@ -312,20 +313,32 @@ private:
     cmd_vel.linear.x = applyDeadband(cmd_vel.linear.x, get_parameter("linear_deadband").as_double());
     cmd_vel.linear.y = applyDeadband(cmd_vel.linear.y, get_parameter("lateral_deadband").as_double());
     cmd_vel.angular.z = applyDeadband(cmd_vel.angular.z, get_parameter("angular_deadband").as_double());
-    const bool exclusive_motion_mode =
-      get_parameter("exclusive_motion_mode").as_bool();
+    const bool translate_then_final_yaw_mode =
+      get_parameter("translate_then_final_yaw_mode").as_bool();
 
-    if (exclusive_motion_mode) {
-      const double rotate_only_heading_threshold =
-        get_parameter("rotate_only_heading_threshold").as_double();
+    if (translate_then_final_yaw_mode) {
+      // 新模式：
+      // 正常路径跟踪阶段永远不调 yaw
+      // 只允许 vx / vy 平移
+      cmd_vel.angular.z = 0.0;
+    } else {
+      // 旧模式：
+      // 根据 heading_error 决定只旋转还是只平移
+      const bool exclusive_motion_mode =
+        get_parameter("exclusive_motion_mode").as_bool();
 
-      if (std::abs(heading_error) > rotate_only_heading_threshold) {
-        // 偏角较大：只旋转，不平移
-        cmd_vel.linear.x = 0.0;
-        cmd_vel.linear.y = 0.0;
-      } else {
-        // 偏角较小：只平移，不旋转
-        cmd_vel.angular.z = 0.0;
+      if (exclusive_motion_mode) {
+        const double rotate_only_heading_threshold =
+          get_parameter("rotate_only_heading_threshold").as_double();
+
+        if (std::abs(heading_error) > rotate_only_heading_threshold) {
+          // 偏角较大：只旋转，不平移
+          cmd_vel.linear.x = 0.0;
+          cmd_vel.linear.y = 0.0;
+        } else {
+          // 偏角较小：只平移，不旋转
+          cmd_vel.angular.z = 0.0;
+        }
       }
     }
 
@@ -709,10 +722,13 @@ private:
       return;
     }
     
+    const bool translate_then_final_yaw_mode =
+      get_parameter("translate_then_final_yaw_mode").as_bool();
+
     const bool exclusive_motion_mode =
       get_parameter("exclusive_motion_mode").as_bool();
 
-    if (exclusive_motion_mode) {
+    if (translate_then_final_yaw_mode || exclusive_motion_mode) {
       if (!final_position_reached) {
         // 终点位置还没到：只修正位置，不修正角度
         cmd_vel.angular.z = 0.0;
