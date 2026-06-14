@@ -8,6 +8,12 @@
   <license>TODO: License declaration</license>
 
   <depend>rclpy</depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+  <exec_depend>r2_nav_bringup</exec_depend>
+  <exec_depend>techx_r2_arm_control</exec_depend>
+  <exec_depend>techx_r2_chassis_control</exec_depend>
+  <exec_depend>r2_odin_pose_pid</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>

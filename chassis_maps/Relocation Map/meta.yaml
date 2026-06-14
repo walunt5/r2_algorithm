@@ -1,21 +1,21 @@
-map_id: imported_pcd_map
+map_id: loaded_map
 frame_id: map
-resolution: 0.2
+resolution: 0.20000000298023224
 octomap_file: octomap_msg.npz
 layers_file: layers.npz
 source_world_file: ''
 snapshot_stamp:
-  sec: 1781425164
-  nanosec: 179410675
+  sec: 1781431448
+  nanosec: 629663270
 bounds:
   min:
-  - -1.2000000000000002
-  - -5.6
-  - -0.6
+  - -1.2000000178813934
+  - -5.600000083446503
+  - -0.6000000089406967
   max:
-  - 12.6
-  - 1.5999999999999999
-  - 2.4000000000000004
+  - 12.600000187754631
+  - 1.600000023841858
+  - 2.400000035762787
 planner:
   robot_radius: 0.25
   snap_search_radius_cells: 12
@@ -27,6 +27,6 @@ planner:
   preblocked_costmap_radius_cells: 3
   preblocked_costmap_weight: 2.5
 layers:
-  preblocked_count: 4158
-  traversable_count: 876
-  risk_cost_count: 791
+  preblocked_count: 4183
+  traversable_count: 878
+  risk_cost_count: 793

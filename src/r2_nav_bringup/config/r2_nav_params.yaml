@@ -6,7 +6,7 @@ maps:
   relocalization_pcd_file: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/Relocation Map.pcd"
 
   # jie_octomap 加载的 OctoMap 地图包目录
-  map_package_dir: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/Relocation Map.pcd"
+  map_package_dir: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/Relocation Map"
 
 ui:
   show_rviz: true

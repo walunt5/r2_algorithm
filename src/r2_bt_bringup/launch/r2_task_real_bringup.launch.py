@@ -5,12 +5,22 @@ from ament_index_python.packages import get_package_share_directory
 from launch import LaunchDescription
 from launch.actions import IncludeLaunchDescription
 from launch.launch_description_sources import PythonLaunchDescriptionSource
+from launch.actions import DeclareLaunchArgument
+from launch.conditions import IfCondition
+from launch.substitutions import LaunchConfiguration
 
 
 def generate_launch_description():
     nav_share = get_package_share_directory("r2_nav_bringup")
     arm_share = get_package_share_directory("techx_r2_arm_control")
     chassis_share = get_package_share_directory("techx_r2_chassis_control")
+    odin_pose_pid_share = get_package_share_directory("r2_odin_pose_pid")
+
+    launch_odin_pose_pid_arg = DeclareLaunchArgument(
+        "launch_odin_pose_pid",
+        default_value="true",
+        description="Launch real odin pose pid align action server",
+    )
 
     nav_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
@@ -47,8 +57,21 @@ def generate_launch_description():
         )
     )
 
+    odin_pose_pid_launch = IncludeLaunchDescription(
+        PythonLaunchDescriptionSource(
+            os.path.join(
+                odin_pose_pid_share,
+                "launch",
+                "odin_pose_pid_server.launch.py",
+            )
+        ),
+        condition=IfCondition(LaunchConfiguration("launch_odin_pose_pid")),
+    )
+
     return LaunchDescription([
+        launch_odin_pose_pid_arg,
         nav_launch,
         arm_serial_launch,
         chassis_serial_launch,
+        odin_pose_pid_launch,
     ])
