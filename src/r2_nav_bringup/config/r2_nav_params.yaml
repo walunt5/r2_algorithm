@@ -1,12 +1,12 @@
 maps:
   # Odin1 重定位使用的 .bin 地图
-  relocalization_bin_file: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/map_20260526_171423.bin"
+  relocalization_bin_file: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/map_20260614_154214.bin"
 
   # RViz / Web 可视化用的 .pcd 地图
   relocalization_pcd_file: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/Relocation Map.pcd"
 
   # jie_octomap 加载的 OctoMap 地图包目录
-  map_package_dir: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/Relocation Map"
+  map_package_dir: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/Relocation Map.pcd"
 
 ui:
   show_rviz: true
@@ -65,9 +65,9 @@ d1_controller:
     rotate_only_heading_threshold: 0.25
 
     # 路径跟踪速度上限，单位：m/s 和 rad/s
-    max_linear_speed: 0.08
-    max_lateral_speed: 0.08
-    max_angular_speed: 0.10
+    max_linear_speed: 0.01
+    max_lateral_speed: 0.01
+    max_angular_speed: 0.005
 
     # 跟踪增益，先保守
     linear_gain: 0.8

@@ -5,17 +5,17 @@ octomap_file: octomap_msg.npz
 layers_file: layers.npz
 source_world_file: ''
 snapshot_stamp:
-  sec: 1779789113
-  nanosec: 44355259
+  sec: 1781425164
+  nanosec: 179410675
 bounds:
   min:
-  - -7.2
-  - -1.4000000000000001
-  - -0.4
+  - -1.2000000000000002
+  - -5.6
+  - -0.6
   max:
-  - 11.6
-  - 5.000000000000001
-  - 3.4000000000000004
+  - 12.6
+  - 1.5999999999999999
+  - 2.4000000000000004
 planner:
   robot_radius: 0.25
   snap_search_radius_cells: 12
@@ -27,6 +27,6 @@ planner:
   preblocked_costmap_radius_cells: 3
   preblocked_costmap_weight: 2.5
 layers:
-  preblocked_count: 5531
-  traversable_count: 1011
-  risk_cost_count: 969
+  preblocked_count: 4158
+  traversable_count: 876
+  risk_cost_count: 791
