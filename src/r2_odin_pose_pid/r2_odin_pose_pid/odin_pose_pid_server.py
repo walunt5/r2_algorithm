@@ -94,11 +94,22 @@ class OdinPosePidServer(Node):
         self.get_logger().info(f'Loading odin pose pid config: {config_yaml}')
 
         self.global_frame = self.config.get('frames', {}).get('global_frame', 'map')
-        self.robot_frame = self.config.get('frames', {}).get('robot_frame', 'chassis_base_link')
+        self.robot_frame = self.config.get('frames', {}).get(
+            'robot_frame',
+            'chassis_base_link'
+        )
 
         self.cmd_vel_topic = self.config.get('topics', {}).get('cmd_vel', '/cmd_vel')
 
         self.rate_hz = float(self.config.get('control', {}).get('rate_hz', 30.0))
+        if self.rate_hz <= 0.0:
+            self.get_logger().warn(
+                f'Invalid rate_hz={self.rate_hz}, use default 30.0'
+            )
+            self.rate_hz = 30.0
+
+        self.period_sec = 1.0 / self.rate_hz
+
         self.default_timeout_sec = float(
             self.config.get('control', {}).get('default_timeout_sec', 8.0)
         )
@@ -132,7 +143,10 @@ class OdinPosePidServer(Node):
 
         self.nav_goals_yaml = self._resolve_package_file(
             self.config.get('files', {}).get('nav_goals_package', 'r2_nav_bringup'),
-            self.config.get('files', {}).get('nav_goals_relative_path', 'config/r2_nav_goals.yaml')
+            self.config.get('files', {}).get(
+                'nav_goals_relative_path',
+                'config/r2_nav_goals.yaml'
+            )
         )
 
         self.cmd_pub = self.create_publisher(Twist, self.cmd_vel_topic, 10)
@@ -143,6 +157,9 @@ class OdinPosePidServer(Node):
             self,
             spin_thread=True
         )
+
+        self.last_tf_warn_time = 0.0
+        self.tf_warn_interval_sec = 1.0
 
         self.action_server = ActionServer(
             self,
@@ -156,7 +173,8 @@ class OdinPosePidServer(Node):
         self.get_logger().info(
             f'OdinPosePid REAL action server started: /r2_odin_pose_pid/align, '
             f'global_frame={self.global_frame}, robot_frame={self.robot_frame}, '
-            f'cmd_vel={self.cmd_vel_topic}, nav_goals_yaml={self.nav_goals_yaml}'
+            f'cmd_vel={self.cmd_vel_topic}, nav_goals_yaml={self.nav_goals_yaml}, '
+            f'rate_hz={self.rate_hz}'
         )
 
     def _make_pid(self, cfg: dict, kp: float, ki: float, kd: float, i_limit: float) -> Pid1D:
@@ -234,8 +252,14 @@ class OdinPosePidServer(Node):
     def _publish_zero(self):
         self.cmd_pub.publish(Twist())
 
-    def _make_result(self, success: bool, message: str,
-                     error_x: float = 0.0, error_y: float = 0.0, error_yaw: float = 0.0):
+    def _make_result(
+        self,
+        success: bool,
+        message: str,
+        error_x: float = 0.0,
+        error_y: float = 0.0,
+        error_yaw: float = 0.0
+    ):
         result = OdinPosePidAlign.Result()
         result.success = success
         result.message = message
@@ -243,6 +267,27 @@ class OdinPosePidServer(Node):
         result.final_error_y = float(error_y)
         result.final_error_yaw = float(error_yaw)
         return result
+
+    def _publish_feedback(
+        self,
+        goal_handle,
+        state: str,
+        error_x: float,
+        error_y: float,
+        error_yaw: float,
+        cmd_vx: float,
+        cmd_vy: float,
+        cmd_wz: float
+    ):
+        feedback = OdinPosePidAlign.Feedback()
+        feedback.state = state
+        feedback.error_x = float(error_x)
+        feedback.error_y = float(error_y)
+        feedback.error_yaw = float(error_yaw)
+        feedback.cmd_vx = float(cmd_vx)
+        feedback.cmd_vy = float(cmd_vy)
+        feedback.cmd_wz = float(cmd_wz)
+        goal_handle.publish_feedback(feedback)
 
     def execute_callback(self, goal_handle):
         goal = goal_handle.request
@@ -276,13 +321,15 @@ class OdinPosePidServer(Node):
         start_time = time.monotonic()
         last_time = start_time
 
-        rate = self.create_rate(self.rate_hz)
-
         last_error_forward = 0.0
         last_error_left = 0.0
         last_error_yaw = 0.0
 
+        loop_count = 0
+
         while rclpy.ok():
+            loop_count += 1
+
             now = time.monotonic()
             dt = now - last_time
             last_time = now
@@ -318,22 +365,26 @@ class OdinPosePidServer(Node):
             try:
                 current_x, current_y, current_yaw = self._lookup_current_pose(target_frame)
             except TransformException as e:
-                self.get_logger().warn(
-                    f'TF lookup failed: {target_frame} -> {self.robot_frame}: {e}'
+                warn_now = time.monotonic()
+                if warn_now - self.last_tf_warn_time > self.tf_warn_interval_sec:
+                    self.last_tf_warn_time = warn_now
+                    self.get_logger().warn(
+                        f'TF lookup failed: {target_frame} -> {self.robot_frame}: {e}'
+                    )
+
+                self._publish_feedback(
+                    goal_handle,
+                    'WAIT_TF',
+                    last_error_forward,
+                    last_error_left,
+                    last_error_yaw,
+                    0.0,
+                    0.0,
+                    0.0
                 )
 
-                feedback = OdinPosePidAlign.Feedback()
-                feedback.state = 'WAIT_TF'
-                feedback.error_x = last_error_forward
-                feedback.error_y = last_error_left
-                feedback.error_yaw = last_error_yaw
-                feedback.cmd_vx = 0.0
-                feedback.cmd_vy = 0.0
-                feedback.cmd_wz = 0.0
-                goal_handle.publish_feedback(feedback)
-
                 self._publish_zero()
-                rate.sleep()
+                time.sleep(self.period_sec)
                 continue
 
             dx = target_x - current_x
@@ -405,7 +456,7 @@ class OdinPosePidServer(Node):
                     self.get_logger().warn(
                         'Switch stage: ALIGN_XY -> ALIGN_YAW, yaw drift too large'
                     )
-                    rate.sleep()
+                    time.sleep(self.period_sec)
                     continue
 
                 if position_ok and not yaw_ok:
@@ -415,7 +466,7 @@ class OdinPosePidServer(Node):
                     self.get_logger().info(
                         'Switch stage: ALIGN_XY -> ALIGN_YAW, final yaw correction'
                     )
-                    rate.sleep()
+                    time.sleep(self.period_sec)
                     continue
 
                 cmd.linear.x = clamp(
@@ -432,17 +483,25 @@ class OdinPosePidServer(Node):
 
             self.cmd_pub.publish(cmd)
 
-            feedback = OdinPosePidAlign.Feedback()
-            feedback.state = stage
-            feedback.error_x = float(error_forward)
-            feedback.error_y = float(error_left)
-            feedback.error_yaw = float(error_yaw)
-            feedback.cmd_vx = float(cmd.linear.x)
-            feedback.cmd_vy = float(cmd.linear.y)
-            feedback.cmd_wz = float(cmd.angular.z)
-            goal_handle.publish_feedback(feedback)
+            self._publish_feedback(
+                goal_handle,
+                stage,
+                error_forward,
+                error_left,
+                error_yaw,
+                cmd.linear.x,
+                cmd.linear.y,
+                cmd.angular.z
+            )
 
-            rate.sleep()
+            if loop_count % int(max(1, self.rate_hz)) == 0:
+                self.get_logger().info(
+                    f'Align loop: stage={stage}, '
+                    f'err=({error_forward:.3f}, {error_left:.3f}, {error_yaw:.3f}), '
+                    f'cmd=({cmd.linear.x:.3f}, {cmd.linear.y:.3f}, {cmd.angular.z:.3f})'
+                )
+
+            time.sleep(self.period_sec)
 
         self._publish_zero()
         goal_handle.abort()
