@@ -10,7 +10,7 @@ from launch_ros.substitutions import FindPackageShare
 def generate_launch_description():
     xml_file_name_arg = DeclareLaunchArgument(
         "xml_file_name",
-        default_value="test_meilin_kfs_logic.xml",
+        default_value="test_odin_pose_pid_action.xml",
         description="Behavior tree XML file name under r2_bt_executor/config.",
     )
 

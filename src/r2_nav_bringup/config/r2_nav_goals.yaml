@@ -1,30 +1,27 @@
 goals:
   GYM_HEAD_RACK:
     frame_id: map
-    x: 1.20
-    y: 0.80
+    x: 1.2
+    y: 0.8
     z: 0.0
     yaw: 1.57
-
   GYM_TO_MEILIN_ENTRY:
     frame_id: map
-    x: 3.50
-    y: 1.20
+    x: 3.5
+    y: 1.2
     z: 0.0
     yaw: 0.0
-
   MEILIN_FLAT_TO_EXIT:
     frame_id: map
-    x: 6.20
-    y: -0.50
+    x: 6.2
+    y: -0.5
     z: 0.0
     yaw: -1.57
-
   MEILIN_TO_BATTLE_RAMP:
     frame_id: map
-    x: 7.80
-    y: 1.40
-    z: 0.30
+    x: 7.8
+    y: 1.4
+    z: 0.3
     yaw: 0.0
   TEST_PASSABLE_POINT:
     frame_id: map
@@ -32,38 +29,39 @@ goals:
     y: 0.4948465767010584
     z: 0.20000000298023046
     yaw: 1.7786
-    
   ENTRY_TO_B2_APPROACH:
     frame_id: map
-    x: 1.23
-    y: 0.45
-    z: 0.0
-    yaw: 1.57
-
+    x: 2.118819
+    y: -0.42821
+    z: -0.190673
+    yaw: -0.054035
   B2_TO_B3_APPROACH:
     frame_id: map
-    x: 2.34
-    y: 0.67
-    z: 0.0
-    yaw: 1.57
-
+    x: 1.953999
+    y: 0.237907
+    z: -0.194115
+    yaw: 0.158325
   B3_TO_EXIT_ZONE_APPROACH:
     frame_id: map
     x: 1.25
     y: 0.89
     z: 0.0
     yaw: 0.0
-
   B3_LANDING:
     frame_id: map
     x: 0.0
     y: 0.0
     z: 0.0
     yaw: 0.0
-
   EXIT_ZONE_LANDING:
     frame_id: map
     x: 0.0
     y: 0.0
     z: 0.0
     yaw: 0.0
+  B2_TO_B4_APPROACH:
+    frame_id: map
+    x: 1.955551
+    y: 0.241325
+    z: -0.194954
+    yaw: 0.158628

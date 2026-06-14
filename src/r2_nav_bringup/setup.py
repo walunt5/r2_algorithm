@@ -28,6 +28,7 @@ setup(
     },
     entry_points={
         'console_scripts': [
+            'r2_goal_recorder_gui = r2_nav_bringup.goal_recorder_gui:main',
         ],
     },
 )

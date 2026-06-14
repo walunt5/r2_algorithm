@@ -81,6 +81,21 @@ transitions:
     approach_goal_name: B2_TO_B3_APPROACH
     landing_goal_name: B3_LANDING
 
+  B2->B4:
+    edge_id: B2_TO_B4
+    approach_goal_name: B2_TO_B4_APPROACH
+    landing_goal_name: B4_LANDING
+  
+  B2->B5:
+    edge_id: B2_TO_B5
+    approach_goal_name: B2_TO_B5_APPROACH
+    landing_goal_name: B5_LANDING
+
+  B2->B6:
+    edge_id: B2_TO_B6
+    approach_goal_name: B2_TO_B6_APPROACH
+    landing_goal_name: B6_LANDING
+
   B3->EXIT_ZONE:
     edge_id: B3_TO_EXIT_ZONE
     approach_goal_name: B3_TO_EXIT_ZONE_APPROACH
