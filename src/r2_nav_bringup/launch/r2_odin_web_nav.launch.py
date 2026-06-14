@@ -135,6 +135,7 @@ def generate_launch_description():
     show_map_gui_default = "true" if bool(ui.get("show_map_gui", False)) else "false"
     launch_web_default = "true" if bool(ui.get("launch_web", True)) else "false"
     launch_rosbridge_default = "true" if bool(ui.get("launch_rosbridge", True)) else "false"
+    launch_serial_default = "true" if bool(ui.get("launch_serial", True)) else "false"
     web_http_port_default = str(ui.get("web_http_port", "8080"))
 
     launch_rviz_arg = DeclareLaunchArgument(
@@ -159,7 +160,7 @@ def generate_launch_description():
     )
     launch_serial_arg = DeclareLaunchArgument(
         "launch_serial",
-        default_value="true",
+        default_value=launch_serial_default,
         description="Launch serial communication node",
     )
     launch_web_arg = DeclareLaunchArgument(

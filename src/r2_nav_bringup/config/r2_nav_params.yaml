@@ -13,6 +13,7 @@ ui:
   show_map_gui: true
   launch_web: true
   launch_rosbridge: true
+  launch_serial: false
   web_http_port: "8080"
 
 frames:
