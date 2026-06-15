@@ -45,6 +45,42 @@ class MissionManagerSim(QObject):
 
         self.load_meilin_map_cache()
 
+
+    def get_source_meilin_map_path(self):
+        return (
+            self.get_workspace_root()
+            / "src"
+            / "r2_bt_executor"
+            / "config"
+            / "meilin_map.yaml"
+        )
+
+
+    def get_install_meilin_map_path(self):
+        return (
+            self.get_workspace_root()
+            / "install"
+            / "r2_bt_executor"
+            / "share"
+            / "r2_bt_executor"
+            / "config"
+            / "meilin_map.yaml"
+        )
+
+
+    def save_yaml_to_path(self, yaml_path, data):
+        yaml_path = Path(yaml_path)
+        yaml_path.parent.mkdir(parents=True, exist_ok=True)
+
+        with open(yaml_path, "w", encoding="utf-8") as f:
+            yaml.safe_dump(
+                data,
+                f,
+                allow_unicode=True,
+                sort_keys=False,
+                default_flow_style=False,
+            )
+
     @property
     def manual_route_text(self):
         if not self.manual_block_sequence:
@@ -323,59 +359,67 @@ class MissionManagerSim(QObject):
         if self.tree_running or self.system_starting:
             return False, "任务运行中或系统启动中不能保存配置"
 
-        yaml_path = self.get_default_meilin_map_path()
-        if not os.path.exists(yaml_path):
-            return False, f"找不到 meilin_map.yaml：\n{yaml_path}\n\n请确认 UI 工程位于 r2_algorithm/ui 目录下，或者设置环境变量 R2_ALGORITHM_ROOT。"
+        source_yaml_path = self.get_source_meilin_map_path()
+        install_yaml_path = self.get_install_meilin_map_path()
+
+        if not source_yaml_path.exists():
+            return False, f"找不到源码 meilin_map.yaml：\n{source_yaml_path}"
 
         try:
-            with open(yaml_path, "r", encoding="utf-8") as f:
+            with open(source_yaml_path, "r", encoding="utf-8") as f:
                 data = yaml.safe_load(f) or {}
 
-            data.setdefault("blocks", {})
-            for i in range(1, 13):
-                block_name = f"B{i}"
-                data["blocks"].setdefault(block_name, {})
-                # 只修改 has_kfs；不修改 height / kfs_height。
-                data["blocks"][block_name]["has_kfs"] = bool(self.block_has_kfs.get(i, False))
+            data.setdefault("routes", {})
+            data["routes"].setdefault("zone2_main", {})
 
-            if "ENTRY" in data["blocks"]:
-                data["blocks"]["ENTRY"]["has_kfs"] = False
-            if "EXIT_ZONE" in data["blocks"]:
-                data["blocks"]["EXIT_ZONE"]["has_kfs"] = False
-
-            route_msg = ""
+            # 如果 UI 当前路线为空：只保存 KFS，不清空原路线
             if self.manual_block_sequence:
-                data.setdefault("routes", {}).setdefault("zone2_main", {})
                 route_blocks = [f"B{x}" for x in self.manual_block_sequence]
+
                 if "EXIT_ZONE" not in route_blocks:
                     route_blocks.append("EXIT_ZONE")
+
                 data["routes"]["zone2_main"]["start_block"] = "ENTRY"
                 data["routes"]["zone2_main"]["start_height"] = 0
                 data["routes"]["zone2_main"]["blocks"] = route_blocks
-                route_msg = f"路线 {self.manual_route_text}"
-            else:
-                route_msg = "路线为空，已保留 YAML 里的原路线，只保存 KFS 状态"
 
-            # 先写临时文件，再替换，避免写一半出错导致 YAML 损坏。
-            tmp_path = yaml_path + ".tmp"
-            with open(tmp_path, "w", encoding="utf-8") as f:
-                yaml.safe_dump(
-                    data,
-                    f,
-                    allow_unicode=True,
-                    sort_keys=False,
-                    default_flow_style=False,
+            data.setdefault("blocks", {})
+
+            for i in range(1, 13):
+                block_name = f"B{i}"
+                data["blocks"].setdefault(block_name, {})
+                data["blocks"][block_name]["has_kfs"] = bool(
+                    self.block_has_kfs.get(i, False)
                 )
-            os.replace(tmp_path, yaml_path)
 
-            # 重新读取一次，确保 UI 状态和文件一致。
-            self.load_meilin_map_cache()
-            self.state = "MEILIN_EDITING"
-            self.emit_state(f"已保存二区配置：{route_msg}，KFS：{self.kfs_text}")
-            return True, f"已保存到：\n{yaml_path}\n\n{route_msg}\nKFS：{self.kfs_text}"
+            if "ENTRY" in data["blocks"]:
+                data["blocks"]["ENTRY"]["has_kfs"] = False
+
+            if "EXIT_ZONE" in data["blocks"]:
+                data["blocks"]["EXIT_ZONE"]["has_kfs"] = False
+
+            # 1. 保存源码配置
+            self.save_yaml_to_path(source_yaml_path, data)
+
+            # 2. 同步保存到 install/share，行为树实际读取这里
+            self.save_yaml_to_path(install_yaml_path, data)
+
+            msg = (
+                "已保存二区配置\n\n"
+                f"源码配置：\n{source_yaml_path}\n\n"
+                f"运行配置：\n{install_yaml_path}\n\n"
+                f"当前路线：{self.manual_route_text}\n"
+                f"KFS：{self.kfs_text}"
+            )
+
+            self.emit_state(
+                f"已保存二区配置：路线 {self.manual_route_text}，KFS：{self.kfs_text}"
+            )
+
+            return True, msg
 
         except Exception as e:
-            return False, f"保存失败：{e}\n目标文件：\n{yaml_path}"
+            return False, str(e)
 
     def start_gym(self):
         if self.tree_running:
