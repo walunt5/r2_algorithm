@@ -1,5 +1,6 @@
 import sys
 from PyQt5.QtCore import Qt
+from PyQt5.QtGui import QPainter, QColor, QFont
 from PyQt5.QtWidgets import (
     QApplication, QWidget, QLabel, QPushButton, QTextEdit,
     QVBoxLayout, QHBoxLayout, QGridLayout, QFrame, QProgressBar,
@@ -44,15 +45,26 @@ class TeamButton(QPushButton):
 
 class BlockButton(QPushButton):
     def __init__(self, block_id: int):
-        super().__init__()
+        super().__init__("")
         self.block_id = block_id
+        self.display_height = 0
+        self.display_selected = False
+        self.display_order = 0
+        self.display_has_kfs = False
+        self.display_edit_mode = "ROUTE"
         self.setCheckable(True)
         self.setMinimumHeight(82)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setObjectName("Block_0")
-        self.setText(f"#{block_id}\n0mm\n无KFS")
+        self.setProperty("editMode", "ROUTE")
 
     def set_block_visual(self, height_mm: int, selected: bool, order: int, has_kfs: bool, edit_mode: str):
+        self.display_height = int(height_mm)
+        self.display_selected = bool(selected)
+        self.display_order = int(order)
+        self.display_has_kfs = bool(has_kfs)
+        self.display_edit_mode = edit_mode
+
         if height_mm <= 0:
             self.setObjectName("Block_0")
         elif height_mm == 200:
@@ -63,12 +75,66 @@ class BlockButton(QPushButton):
             self.setObjectName("Block_600")
         else:
             self.setObjectName("Block_400")
-        kfs_text = "KFS" if has_kfs else "无KFS"
-        prefix = f"{order}. #{self.block_id}" if selected else f"#{self.block_id}"
+
+        self.setProperty("editMode", edit_mode)
         self.setChecked(selected)
-        self.setText(f"{prefix}\n{height_mm}mm\n[{kfs_text}]" if edit_mode == "KFS" else f"{prefix}\n{height_mm}mm\n{kfs_text}")
+
+        # objectName / dynamic property 改变后强制刷新 QSS。
         self.style().unpolish(self)
         self.style().polish(self)
+        self.update()
+
+    def paintEvent(self, event):
+        # 先让 QPushButton/QSS 画背景、边框和选中状态。
+        super().paintEvent(event)
+
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.TextAntialiasing)
+
+        rect = self.rect()
+        w = rect.width()
+        h = rect.height()
+
+        prefix = f"{self.display_order}. #{self.block_id}" if self.display_selected else f"#{self.block_id}"
+        height_text = f"{self.display_height}mm"
+
+        if self.display_has_kfs:
+            kfs_text = "★ 有KFS ★"
+            kfs_color = QColor("#ffd21f")  # 金色：醒目但不加边框
+        else:
+            kfs_text = "无KFS"
+            kfs_color = QColor("#ffffff")  # 无 KFS：白色
+
+        if self.display_edit_mode == "KFS":
+            kfs_text = f"[{kfs_text}]"
+
+        top_font = QFont("Microsoft YaHei", 16)
+        top_font.setBold(True)
+        mid_font = QFont("Microsoft YaHei", 15)
+        kfs_font = QFont("Microsoft YaHei", 13)  # KFS 字体再小一点，避免三行文字太挤
+        kfs_font.setBold(True)
+
+        # 选中时整体背景较深，文字保持白/金；未选中也保持高对比度。
+        normal_color = QColor("#ffffff")
+
+        line_h = max(20, h // 4)
+        y1 = int(h * 0.18)
+        y2 = int(h * 0.45)
+        y3 = int(h * 0.72)
+
+        painter.setPen(normal_color)
+        painter.setFont(top_font)
+        painter.drawText(0, y1, w, line_h, Qt.AlignCenter, prefix)
+
+        painter.setPen(normal_color)
+        painter.setFont(mid_font)
+        painter.drawText(0, y2, w, line_h, Qt.AlignCenter, height_text)
+
+        painter.setPen(kfs_color)
+        painter.setFont(kfs_font)
+        painter.drawText(0, y3, w, line_h, Qt.AlignCenter, kfs_text)
+
+        painter.end()
 
 
 class InfoCard(QFrame):
@@ -266,8 +332,17 @@ class MainWindow(QWidget):
         #Btn_red { background-color: #f8fafc; color: #ef4444; border: 3px solid #ef4444; font-size: 22px; } #Btn_red:checked { background-color: #ef4444; color: #ffffff; border: 4px solid #fecaca; }
         #Btn_blue { background-color: #f8fafc; color: #3b82f6; border: 3px solid #3b82f6; font-size: 22px; } #Btn_blue:checked { background-color: #3b82f6; color: #ffffff; border: 4px solid #bfdbfe; }
         #BlockGridFrame { background-color: #9fd5df; border: 3px solid #7cc4d1; border-radius: 8px; }
-        #Block_0 { background-color: #374151; border: 2px solid #6b7280; border-radius: 12px; font-size: 18px; } #Block_200 { background-color: #145c25; border: 2px solid #2f8b46; border-radius: 12px; font-size: 18px; } #Block_400 { background-color: #24733a; border: 2px solid #44a35d; border-radius: 12px; font-size: 18px; } #Block_600 { background-color: #a8c24a; border: 2px solid #d7ef5a; border-radius: 12px; font-size: 18px; }
-        #Block_0:checked, #Block_200:checked, #Block_400:checked, #Block_600:checked { border: 6px solid #facc15; background-color: #0f766e; color: #ffffff; }
+        #Block_0 { background-color: #374151; border: 2px solid #6b7280; border-radius: 12px; font-size: 18px; }
+        /* 200mm 和 400mm 颜色互换：200 用原 400 颜色，400 用原 200 颜色 */
+        #Block_200 { background-color: #24733a; border: 2px solid #44a35d; border-radius: 12px; font-size: 18px; }
+        #Block_400 { background-color: #145c25; border: 2px solid #2f8b46; border-radius: 12px; font-size: 18px; }
+        #Block_600 { background-color: #a8c24a; border: 2px solid #d7ef5a; border-radius: 12px; font-size: 18px; }
+        #Block_0:checked, #Block_200:checked, #Block_400:checked, #Block_600:checked {
+            border: 6px solid #facc15;
+            background-color: #0f766e;
+            color: #ffffff;
+        }
+
         #LogBox { background-color: #050505; border: 1px solid #333333; border-radius: 14px; color: #e5e7eb; padding: 8px; font-family: "Consolas", "Microsoft YaHei"; font-size: 12px; }
         QProgressBar { border: 1px solid #333333; border-radius: 10px; text-align: center; background-color: #171717; color: #ffffff; height: 24px; font-size: 14px; } QProgressBar::chunk { background-color: #22c55e; border-radius: 10px; }
         ''')
