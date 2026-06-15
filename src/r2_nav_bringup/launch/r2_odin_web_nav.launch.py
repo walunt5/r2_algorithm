@@ -8,12 +8,12 @@ from ament_index_python.packages import PackageNotFoundError
 from launch import LaunchDescription
 from launch.actions import DeclareLaunchArgument
 from launch.actions import ExecuteProcess
+from launch.actions import LogInfo
 from launch.conditions import IfCondition
 from launch.substitutions import LaunchConfiguration
 
 from launch_ros.actions import Node
 from launch_ros.parameter_descriptions import ParameterValue
-
 
 def load_yaml(path: str) -> dict:
     with open(path, "r", encoding="utf-8") as f:
@@ -94,7 +94,10 @@ def generate_launch_description():
     r2_nav_share = get_package_share_directory("r2_nav_bringup")
     jie_octomap_share = get_package_share_directory("jie_octomap")
     odin_ros_driver_share = get_package_share_directory("odin_ros_driver")
-    serial_comm_share = get_package_share_directory("serial_communication_pkg")
+    try:
+        serial_comm_share = get_package_share_directory("serial_communication_pkg")
+    except PackageNotFoundError:
+        serial_comm_share = ""
 
     config_path = os.path.join(r2_nav_share, "config", "r2_nav_params.yaml")
     config = load_yaml(config_path)
@@ -135,7 +138,6 @@ def generate_launch_description():
     show_map_gui_default = "true" if bool(ui.get("show_map_gui", False)) else "false"
     launch_web_default = "true" if bool(ui.get("launch_web", True)) else "false"
     launch_rosbridge_default = "true" if bool(ui.get("launch_rosbridge", True)) else "false"
-    launch_serial_default = "true" if bool(ui.get("launch_serial", True)) else "false"
     web_http_port_default = str(ui.get("web_http_port", "8080"))
 
     launch_rviz_arg = DeclareLaunchArgument(
@@ -160,7 +162,7 @@ def generate_launch_description():
     )
     launch_serial_arg = DeclareLaunchArgument(
         "launch_serial",
-        default_value=launch_serial_default,
+        default_value="true",
         description="Launch serial communication node",
     )
     launch_web_arg = DeclareLaunchArgument(
@@ -395,10 +397,10 @@ def generate_launch_description():
                 "cmd_vel_topic": "/cmd_vel",
                 "manual_cmd_vel_topic": "/web_cmd_vel",
                 "tracking_point_marker_topic": "/tracking_point_marker",
-                # "enable_tracking_debug_view": ParameterValue(
-                #     LaunchConfiguration("launch_map_gui"),
-                #     value_type=bool,
-                # ),
+                "enable_tracking_debug_view": ParameterValue(
+                    LaunchConfiguration("launch_map_gui"),
+                    value_type=bool,
+                ),
                 "map_frame": frames.get("map_frame", "map"),
                 "base_frame": frames.get("base_frame", "chassis_base_link"),
                 "base_frame_candidates": frames.get(
@@ -409,16 +411,34 @@ def generate_launch_description():
         ],
     )
 
-    cmd_vel_to_serial_node = Node(
-        package="serial_communication_pkg",
-        executable="cmd_vel_to_serial_node",
-        name="cmd_vel_to_serial_node",
-        output="screen",
-        condition=IfCondition(LaunchConfiguration("launch_serial")),
-        parameters=[
-            os.path.join(serial_comm_share, "config", "serial_params.yaml")
-        ],
-    )
+    serial_launch_actions = []
+    if serial_comm_share:
+        serial_params_file = os.path.join(
+            serial_comm_share,
+            "config",
+            "serial_params.yaml",
+        )
+
+        cmd_vel_to_serial_node = Node(
+            package="serial_communication_pkg",
+            executable="cmd_vel_to_serial_node",
+            name="cmd_vel_to_serial_node",
+            output="screen",
+            condition=IfCondition(LaunchConfiguration("launch_serial")),
+            parameters=[serial_params_file],
+        )
+        serial_launch_actions.append(cmd_vel_to_serial_node)
+    else:
+        serial_launch_actions.append(
+            LogInfo(
+                msg=(
+                    "serial_communication_pkg not found. "
+                    "Skip old cmd_vel_to_serial_node. "
+                    "This is OK when launch_serial:=false and "
+                    "techx_r2_chassis_control/chassis_serial_node is used."
+                )
+            )
+        )
 
     map_viewer_gui_node = Node(
         package="jie_octomap",
@@ -497,7 +517,7 @@ def generate_launch_description():
             occupied_marker_node,
             planner_node,
             controller_node,
-            cmd_vel_to_serial_node,
+            *serial_launch_actions,
             map_viewer_gui_node,
             web_http_server,
             rosbridge_node,

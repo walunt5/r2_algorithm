@@ -1,0 +1,11 @@
+red:
+  relocalization_bin_file: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/red/map_red.bin"
+  relocalization_pcd_file: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/red/Relocation Map.pcd"
+  map_package_dir: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/red/Relocation Map"
+  nav_goals_file: "/home/xie/techx_R2_algorithm/r2_algorithm/ui/config/red_r2_nav_goals.yaml"
+
+blue:
+  relocalization_bin_file: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/blue/map_blue.bin"
+  relocalization_pcd_file: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/blue/Relocation Map.pcd"
+  map_package_dir: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/blue/Relocation Map"
+  nav_goals_file: "/home/xie/techx_R2_algorithm/r2_algorithm/ui/config/blue_r2_nav_goals.yaml"
