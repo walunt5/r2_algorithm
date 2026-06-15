@@ -1,6 +1,6 @@
 arm_serial_node:
   ros__parameters:
-    port: /dev/ttyUSB0
+    port: /dev/r2_arm
     baudrate: 115200
     ack_timeout_ms: 100
     max_retries: 3

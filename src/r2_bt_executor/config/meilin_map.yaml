@@ -2,129 +2,250 @@ blocks:
   ENTRY:
     height: 0
     has_kfs: false
-
+    kfs_height: 0
   B1:
-    height: 0
-    has_kfs: false
-
+    height: 400
+    has_kfs: true
+    kfs_height: 400
   B2:
     height: 200
     has_kfs: false
-
+    kfs_height: 200
   B3:
-    height: 200
+    height: 400
     has_kfs: true
     kfs_height: 200
-
   B4:
-    height: 400
+    height: 200
     has_kfs: false
-
+    kfs_height: 200
   B5:
     height: 400
-    has_kfs: true
+    has_kfs: false
     kfs_height: 400
-
   B6:
-    height: 200
+    height: 600
     has_kfs: false
-
+    kfs_height: 600
   B7:
-    height: 0
+    height: 400
     has_kfs: false
-
+    kfs_height: 400
   B8:
-    height: 200
-    has_kfs: true
+    height: 600
+    has_kfs: false
     kfs_height: 200
-
   B9:
     height: 400
     has_kfs: false
-
+    kfs_height: 400
   B10:
     height: 200
-    has_kfs: true
+    has_kfs: false
     kfs_height: 400
-
   B11:
-    height: 0
+    height: 400
     has_kfs: false
-
+    kfs_height: 400
   B12:
-    height: 0
+    height: 200
     has_kfs: false
-
+    kfs_height: 200
   EXIT_ZONE:
     height: 0
     has_kfs: false
-
-
+    kfs_height: 0
 routes:
   zone2_main:
     start_block: ENTRY
     start_height: 0
     blocks:
-      - B2
-      - B3
-      - EXIT_ZONE
-
-
+    - B1
+    - B2
+    - B5
+    - B8
+    - B11
+    - EXIT_ZONE
 transitions:
+  ENTRY->B1:
+    edge_id: ENTRY_TO_B1
+    approach_goal_name: ENTRY_TO_B1_APPROACH
+    landing_goal_name: B1_LANDING
   ENTRY->B2:
     edge_id: ENTRY_TO_B2
     approach_goal_name: ENTRY_TO_B2_APPROACH
     landing_goal_name: B2_LANDING
-
+  ENTRY->B3:
+    edge_id: ENTRY_TO_B3
+    approach_goal_name: ENTRY_TO_B3_APPROACH
+    landing_goal_name: B3_LANDING
+  B1->B2:
+    edge_id: B1_TO_B2
+    approach_goal_name: B1_TO_B2_APPROACH
+    landing_goal_name: B2_LANDING
+  B2->B1:
+    edge_id: B2_TO_B1
+    approach_goal_name: B2_TO_B1_APPROACH
+    landing_goal_name: B1_LANDING
   B2->B3:
     edge_id: B2_TO_B3
     approach_goal_name: B2_TO_B3_APPROACH
     landing_goal_name: B3_LANDING
-
-  B2->B4:
-    edge_id: B2_TO_B4
-    approach_goal_name: B2_TO_B4_APPROACH
+  B3->B2:
+    edge_id: B3_TO_B2
+    approach_goal_name: B3_TO_B2_APPROACH
+    landing_goal_name: B2_LANDING
+  B1->B4:
+    edge_id: B1_TO_B4
+    approach_goal_name: B1_TO_B4_APPROACH
     landing_goal_name: B4_LANDING
-  
+  B4->B1:
+    edge_id: B4_TO_B1
+    approach_goal_name: B4_TO_B1_APPROACH
+    landing_goal_name: B1_LANDING
   B2->B5:
     edge_id: B2_TO_B5
     approach_goal_name: B2_TO_B5_APPROACH
     landing_goal_name: B5_LANDING
-
-  B2->B6:
-    edge_id: B2_TO_B6
-    approach_goal_name: B2_TO_B6_APPROACH
+  B5->B2:
+    edge_id: B5_TO_B2
+    approach_goal_name: B5_TO_B2_APPROACH
+    landing_goal_name: B2_LANDING
+  B3->B6:
+    edge_id: B3_TO_B6
+    approach_goal_name: B3_TO_B6_APPROACH
     landing_goal_name: B6_LANDING
-
-  B3->EXIT_ZONE:
-    edge_id: B3_TO_EXIT_ZONE
-    approach_goal_name: B3_TO_EXIT_ZONE_APPROACH
+  B6->B3:
+    edge_id: B6_TO_B3
+    approach_goal_name: B6_TO_B3_APPROACH
+    landing_goal_name: B3_LANDING
+  B4->B5:
+    edge_id: B4_TO_B5
+    approach_goal_name: B4_TO_B5_APPROACH
+    landing_goal_name: B5_LANDING
+  B5->B4:
+    edge_id: B5_TO_B4
+    approach_goal_name: B5_TO_B4_APPROACH
+    landing_goal_name: B4_LANDING
+  B5->B6:
+    edge_id: B5_TO_B6
+    approach_goal_name: B5_TO_B6_APPROACH
+    landing_goal_name: B6_LANDING
+  B6->B5:
+    edge_id: B6_TO_B5
+    approach_goal_name: B6_TO_B5_APPROACH
+    landing_goal_name: B5_LANDING
+  B4->B7:
+    edge_id: B4_TO_B7
+    approach_goal_name: B4_TO_B7_APPROACH
+    landing_goal_name: B7_LANDING
+  B7->B4:
+    edge_id: B7_TO_B4
+    approach_goal_name: B7_TO_B4_APPROACH
+    landing_goal_name: B4_LANDING
+  B5->B8:
+    edge_id: B5_TO_B8
+    approach_goal_name: B5_TO_B8_APPROACH
+    landing_goal_name: B8_LANDING
+  B8->B5:
+    edge_id: B8_TO_B5
+    approach_goal_name: B8_TO_B5_APPROACH
+    landing_goal_name: B5_LANDING
+  B6->B9:
+    edge_id: B6_TO_B9
+    approach_goal_name: B6_TO_B9_APPROACH
+    landing_goal_name: B9_LANDING
+  B9->B6:
+    edge_id: B9_TO_B6
+    approach_goal_name: B9_TO_B6_APPROACH
+    landing_goal_name: B6_LANDING
+  B7->B8:
+    edge_id: B7_TO_B8
+    approach_goal_name: B7_TO_B8_APPROACH
+    landing_goal_name: B8_LANDING
+  B8->B7:
+    edge_id: B8_TO_B7
+    approach_goal_name: B8_TO_B7_APPROACH
+    landing_goal_name: B7_LANDING
+  B8->B9:
+    edge_id: B8_TO_B9
+    approach_goal_name: B8_TO_B9_APPROACH
+    landing_goal_name: B9_LANDING
+  B9->B8:
+    edge_id: B9_TO_B8
+    approach_goal_name: B9_TO_B8_APPROACH
+    landing_goal_name: B8_LANDING
+  B7->B10:
+    edge_id: B7_TO_B10
+    approach_goal_name: B7_TO_B10_APPROACH
+    landing_goal_name: B10_LANDING
+  B10->B7:
+    edge_id: B10_TO_B7
+    approach_goal_name: B10_TO_B7_APPROACH
+    landing_goal_name: B7_LANDING
+  B8->B11:
+    edge_id: B8_TO_B11
+    approach_goal_name: B8_TO_B11_APPROACH
+    landing_goal_name: B11_LANDING
+  B11->B8:
+    edge_id: B11_TO_B8
+    approach_goal_name: B11_TO_B8_APPROACH
+    landing_goal_name: B8_LANDING
+  B9->B12:
+    edge_id: B9_TO_B12
+    approach_goal_name: B9_TO_B12_APPROACH
+    landing_goal_name: B12_LANDING
+  B12->B9:
+    edge_id: B12_TO_B9
+    approach_goal_name: B12_TO_B9_APPROACH
+    landing_goal_name: B9_LANDING
+  B10->B11:
+    edge_id: B10_TO_B11
+    approach_goal_name: B10_TO_B11_APPROACH
+    landing_goal_name: B11_LANDING
+  B11->B10:
+    edge_id: B11_TO_B10
+    approach_goal_name: B11_TO_B10_APPROACH
+    landing_goal_name: B10_LANDING
+  B11->B12:
+    edge_id: B11_TO_B12
+    approach_goal_name: B11_TO_B12_APPROACH
+    landing_goal_name: B12_LANDING
+  B12->B11:
+    edge_id: B12_TO_B11
+    approach_goal_name: B12_TO_B11_APPROACH
+    landing_goal_name: B11_LANDING
+  B10->EXIT_ZONE:
+    edge_id: B10_TO_EXIT_ZONE
+    approach_goal_name: B10_TO_EXIT_ZONE_APPROACH
     landing_goal_name: EXIT_ZONE_LANDING
-
-
+  B11->EXIT_ZONE:
+    edge_id: B11_TO_EXIT_ZONE
+    approach_goal_name: B11_TO_EXIT_ZONE_APPROACH
+    landing_goal_name: EXIT_ZONE_LANDING
+  B12->EXIT_ZONE:
+    edge_id: B12_TO_EXIT_ZONE
+    approach_goal_name: B12_TO_EXIT_ZONE_APPROACH
+    landing_goal_name: EXIT_ZONE_LANDING
 arm_actions:
   target_ids:
     kfs_suction_arm: 2
-
   kfs_pick_by_delta:
-    "0": 528
-    "200": 529
-    "-200": 530
-    "400": 531
-    "-400": 532
-
+    '0': 528
+    '200': 529
+    '-200': 530
+    '400': 531
+    '-400': 532
   kfs_lift_up: 544
   kfs_transfer_to_storage: 560
-
   end_effectors:
+    gripper_claw: 1
     arm_suction_pump: 2
     rear_storage_pump: 3
-
-
 chassis_cmds:
   by_delta:
-    "0": MOVE_FLAT
-    "200": CLIMB_200
-    "400": CLIMB_400
-    "-200": DESCEND_200
-    "-400": DESCEND_400
+    '0': MOVE_FLAT
+    '200': CLIMB_200
+    '400': CLIMB_400
+    '-200': DESCEND_200
+    '-400': DESCEND_400

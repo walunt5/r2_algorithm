@@ -1,6 +1,6 @@
 chassis_serial_node:
   ros__parameters:
-    port: /dev/ttyUSB0
+    port: /dev/r2_chassis
     baudrate: 115200
     serial_timeout_sec: 0.02
     velocity_rate_hz: 30.0

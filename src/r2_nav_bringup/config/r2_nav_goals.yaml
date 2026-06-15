@@ -1,67 +1,280 @@
 goals:
-  GYM_HEAD_RACK:
+  ENTRY_TO_B1_APPROACH:
     frame_id: map
-    x: 1.2
-    y: 0.8
-    z: 0.0
-    yaw: 1.57
-  GYM_TO_MEILIN_ENTRY:
-    frame_id: map
-    x: 3.5
-    y: 1.2
+    x: 0.0
+    y: 0.0
     z: 0.0
     yaw: 0.0
-  MEILIN_FLAT_TO_EXIT:
-    frame_id: map
-    x: 6.2
-    y: -0.5
-    z: 0.0
-    yaw: -1.57
-  MEILIN_TO_BATTLE_RAMP:
-    frame_id: map
-    x: 7.8
-    y: 1.4
-    z: 0.3
-    yaw: 0.0
-  TEST_PASSABLE_POINT:
-    frame_id: map
-    x: 6.1448036616089405
-    y: 0.4948465767010584
-    z: 0.20000000298023046
-    yaw: 1.7786
+
   ENTRY_TO_B2_APPROACH:
     frame_id: map
-    x: 2.118819
-    y: -0.42821
-    z: -0.190673
-    yaw: -0.054035
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  ENTRY_TO_B3_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B1_TO_B2_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B2_TO_B1_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
   B2_TO_B3_APPROACH:
     frame_id: map
-    x: 1.953999
-    y: 0.237907
-    z: -0.194115
-    yaw: 0.158325
-  B3_TO_EXIT_ZONE_APPROACH:
-    frame_id: map
-    x: 1.25
-    y: 0.89
+    x: 0.0
+    y: 0.0
     z: 0.0
     yaw: 0.0
-  B3_LANDING:
+
+  B3_TO_B2_APPROACH:
     frame_id: map
     x: 0.0
     y: 0.0
     z: 0.0
     yaw: 0.0
-  EXIT_ZONE_LANDING:
+
+  B1_TO_B4_APPROACH:
     frame_id: map
     x: 0.0
     y: 0.0
     z: 0.0
     yaw: 0.0
-  B2_TO_B4_APPROACH:
+
+  B4_TO_B1_APPROACH:
     frame_id: map
-    x: 1.955551
-    y: 0.241325
-    z: -0.194954
-    yaw: 0.158628
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B2_TO_B5_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B5_TO_B2_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B3_TO_B6_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B6_TO_B3_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B4_TO_B5_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B5_TO_B4_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B5_TO_B6_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B6_TO_B5_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B4_TO_B7_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B7_TO_B4_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B5_TO_B8_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B8_TO_B5_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B6_TO_B9_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B9_TO_B6_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B7_TO_B8_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B8_TO_B7_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B8_TO_B9_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B9_TO_B8_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B7_TO_B10_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B10_TO_B7_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B8_TO_B11_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B11_TO_B8_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B9_TO_B12_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B12_TO_B9_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B10_TO_B11_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B11_TO_B10_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B11_TO_B12_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B12_TO_B11_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B10_TO_EXIT_ZONE_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B11_TO_EXIT_ZONE_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+
+  B12_TO_EXIT_ZONE_APPROACH:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
