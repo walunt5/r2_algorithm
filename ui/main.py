@@ -389,6 +389,53 @@ class MainWindow(QWidget):
         self.stack.setCurrentWidget(self.home_page)
     def reset_all(self):
         self.manager.reset(); self.home_page.update_team("UNKNOWN"); self.home_page.update_system({"current_team":"UNKNOWN","system_started":False,"system_ready":False,"system_starting":False,"system_progress":0}); self.meilin_prepare_page.update_state("UNKNOWN", [], {}, "ROUTE", self.manager.block_heights); self.gym_running_page.log_box.clear(); self.meilin_running_page.log_box.clear(); self.stack.setCurrentWidget(self.home_page)
+    def closeEvent(self, event):
+        """
+        用户点击窗口右上角 X 时触发。
+        目的：
+        1. 如果系统/行为树正在运行，提示用户确认
+        2. 确认关闭后，自动执行 reset()
+        3. 避免 UI 关闭后 ROS2 launch / 行为树进程继续后台运行
+        """
+        has_running_process = (
+            self.manager.tree_running
+            or self.manager.system_started
+            or self.manager.system_ready
+            or self.manager.system_starting
+            or self.manager.system_process is not None
+            or self.manager.gym_bt_process is not None
+            or self.manager.meilin_bt_process is not None
+        )
+
+        if has_running_process:
+            reply = QMessageBox.question(
+                self,
+                "确认退出",
+                "检测到系统或行为树进程可能仍在运行。\n\n"
+                "直接关闭窗口会自动执行复位：\n"
+                "1. 发布 /cmd_vel=0\n"
+                "2. 停止当前行为树\n"
+                "3. Ctrl+C 关闭总 launch\n\n"
+                "确定要退出吗？",
+                QMessageBox.Yes | QMessageBox.No,
+                QMessageBox.No,
+            )
+
+            if reply != QMessageBox.Yes:
+                event.ignore()
+                return
+
+            try:
+                self.manager.reset()
+            except Exception as e:
+                QMessageBox.warning(
+                    self,
+                    "退出时复位失败",
+                    f"关闭窗口时执行复位失败：\n{e}\n\n"
+                    "窗口会继续关闭，但你需要手动检查 ROS2 进程。",
+                )
+
+        event.accept()    
     def on_state_changed(self,data):
         state=data.get("state","IDLE"); step=data.get("current_step","-"); progress=int(data.get("progress",0)); team=data.get("current_team","UNKNOWN"); route_text=data.get("manual_route_text","未选择"); kfs_text=data.get("kfs_text","未标记"); team_text="红方" if team=="RED" else ("蓝方" if team=="BLUE" else "未选择")
         self.home_page.status_card.set_body(data.get("message","空闲")); self.home_page.update_team(team); self.home_page.update_system(data)
