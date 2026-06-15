@@ -1,0 +1,169 @@
+<root BTCPP_format="4" main_tree_to_execute="TestClimb400ThenDescend400">
+
+  <!--
+    文件建议保存到：
+      src/r2_bt_executor/config/test_chassis_step_command.xml
+
+    默认执行：
+      TestClimb200ThenDescend200
+
+    如果要切换测试内容，修改 root 里的 main_tree_to_execute，例如：
+      main_tree_to_execute="TestMoveFlat"
+      main_tree_to_execute="TestClimb400ThenDescend400"
+      main_tree_to_execute="TestFullChassisStepCommands"
+  -->
+
+  <BehaviorTree ID="TestMoveFlat">
+    <Sequence name="test_move_flat">
+      <R2ChassisStepCommandNode
+        action_name="/r2_chassis/step_command"
+        cmd_type="MOVE_FLAT"
+        from_block="TEST_START"
+        target_block="TEST_FLAT"
+        current_h="0"
+        target_h="0"
+        edge_id="TEST_MOVE_FLAT"
+        timeout_sec="10.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="15000" />
+
+      <R2ForceSuccess />
+    </Sequence>
+  </BehaviorTree>
+
+
+  <BehaviorTree ID="TestClimb200ThenDescend200">
+    <Sequence name="test_climb_200_then_descend_200">
+
+      <R2ChassisStepCommandNode
+        action_name="/r2_chassis/step_command"
+        cmd_type="CLIMB_200"
+        from_block="TEST_0MM"
+        target_block="TEST_200MM"
+        current_h="0"
+        target_h="200"
+        edge_id="TEST_CLIMB_200"
+        timeout_sec="15.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="20000" />
+
+      <R2ChassisStepCommandNode
+        action_name="/r2_chassis/step_command"
+        cmd_type="DESCEND_200"
+        from_block="TEST_200MM"
+        target_block="TEST_0MM"
+        current_h="200"
+        target_h="0"
+        edge_id="TEST_DESCEND_200"
+        timeout_sec="15.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="20000" />
+
+      <R2ForceSuccess />
+
+    </Sequence>
+  </BehaviorTree>
+
+
+  <BehaviorTree ID="TestClimb400ThenDescend400">
+    <Sequence name="test_climb_400_then_descend_400">
+
+      <R2ChassisStepCommandNode
+        action_name="/r2_chassis/step_command"
+        cmd_type="CLIMB_400"
+        from_block="TEST_0MM"
+        target_block="TEST_400MM"
+        current_h="0"
+        target_h="400"
+        edge_id="TEST_CLIMB_400"
+        timeout_sec="20.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="25000" />
+
+      <!-- <R2ChassisStepCommandNode
+        action_name="/r2_chassis/step_command"
+        cmd_type="DESCEND_400"
+        from_block="TEST_400MM"
+        target_block="TEST_0MM"
+        current_h="400"
+        target_h="0"
+        edge_id="TEST_DESCEND_400"
+        timeout_sec="20.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="25000" /> -->
+
+      <R2ForceSuccess />
+
+    </Sequence>
+  </BehaviorTree>
+
+
+  <BehaviorTree ID="TestFullChassisStepCommands">
+    <Sequence name="test_full_chassis_step_commands">
+
+      <R2ChassisStepCommandNode
+        action_name="/r2_chassis/step_command"
+        cmd_type="MOVE_FLAT"
+        from_block="TEST_START"
+        target_block="TEST_FLAT"
+        current_h="0"
+        target_h="0"
+        edge_id="TEST_MOVE_FLAT"
+        timeout_sec="10.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="15000" />
+
+      <R2ChassisStepCommandNode
+        action_name="/r2_chassis/step_command"
+        cmd_type="CLIMB_200"
+        from_block="TEST_0MM"
+        target_block="TEST_200MM"
+        current_h="0"
+        target_h="200"
+        edge_id="TEST_CLIMB_200"
+        timeout_sec="15.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="20000" />
+
+      <R2ChassisStepCommandNode
+        action_name="/r2_chassis/step_command"
+        cmd_type="DESCEND_200"
+        from_block="TEST_200MM"
+        target_block="TEST_0MM"
+        current_h="200"
+        target_h="0"
+        edge_id="TEST_DESCEND_200"
+        timeout_sec="15.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="20000" />
+
+      <R2ChassisStepCommandNode
+        action_name="/r2_chassis/step_command"
+        cmd_type="CLIMB_400"
+        from_block="TEST_0MM"
+        target_block="TEST_400MM"
+        current_h="0"
+        target_h="400"
+        edge_id="TEST_CLIMB_400"
+        timeout_sec="20.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="25000" />
+
+      <R2ChassisStepCommandNode
+        action_name="/r2_chassis/step_command"
+        cmd_type="DESCEND_400"
+        from_block="TEST_400MM"
+        target_block="TEST_0MM"
+        current_h="400"
+        target_h="0"
+        edge_id="TEST_DESCEND_400"
+        timeout_sec="20.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="25000" />
+
+      <R2ForceSuccess />
+
+    </Sequence>
+  </BehaviorTree>
+
+</root>
