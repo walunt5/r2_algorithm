@@ -61,8 +61,6 @@ routes:
     start_height: 0
     blocks:
     - B1
-    - B2
-    - B5
     - B4
     - B7
     - B10

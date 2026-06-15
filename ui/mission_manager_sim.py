@@ -1,4 +1,5 @@
 import os
+import re
 import signal
 import subprocess
 import time
@@ -39,6 +40,8 @@ class MissionManagerSim(QObject):
         self.process_log_dir = self.get_workspace_root() / "log" / "ui_process"
         self.process_log_dir.mkdir(parents=True, exist_ok=True)
         self.process_log_files = {}
+        self.process_log_read_pos = {}
+        self.last_bt_node_name = ""
 
         self.odin_ok = True
         self.lower_mcu_ok = True
@@ -52,6 +55,7 @@ class MissionManagerSim(QObject):
 
         # 监控由 UI 启动的 ros2 launch / 行为树进程。
         # 行为树自己结束或失败时，UI 能自动显示结果，不需要手动点“停止任务”。
+        # 同时读取行为树日志，把“当前执行到哪个行为树积木块”显示到 UI。
         self._process_monitor_timer = QTimer()
         self._process_monitor_timer.timeout.connect(self._monitor_processes)
         self._process_monitor_timer.start(500)
@@ -203,6 +207,7 @@ class MissionManagerSim(QObject):
             preexec_fn=os.setsid,
         )
         self.process_log_files[name] = log_file
+        self.process_log_read_pos[name] = 0
         self.log(f"已启动进程 {name}，pid={proc.pid}")
         self.log(f"日志文件：{log_file}")
         return proc
@@ -222,6 +227,115 @@ class MissionManagerSim(QObject):
         except Exception as e:
             return f"读取日志失败：{e}"
 
+    # -------------------------
+    # 行为树日志 -> UI 当前步骤
+    # -------------------------
+    def bt_node_display_name(self, node_name: str) -> str:
+        """把行为树节点名转换成 UI 上更容易看懂的中文说明。"""
+        mapping = {
+            "R2GetRouteFromYamlNode": "读取二区路线配置",
+            "R2SetBlackboardStringNode": "设置当前方块",
+            "R2SetBlackboardIntNode": "设置高度/路线索引",
+            "R2CheckRouteFinishedNode": "检查路线是否完成",
+            "R2GetNextManualBlockNode": "获取下一个目标方块",
+            "R2GetTransitionInfoFromYamlNode": "读取方块间过渡信息",
+            "R2CheckOdinLocalizationOkMockNode": "检查 Odin 定位状态",
+            "R2NavigateToPoseActionNode": "导航到目标接近点",
+            "R2OdinPosePidAlignActionNode": "执行 Odin PID 精对准",
+            "R2GetBlockHeightFromYamlNode": "读取目标方块高度",
+            "R2CheckBlockHasKfsFromYamlNode": "判断目标方块是否有 KFS",
+            "R2BlackboardCheckBoolNode": "判断条件是否满足",
+            "R2GetBlockKfsHeightFromYamlNode": "读取 KFS 高度",
+            "R2CalculateHeightDeltaNode": "计算高度差",
+            "R2BuildKfsPickActionIdFromYamlNode": "生成 KFS 吸取动作编号",
+            "R2GetArmActionConfigFromYamlNode": "读取机械臂动作配置",
+            "R2SetEndEffectorNode": "控制吸盘/气泵",
+            "R2ExecuteArmActionNode": "执行机械臂动作",
+            "R2BuildChassisCmdTypeFromYamlNode": "生成底盘爬台阶指令",
+            "R2ChassisStepCommandNode": "执行底盘爬台阶动作",
+            "R2IncrementIntNode": "更新路线索引",
+            "R2BlackboardCheckStringNode": "检查是否到达终点",
+            "R2ForceSuccess": "强制返回成功",
+            "R2WaitForever": "等待",
+        }
+        return mapping.get(node_name, node_name)
+
+    def extract_bt_node_name_from_log_line(self, line: str):
+        """从一行行为树日志里提取 R2xxxNode / R2xxxActionNode 名字。"""
+        match = re.search(r"\[(R2[A-Za-z0-9_]*(?:Node|ActionNode|MockNode|Success|Forever))\]", line)
+        if match:
+            return match.group(1)
+        return None
+
+    def handle_bt_log_line_for_ui(self, task_name: str, line: str):
+        """根据行为树日志实时更新 UI 当前步骤。"""
+        node_name = self.extract_bt_node_name_from_log_line(line)
+        if not node_name:
+            return
+
+        # 避免同一个节点在日志里连续打印时重复刷新 UI。
+        if node_name == self.last_bt_node_name:
+            return
+
+        self.last_bt_node_name = node_name
+        display_name = self.bt_node_display_name(node_name)
+
+        # 尝试把日志里的关键信息也带到 UI 上，方便你一眼看懂当前目标。
+        detail = ""
+        if "to_block=" in line:
+            m = re.search(r"to_block=([A-Za-z0-9_]+)", line)
+            if m:
+                detail = f"\n目标方块：{m.group(1)}"
+        elif "goal_name=" in line:
+            m = re.search(r"goal_name=([A-Za-z0-9_]+)", line)
+            if m:
+                detail = f"\n导航目标：{m.group(1)}"
+        elif "from_block=" in line and "to_block=" in line:
+            m1 = re.search(r"from_block=([A-Za-z0-9_]+)", line)
+            m2 = re.search(r"to_block=([A-Za-z0-9_]+)", line)
+            if m1 and m2:
+                detail = f"\n路径：{m1.group(1)} → {m2.group(1)}"
+
+        if task_name == "meilin_bt":
+            self.current_step = f"正在执行：{display_name}\n节点：{node_name}{detail}"
+            self.emit_state(self.current_step)
+
+        elif task_name == "gym_bt":
+            self.current_step = f"一区正在执行：{display_name}\n节点：{node_name}{detail}"
+            self.emit_state(self.current_step)
+
+    def poll_process_log_new_lines(self, name: str, max_read_chars: int = 12000):
+        """只读取某个进程日志中新增加的内容，用来实时更新 UI。"""
+        log_file = self.process_log_files.get(name)
+        if not log_file:
+            return
+
+        log_file = Path(log_file)
+        if not log_file.exists():
+            return
+
+        try:
+            last_pos = self.process_log_read_pos.get(name, 0)
+            file_size = log_file.stat().st_size
+
+            # 如果日志被清空或重建，重新从头读。
+            if last_pos > file_size:
+                last_pos = 0
+
+            with open(log_file, "r", encoding="utf-8", errors="ignore") as f:
+                f.seek(last_pos)
+                new_text = f.read(max_read_chars)
+                self.process_log_read_pos[name] = f.tell()
+
+            if not new_text:
+                return
+
+            for line in new_text.splitlines():
+                self.handle_bt_log_line_for_ui(name, line)
+
+        except Exception as e:
+            self.log(f"读取 {name} 实时日志失败：{e}")
+
     def bt_log_has_failure(self, text: str) -> bool:
         failure_keywords = [
             "Behavior tree finished with FAILURE",
@@ -240,6 +354,13 @@ class MissionManagerSim(QObject):
         return any(k in text for k in success_keywords)
 
     def _monitor_processes(self):
+        # 行为树运行时，实时读取日志，把当前执行到的节点显示到 UI。
+        if self.meilin_bt_process is not None and self.meilin_bt_process.poll() is None:
+            self.poll_process_log_new_lines("meilin_bt")
+
+        if self.gym_bt_process is not None and self.gym_bt_process.poll() is None:
+            self.poll_process_log_new_lines("gym_bt")
+
         self._monitor_meilin_bt_process()
         self._monitor_gym_bt_process()
         self._monitor_system_process()
@@ -248,6 +369,9 @@ class MissionManagerSim(QObject):
         proc = self.meilin_bt_process
         if proc is None or proc.poll() is None:
             return
+
+        # 进程已经退出时，再补读最后一次日志，避免漏掉最后一个节点。
+        self.poll_process_log_new_lines("meilin_bt")
 
         returncode = proc.returncode
         tail = self.read_process_log_tail("meilin_bt")
@@ -287,6 +411,8 @@ class MissionManagerSim(QObject):
         proc = self.gym_bt_process
         if proc is None or proc.poll() is None:
             return
+
+        self.poll_process_log_new_lines("gym_bt")
 
         returncode = proc.returncode
         tail = self.read_process_log_tail("gym_bt")
@@ -669,6 +795,7 @@ class MissionManagerSim(QObject):
             return
 
         try:
+            self.last_bt_node_name = ""
             self.gym_bt_process = self.start_ros_process(
                 "gym_bt",
                 f"ros2 launch r2_bt_bringup run_bt.launch.py xml_file_name:={xml_file_name}",
@@ -722,6 +849,7 @@ class MissionManagerSim(QObject):
             return
 
         try:
+            self.last_bt_node_name = ""
             self.meilin_bt_process = self.start_ros_process(
                 "meilin_bt",
                 f"ros2 launch r2_bt_bringup run_bt.launch.py xml_file_name:={xml_file_name}",
@@ -797,5 +925,6 @@ class MissionManagerSim(QObject):
         self.current_step = "-"
         self.assembly_count = 0
         self.progress = 0
+        self.last_bt_node_name = ""
         self.load_meilin_map_cache()
         self.emit_state("系统已复位：总 launch 已关闭，UI 已回到初始状态")
