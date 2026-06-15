@@ -1,0 +1,182 @@
+<root BTCPP_format="4" main_tree_to_execute="TestLiftEachMotorTo100Then0">
+
+  <!--
+    文件建议保存到：
+      src/r2_bt_executor/config/test_lift_control.xml
+
+    默认执行：
+      TestLiftTo200
+
+    可切换 main_tree_to_execute：
+      TestLiftTo0
+      TestLiftTo200
+      TestLiftTo400
+      TestLift200Then0
+      TestLift400Then0
+      TestLiftEachMotorTo100Then0
+
+    mask 说明：
+      1 = 只控制 1 号升降
+      2 = 只控制 2 号升降
+      4 = 只控制 3 号升降
+      7 = 同时控制 1/2/3 号升降，整车一起升降
+  -->
+
+
+  <BehaviorTree ID="TestLiftTo0">
+    <Sequence name="test_lift_to_0">
+      <R2LiftControlNode
+        action_name="/r2_chassis/lift_control"
+        target_h_mm="0"
+        mask="7"
+        timeout_sec="20.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="25000" />
+
+      <R2ForceSuccess />
+    </Sequence>
+  </BehaviorTree>
+
+
+  <BehaviorTree ID="TestLiftTo200">
+    <Sequence name="test_lift_to_200">
+      <R2LiftControlNode
+        action_name="/r2_chassis/lift_control"
+        target_h_mm="200"
+        mask="7"
+        timeout_sec="20.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="25000" />
+
+      <R2ForceSuccess />
+    </Sequence>
+  </BehaviorTree>
+
+
+  <BehaviorTree ID="TestLiftTo400">
+    <Sequence name="test_lift_to_400">
+      <R2LiftControlNode
+        action_name="/r2_chassis/lift_control"
+        target_h_mm="400"
+        mask="7"
+        timeout_sec="25.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="30000" />
+
+      <R2ForceSuccess />
+    </Sequence>
+  </BehaviorTree>
+
+
+  <BehaviorTree ID="TestLift200Then0">
+    <Sequence name="test_lift_200_then_0">
+
+      <R2LiftControlNode
+        action_name="/r2_chassis/lift_control"
+        target_h_mm="200"
+        mask="7"
+        timeout_sec="20.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="25000" />
+
+      <R2LiftControlNode
+        action_name="/r2_chassis/lift_control"
+        target_h_mm="0"
+        mask="7"
+        timeout_sec="20.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="25000" />
+
+      <R2ForceSuccess />
+
+    </Sequence>
+  </BehaviorTree>
+
+
+  <BehaviorTree ID="TestLift400Then0">
+    <Sequence name="test_lift_400_then_0">
+
+      <R2LiftControlNode
+        action_name="/r2_chassis/lift_control"
+        target_h_mm="400"
+        mask="7"
+        timeout_sec="25.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="30000" />
+
+      <R2LiftControlNode
+        action_name="/r2_chassis/lift_control"
+        target_h_mm="0"
+        mask="7"
+        timeout_sec="25.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="30000" />
+
+      <R2ForceSuccess />
+
+    </Sequence>
+  </BehaviorTree>
+
+
+  <BehaviorTree ID="TestLiftEachMotorTo100Then0">
+    <Sequence name="test_each_lift_motor_to_100_then_0">
+
+      <!-- 只测试 1 号升降 -->
+      <R2LiftControlNode
+        action_name="/r2_chassis/lift_control"
+        target_h_mm="100"
+        mask="7"
+        timeout_sec="15.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="20000" />
+
+      <R2LiftControlNode
+        action_name="/r2_chassis/lift_control"
+        target_h_mm="0"
+        mask="7"
+        timeout_sec="15.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="20000" />
+
+
+      <!-- 只测试 2 号升降 -->
+      <R2LiftControlNode
+        action_name="/r2_chassis/lift_control"
+        target_h_mm="100"
+        mask="7"
+        timeout_sec="15.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="20000" />
+
+      <R2LiftControlNode
+        action_name="/r2_chassis/lift_control"
+        target_h_mm="0"
+        mask="7"
+        timeout_sec="15.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="20000" />
+
+
+      <!-- 只测试 3 号升降 -->
+      <R2LiftControlNode
+        action_name="/r2_chassis/lift_control"
+        target_h_mm="100"
+        mask="7"
+        timeout_sec="15.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="20000" />
+
+      <R2LiftControlNode
+        action_name="/r2_chassis/lift_control"
+        target_h_mm="0"
+        mask="7"
+        timeout_sec="15.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="20000" />
+
+      <R2ForceSuccess />
+
+    </Sequence>
+  </BehaviorTree>
+
+</root>
