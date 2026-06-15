@@ -3,7 +3,7 @@ goals:
     frame_id: map
     x: 0.0
     y: 0.0
-    z: 0.0
+    z: 1.0
     yaw: 0.0
 
   ENTRY_TO_B2_APPROACH:

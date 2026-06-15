@@ -1,5 +1,6 @@
 import os
 import re
+import shutil
 import signal
 import subprocess
 import time
@@ -89,6 +90,28 @@ class MissionManagerSim(QObject):
     def get_install_meilin_map_path(self):
         return self.get_workspace_root() / "install" / "r2_bt_executor" / "share" / "r2_bt_executor" / "config" / "meilin_map.yaml"
 
+    def get_field_profiles_path(self):
+        return self.get_workspace_root() / "ui" / "config" / "field_profiles.yaml"
+
+    def get_source_nav_params_path(self):
+        return self.get_workspace_root() / "src" / "r2_nav_bringup" / "config" / "r2_nav_params.yaml"
+
+    def get_install_nav_params_path(self):
+        return self.get_workspace_root() / "install" / "r2_nav_bringup" / "share" / "r2_nav_bringup" / "config" / "r2_nav_params.yaml"
+
+    def get_source_nav_goals_path(self):
+        return self.get_workspace_root() / "src" / "r2_nav_bringup" / "config" / "r2_nav_goals.yaml"
+
+    def get_install_nav_goals_path(self):
+        return self.get_workspace_root() / "install" / "r2_nav_bringup" / "share" / "r2_nav_bringup" / "config" / "r2_nav_goals.yaml"
+
+    def resolve_config_path(self, path_value: str):
+        """支持绝对路径，也支持相对 r2_algorithm 根目录的路径。"""
+        p = Path(str(path_value).strip()).expanduser()
+        if not p.is_absolute():
+            p = self.get_workspace_root() / p
+        return p.resolve()
+
     def get_default_meilin_map_path(self):
         return str(self.get_source_meilin_map_path())
 
@@ -129,6 +152,105 @@ class MissionManagerSim(QObject):
         yaml_path.parent.mkdir(parents=True, exist_ok=True)
         with open(yaml_path, "w", encoding="utf-8") as f:
             yaml.safe_dump(data, f, allow_unicode=True, sort_keys=False, default_flow_style=False)
+
+    def load_team_nav_profile(self):
+        """
+        启动系统前，根据 UI 当前选择的 RED / BLUE：
+        1. 读取 ui/config/field_profiles.yaml
+        2. 修改 src 和 install 里的 r2_nav_params.yaml
+        3. 把对应红/蓝方 r2_nav_goals.yaml 同步到 src 和 install
+        """
+        if self.current_team not in ["RED", "BLUE"]:
+            return False, "请先选择红方或蓝方"
+
+        profile_key = "red" if self.current_team == "RED" else "blue"
+        field_profiles_path = self.get_field_profiles_path()
+
+        if not field_profiles_path.exists():
+            return False, f"找不到红蓝方配置文件：\n{field_profiles_path}"
+
+        try:
+            with open(field_profiles_path, "r", encoding="utf-8") as f:
+                profiles = yaml.safe_load(f) or {}
+        except Exception as e:
+            return False, f"读取 field_profiles.yaml 失败：{e}"
+
+        if profile_key not in profiles:
+            return False, f"field_profiles.yaml 中没有 {profile_key} 配置"
+
+        profile = profiles.get(profile_key) or {}
+
+        required_keys = [
+            "relocalization_bin_file",
+            "relocalization_pcd_file",
+            "map_package_dir",
+            "nav_goals_file",
+        ]
+
+        for key in required_keys:
+            if key not in profile or not str(profile.get(key, "")).strip():
+                return False, f"{profile_key} 配置缺少字段：{key}"
+
+        relocalization_bin_file = self.resolve_config_path(profile["relocalization_bin_file"])
+        relocalization_pcd_file = self.resolve_config_path(profile["relocalization_pcd_file"])
+        map_package_dir = self.resolve_config_path(profile["map_package_dir"])
+        nav_goals_file = self.resolve_config_path(profile["nav_goals_file"])
+
+        # 启动前检查文件/目录是否真的存在。这样可以避免 launch 启动一半才报错。
+        if not relocalization_bin_file.is_file():
+            return False, f"Odin 重定位 bin 地图不存在：\n{relocalization_bin_file}"
+
+        if not relocalization_pcd_file.is_file():
+            return False, f"PCD 可视化地图不存在：\n{relocalization_pcd_file}"
+
+        if not map_package_dir.is_dir():
+            return False, f"OctoMap 地图包目录不存在：\n{map_package_dir}"
+
+        if not nav_goals_file.is_file():
+            return False, f"红/蓝方导航目标点文件不存在：\n{nav_goals_file}"
+
+        source_nav_params_path = self.get_source_nav_params_path()
+        install_nav_params_path = self.get_install_nav_params_path()
+
+        if not source_nav_params_path.exists():
+            return False, f"找不到源码导航参数文件：\n{source_nav_params_path}"
+
+        try:
+            with open(source_nav_params_path, "r", encoding="utf-8") as f:
+                nav_params = yaml.safe_load(f) or {}
+
+            nav_params.setdefault("maps", {})
+            nav_params["maps"]["relocalization_bin_file"] = str(relocalization_bin_file)
+            nav_params["maps"]["relocalization_pcd_file"] = str(relocalization_pcd_file)
+            nav_params["maps"]["map_package_dir"] = str(map_package_dir)
+
+            # 保存到源码目录
+            self.save_yaml_to_path(source_nav_params_path, nav_params)
+
+            # 保存到 install/share 目录
+            self.save_yaml_to_path(install_nav_params_path, nav_params)
+
+            # 同步导航目标点文件
+            source_nav_goals_path = self.get_source_nav_goals_path()
+            install_nav_goals_path = self.get_install_nav_goals_path()
+
+            source_nav_goals_path.parent.mkdir(parents=True, exist_ok=True)
+            install_nav_goals_path.parent.mkdir(parents=True, exist_ok=True)
+
+            shutil.copyfile(nav_goals_file, source_nav_goals_path)
+            shutil.copyfile(nav_goals_file, install_nav_goals_path)
+
+            msg = (
+                f"已加载{profile_key}方导航配置\n"
+                f"bin地图：{relocalization_bin_file}\n"
+                f"pcd地图：{relocalization_pcd_file}\n"
+                f"OctoMap目录：{map_package_dir}\n"
+                f"导航目标点：{nav_goals_file}"
+            )
+            return True, msg
+
+        except Exception as e:
+            return False, f"加载红蓝方导航配置失败：{e}"
 
     # -------------------------
     # UI 显示文本
@@ -683,6 +805,14 @@ class MissionManagerSim(QObject):
 
         team_name = "红方" if self.current_team == "RED" else "蓝方"
         profile_dir = "red" if self.current_team == "RED" else "blue"
+
+        ok, profile_msg = self.load_team_nav_profile()
+        if not ok:
+            self.error_emitted.emit(profile_msg)
+            self.emit_state("加载红蓝方导航配置失败")
+            return
+        self.log(profile_msg)
+
         self.active_profile = profile_dir
         self.system_started = True
         self.system_ready = False
