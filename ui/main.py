@@ -375,7 +375,18 @@ class MainWindow(QWidget):
         if not self.manager.system_ready: self.show_error("系统尚未准备完成，不能开始二区"); return
         if not self.manager.manual_block_sequence: self.show_error("请先选择至少一个梅林方块"); return
         self.stack.setCurrentWidget(self.meilin_running_page); self.meilin_running_page.log_box.clear(); self.manager.start_meilin()
-    def stop_task(self): self.manager.stop(); self.stack.setCurrentWidget(self.home_page)
+    def stop_task(self):
+        # 如果行为树已经自己退出了，就不要再执行急停流程，避免 UI 卡顿。
+        if (
+            not self.manager.tree_running
+            and self.manager.gym_bt_process is None
+            and self.manager.meilin_bt_process is None
+        ):
+            self.stack.setCurrentWidget(self.home_page)
+            return
+
+        self.manager.stop()
+        self.stack.setCurrentWidget(self.home_page)
     def reset_all(self):
         self.manager.reset(); self.home_page.update_team("UNKNOWN"); self.home_page.update_system({"current_team":"UNKNOWN","system_started":False,"system_ready":False,"system_starting":False,"system_progress":0}); self.meilin_prepare_page.update_state("UNKNOWN", [], {}, "ROUTE", self.manager.block_heights); self.gym_running_page.log_box.clear(); self.meilin_running_page.log_box.clear(); self.stack.setCurrentWidget(self.home_page)
     def on_state_changed(self,data):
@@ -384,10 +395,44 @@ class MainWindow(QWidget):
         self.gym_running_page.step_card.set_body(step); self.gym_running_page.count_card.set_body(f'{data.get("assembly_count",0)} / {data.get("target_assembly_count",1)}'); self.gym_running_page.progress.setValue(progress)
         self.meilin_prepare_page.update_state(team,data.get("manual_block_sequence",[]),data.get("block_has_kfs",{}),data.get("edit_mode","ROUTE"),data.get("block_heights",{}))
         self.meilin_running_page.team_card.set_body(team_text); self.meilin_running_page.route_card.set_body(route_text); self.meilin_running_page.kfs_card.set_body(kfs_text); self.meilin_running_page.step_card.set_body(step); self.meilin_running_page.odin_card.set_body("正常" if data.get("odin_ok") else "未稳定"); self.meilin_running_page.progress.setValue(progress)
-        if state=="GYM_DONE_WAIT_LIFT": self.stack.setCurrentWidget(self.gym_done_page)
-        elif state=="RUNNING_GYM": self.stack.setCurrentWidget(self.gym_running_page)
-        elif state=="RUNNING_MEILIN": self.stack.setCurrentWidget(self.meilin_running_page)
-        elif state=="MATCH_DONE": self.stack.setCurrentWidget(self.finish_page)
+        if state == "GYM_DONE_WAIT_LIFT":
+            self.stack.setCurrentWidget(self.gym_done_page)
+
+        elif state == "RUNNING_GYM":
+            self.stack.setCurrentWidget(self.gym_running_page)
+
+        elif state == "RUNNING_MEILIN":
+            self.stack.setCurrentWidget(self.meilin_running_page)
+
+        elif state == "MATCH_DONE":
+            self.stack.setCurrentWidget(self.finish_page)
+
+        elif state == "MEILIN_FAILED":
+            # 二区行为树失败后，自动回到二区准备界面，方便重新选路线/重新开始
+            self.meilin_prepare_page.update_state(
+                team,
+                data.get("manual_block_sequence", []),
+                data.get("block_has_kfs", {}),
+                data.get("edit_mode", "ROUTE"),
+                data.get("block_heights", {}),
+            )
+            self.stack.setCurrentWidget(self.meilin_prepare_page)
+
+        elif state == "MEILIN_EXITED":
+            self.meilin_prepare_page.update_state(
+                team,
+                data.get("manual_block_sequence", []),
+                data.get("block_has_kfs", {}),
+                data.get("edit_mode", "ROUTE"),
+                data.get("block_heights", {}),
+            )
+            self.stack.setCurrentWidget(self.meilin_prepare_page)
+
+        elif state == "GYM_FAILED":
+            self.stack.setCurrentWidget(self.gym_prepare_page)
+
+        elif state == "SYSTEM_EXITED":
+            self.stack.setCurrentWidget(self.home_page)
     def on_log(self,text): self.gym_running_page.log_box.append(text); self.meilin_running_page.log_box.append(text)
     def show_error(self,text): QMessageBox.warning(self,"提示",text)
 

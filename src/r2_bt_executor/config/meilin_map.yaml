@@ -5,15 +5,15 @@ blocks:
     kfs_height: 0
   B1:
     height: 400
-    has_kfs: false
+    has_kfs: true
     kfs_height: 400
   B2:
     height: 200
-    has_kfs: true
+    has_kfs: false
     kfs_height: 200
   B3:
     height: 400
-    has_kfs: false
+    has_kfs: true
     kfs_height: 200
   B4:
     height: 200
@@ -21,23 +21,23 @@ blocks:
     kfs_height: 200
   B5:
     height: 400
-    has_kfs: true
+    has_kfs: false
     kfs_height: 400
   B6:
     height: 600
-    has_kfs: true
+    has_kfs: false
     kfs_height: 600
   B7:
     height: 400
-    has_kfs: true
+    has_kfs: false
     kfs_height: 400
   B8:
     height: 600
-    has_kfs: true
+    has_kfs: false
     kfs_height: 200
   B9:
     height: 400
-    has_kfs: true
+    has_kfs: false
     kfs_height: 400
   B10:
     height: 200
@@ -63,8 +63,9 @@ routes:
     - B1
     - B2
     - B5
-    - B8
-    - B11
+    - B4
+    - B7
+    - B10
     - EXIT_ZONE
 transitions:
   ENTRY->B1:
