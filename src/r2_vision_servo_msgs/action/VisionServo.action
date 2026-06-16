@@ -1,0 +1,45 @@
+# Goal
+# 希望目标物体最终出现在 chassis_base_link 坐标系下的位置
+float32 desired_x
+float32 desired_y
+float32 desired_z
+
+# 允许误差
+float32 tolerance_x
+float32 tolerance_y
+float32 tolerance_z
+
+# 是否把 z 也作为成功条件
+# 注意：底盘不能控制 z，所以一般先设 false
+bool use_z_tolerance
+
+# 连续多少帧满足容差才算成功
+uint16 stable_frames
+
+# 超时时间
+float32 timeout_sec
+
+---
+# Result
+bool success
+string message
+
+float32 final_target_x
+float32 final_target_y
+float32 final_target_z
+
+float32 final_error_x
+float32 final_error_y
+float32 final_error_z
+
+---
+# Feedback
+float32 target_x
+float32 target_y
+float32 target_z
+
+float32 error_x
+float32 error_y
+float32 error_z
+
+uint16 stable_count
