@@ -1,0 +1,35 @@
+<?xml version="1.0"?>
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
+  <name>techx_vision_bridge</name>
+  <version>2.0.0</version>
+  <description>
+    GMK M6 视觉数据 UDP→ROS2 桥接功能包（C++ 实现）。
+    从以太网口接收上游视觉系统的 UDP 数据包，经五重防爆校验后，
+    转化为自定义 Target3D 消息发布至 /techx/vision/targets 话题。
+    采用独立 std::thread 阻塞式接收 + 线程安全消息队列架构，
+    追求 0ms 响应抖动。
+  </description>
+  <maintainer email="techx@example.com">TechX Robotics</maintainer>
+  <license>MIT</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+
+  <depend>rclcpp</depend>
+  <depend>std_msgs</depend>
+  <depend>geometry_msgs</depend>
+  <depend>rosidl_default_generators</depend>
+
+  <exec_depend>rosidl_default_runtime</exec_depend>
+  <exec_depend>launch</exec_depend>
+  <exec_depend>launch_ros</exec_depend>
+
+  <member_of_group>rosidl_interface_packages</member_of_group>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+
+  <export>
+    <build_type>ament_cmake</build_type>
+  </export>
+</package>

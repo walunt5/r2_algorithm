@@ -338,12 +338,6 @@ class VisionServoActionServer(Node):
                 f"cmd=({cmd.linear.x:.3f}, {cmd.linear.y:.3f})",
             )
 
-            self.get_logger().info(
-                f"target=({target_x:.3f}, {target_y:.3f}, {target_z:.3f}), "
-                f"error=({error_x:.3f}, {error_y:.3f}, {error_z:.3f}), "
-                f"cmd=({cmd.linear.x:.3f}, {cmd.linear.y:.3f})",
-            )
-
             time.sleep(sleep_dt)
 
         self.publish_stop()
