@@ -13,10 +13,10 @@ goals:
     yaw: 0.0
   ENTRY_TO_B3_APPROACH:
     frame_id: map
-    x: 0.0
-    y: 0.0
-    z: 0.0
-    yaw: 0.0
+    x: 1.845851
+    y: -0.315796
+    z: -0.122479
+    yaw: 0.075597
   B1_TO_B2_APPROACH:
     frame_id: map
     x: 0.0

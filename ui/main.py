@@ -9,14 +9,14 @@ from PyQt5.QtWidgets import (
 from mission_manager_sim import MissionManagerSim
 
 SCREEN_W = 900
-SCREEN_H = 600
+SCREEN_H = 500
 
 RED_LAYOUT = [[12, 11, 10], [9, 8, 7], [6, 5, 4], [3, 2, 1]]
 BLUE_LAYOUT = [[10, 11, 12], [7, 8, 9], [4, 5, 6], [1, 2, 3]]
 
 
 class TouchButton(QPushButton):
-    def __init__(self, text: str, kind: str = "primary", height: int = 68, fixed_height: bool = False):
+    def __init__(self, text: str, kind: str = "primary", height: int = 52, fixed_height: bool = False):
         super().__init__(text)
         self.setObjectName(f"Btn_{kind}")
         if fixed_height:
@@ -30,7 +30,7 @@ class SmallButton(QPushButton):
     def __init__(self, text: str, kind: str = "secondary"):
         super().__init__(text)
         self.setObjectName(f"Btn_{kind}")
-        self.setMinimumHeight(52)
+        self.setMinimumHeight(42)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
 
@@ -39,7 +39,7 @@ class TeamButton(QPushButton):
         super().__init__(text)
         self.setObjectName(f"Btn_{kind}")
         self.setCheckable(True)
-        self.setMinimumHeight(62)
+        self.setMinimumHeight(48)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
 
@@ -53,7 +53,7 @@ class BlockButton(QPushButton):
         self.display_has_kfs = False
         self.display_edit_mode = "ROUTE"
         self.setCheckable(True)
-        self.setMinimumHeight(82)
+        self.setMinimumHeight(58)
         self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.setObjectName("Block_0")
         self.setProperty("editMode", "ROUTE")
@@ -108,10 +108,10 @@ class BlockButton(QPushButton):
         if self.display_edit_mode == "KFS":
             kfs_text = f"[{kfs_text}]"
 
-        top_font = QFont("Microsoft YaHei", 16)
+        top_font = QFont("Microsoft YaHei", 11)
         top_font.setBold(True)
-        mid_font = QFont("Microsoft YaHei", 15)
-        kfs_font = QFont("Microsoft YaHei", 13)  # KFS 字体再小一点，避免三行文字太挤
+        mid_font = QFont("Microsoft YaHei", 10)
+        kfs_font = QFont("Microsoft YaHei", 9)  # KFS 字体再小一点，避免三行文字太挤
         kfs_font.setBold(True)
 
         # 选中时整体背景较深，文字保持白/金；未选中也保持高对比度。
@@ -179,9 +179,9 @@ class HomePage(QWidget):
         self.red_btn = TeamButton("RED\n红方", "red"); self.blue_btn = TeamButton("BLUE\n蓝方", "blue")
         self.red_btn.clicked.connect(lambda: ui.select_team("RED")); self.blue_btn.clicked.connect(lambda: ui.select_team("BLUE"))
         team_row.addWidget(self.red_btn); team_row.addWidget(self.blue_btn); right.addLayout(team_row)
-        self.start_system_btn = TouchButton("启动系统 / 加载配置", "boot", height=50, fixed_height=True); self.start_system_btn.clicked.connect(ui.start_system); right.addWidget(self.start_system_btn)
-        self.gym_btn = TouchButton("进入一区任务", "primary", height=60); self.gym_btn.clicked.connect(ui.goto_gym_prepare); right.addWidget(self.gym_btn)
-        self.meilin_btn = TouchButton("进入二区任务", "primary", height=60); self.meilin_btn.clicked.connect(ui.goto_meilin_prepare); right.addWidget(self.meilin_btn)
+        self.start_system_btn = TouchButton("启动系统 / 加载配置", "boot", height=42, fixed_height=True); self.start_system_btn.clicked.connect(ui.start_system); right.addWidget(self.start_system_btn)
+        self.gym_btn = TouchButton("进入一区任务", "primary", height=48); self.gym_btn.clicked.connect(ui.goto_gym_prepare); right.addWidget(self.gym_btn)
+        self.meilin_btn = TouchButton("进入二区任务", "primary", height=48); self.meilin_btn.clicked.connect(ui.goto_meilin_prepare); right.addWidget(self.meilin_btn)
         row = QHBoxLayout(); row.setSpacing(8)
         btn_stop = SmallButton("急停", "danger"); btn_stop.clicked.connect(ui.stop_task)
         btn_reset = SmallButton("复位", "warning"); btn_reset.clicked.connect(ui.reset_all)
@@ -251,12 +251,12 @@ class MeilinPreparePage(QWidget):
             btn = BlockButton(block_id); btn.clicked.connect(lambda checked, b=block_id: ui.toggle_block(b)); self.block_buttons[block_id]=btn
         main.addWidget(grid_frame, stretch=1)
         side = QVBoxLayout(); side.setSpacing(8); body.addLayout(side)
-        self.mode_btn = TouchButton("模式\n路线", "warning", height=55); self.mode_btn.clicked.connect(ui.toggle_meilin_edit_mode); side.addWidget(self.mode_btn)
-        save_btn = TouchButton("保存\n配置", "boot", height=55); save_btn.clicked.connect(ui.save_meilin_config); side.addWidget(save_btn)
-        clear_btn = TouchButton("CLEAR\n清", "secondary", height=55); clear_btn.clicked.connect(ui.clear_block_sequence); side.addWidget(clear_btn)
-        start_btn = TouchButton("START\n开", "start", height=62); start_btn.clicked.connect(ui.start_meilin); side.addWidget(start_btn)
-        back_btn = TouchButton("BACK\n返", "secondary", height=55); back_btn.clicked.connect(ui.goto_home); side.addWidget(back_btn)
-        stop_btn = TouchButton("急停", "danger", height=55); stop_btn.clicked.connect(ui.stop_task); side.addWidget(stop_btn); side.addStretch(1)
+        self.mode_btn = TouchButton("模式\n路线", "warning", height=44); self.mode_btn.clicked.connect(ui.toggle_meilin_edit_mode); side.addWidget(self.mode_btn)
+        save_btn = TouchButton("保存\n配置", "boot", height=44); save_btn.clicked.connect(ui.save_meilin_config); side.addWidget(save_btn)
+        clear_btn = TouchButton("CLEAR\n清", "secondary", height=44); clear_btn.clicked.connect(ui.clear_block_sequence); side.addWidget(clear_btn)
+        start_btn = TouchButton("START\n开", "start", height=48); start_btn.clicked.connect(ui.start_meilin); side.addWidget(start_btn)
+        back_btn = TouchButton("BACK\n返", "secondary", height=44); back_btn.clicked.connect(ui.goto_home); side.addWidget(back_btn)
+        stop_btn = TouchButton("急停", "danger", height=44); stop_btn.clicked.connect(ui.stop_task); side.addWidget(stop_btn); side.addStretch(1)
         self.update_state("UNKNOWN", [], {}, "ROUTE", {})
 
     def update_state(self, team, sequence, block_has_kfs=None, edit_mode="ROUTE", block_heights=None):
@@ -310,7 +310,7 @@ class FinishPage(QWidget):
 
 class MainWindow(QWidget):
     def __init__(self):
-        super().__init__(); self.setWindowTitle("R2 900x600 横屏控制台"); self.setFixedSize(SCREEN_W, SCREEN_H)
+        super().__init__(); self.setWindowTitle("R2 900x500 横屏控制台"); self.setFixedSize(SCREEN_W, SCREEN_H)
         self.manager=MissionManagerSim(); self.manager.state_changed.connect(self.on_state_changed); self.manager.log_emitted.connect(self.on_log); self.manager.error_emitted.connect(self.show_error)
         self.stack=QStackedWidget(); self.home_page=HomePage(self); self.gym_prepare_page=SimplePage("一区任务","机器人在一区起点。\n点击开始后模拟一区任务。",self,self.start_gym); self.gym_running_page=GymRunningPage(self); self.gym_done_page=SimplePage("一区完成","请人工把机器人抬回重试区。",self,self.goto_meilin_prepare); self.meilin_prepare_page=MeilinPreparePage(self); self.meilin_running_page=MeilinRunningPage(self); self.finish_page=FinishPage(self)
         for page in [self.home_page,self.gym_prepare_page,self.gym_running_page,self.gym_done_page,self.meilin_prepare_page,self.meilin_running_page,self.finish_page]: self.stack.addWidget(page)
@@ -318,33 +318,33 @@ class MainWindow(QWidget):
 
     def apply_style(self):
         self.setStyleSheet('''
-        QWidget { background-color: #000000; color: #f8fafc; font-family: "Microsoft YaHei", "SimHei", "Arial"; font-size: 15px; }
-        #MainTitle { font-size: 30px; font-weight: 900; color: #ffffff; }
-        #PageHeader { background-color: #c7e6ee; color: #00172b; font-size: 28px; font-weight: 900; padding-left: 16px; min-height: 44px; }
-        #TeamLabel { background-color: #c7e6ee; color: #00172b; font-size: 20px; font-weight: 900; padding: 0px 12px; min-height: 44px; }
+        QWidget { background-color: #000000; color: #f8fafc; font-family: "Microsoft YaHei", "SimHei", "Arial"; font-size: 11px; }
+        #MainTitle { font-size: 20px; font-weight: 900; color: #ffffff; }
+        #PageHeader { background-color: #c7e6ee; color: #00172b; font-size: 18px; font-weight: 900; padding-left: 16px; min-height: 44px; }
+        #TeamLabel { background-color: #c7e6ee; color: #00172b; font-size: 13px; font-weight: 900; padding: 0px 12px; min-height: 44px; }
         #InfoCard { background-color: #171717; border: 1px solid #2f2f2f; border-radius: 16px; }
-        #CardTitle { font-size: 16px; color: #ffffff; font-weight: 800; }
-        #CardBody { font-size: 16px; color: #ffffff; line-height: 1.28; font-weight: 700; }
-        QPushButton { background-color: #2563eb; color: white; border: 1px solid #3b82f6; border-radius: 16px; padding: 7px; font-size: 19px; font-weight: 900; }
+        #CardTitle { font-size: 11px; color: #ffffff; font-weight: 800; }
+        #CardBody { font-size: 11px; color: #ffffff; line-height: 1.28; font-weight: 700; }
+        QPushButton { background-color: #2563eb; color: white; border: 1px solid #3b82f6; border-radius: 16px; padding: 7px; font-size: 13px; font-weight: 900; }
         QPushButton:checked { border: 4px solid #facc15; } QPushButton:disabled { background-color: #374151; color: #9ca3af; border: 1px solid #4b5563; }
-        #Btn_start { background-color: #16a34a; border: 2px solid #86efac; font-size: 24px; } #Btn_boot { background-color: #facc15; color: #111827; border: 2px solid #fde68a; font-size: 19px; padding: 4px; }
-        #Btn_secondary { background-color: #e8f4fb; color: #00172b; border: 1px solid #9fb7c5; font-size: 18px; } #Btn_danger { background-color: #dc2626; border: 1px solid #ef4444; } #Btn_warning { background-color: #d97706; border: 1px solid #f59e0b; }
-        #Btn_red { background-color: #f8fafc; color: #ef4444; border: 3px solid #ef4444; font-size: 22px; } #Btn_red:checked { background-color: #ef4444; color: #ffffff; border: 4px solid #fecaca; }
-        #Btn_blue { background-color: #f8fafc; color: #3b82f6; border: 3px solid #3b82f6; font-size: 22px; } #Btn_blue:checked { background-color: #3b82f6; color: #ffffff; border: 4px solid #bfdbfe; }
+        #Btn_start { background-color: #16a34a; border: 2px solid #86efac; font-size: 12px; } #Btn_boot { background-color: #facc15; color: #111827; border: 2px solid #fde68a; font-size: 13px; padding: 4px; }
+        #Btn_secondary { background-color: #e8f4fb; color: #00172b; border: 1px solid #9fb7c5; font-size: 12px; } #Btn_danger { background-color: #dc2626; border: 1px solid #ef4444; } #Btn_warning { background-color: #d97706; border: 1px solid #f59e0b; }
+        #Btn_red { background-color: #f8fafc; color: #ef4444; border: 3px solid #ef4444; font-size: 14px; } #Btn_red:checked { background-color: #ef4444; color: #ffffff; border: 4px solid #fecaca; }
+        #Btn_blue { background-color: #f8fafc; color: #3b82f6; border: 3px solid #3b82f6; font-size: 14px; } #Btn_blue:checked { background-color: #3b82f6; color: #ffffff; border: 4px solid #bfdbfe; }
         #BlockGridFrame { background-color: #9fd5df; border: 3px solid #7cc4d1; border-radius: 8px; }
-        #Block_0 { background-color: #374151; border: 2px solid #6b7280; border-radius: 12px; font-size: 18px; }
+        #Block_0 { background-color: #374151; border: 2px solid #6b7280; border-radius: 12px; font-size: 12px; }
         /* 200mm 和 400mm 颜色互换：200 用原 400 颜色，400 用原 200 颜色 */
-        #Block_200 { background-color: #24733a; border: 2px solid #44a35d; border-radius: 12px; font-size: 18px; }
-        #Block_400 { background-color: #145c25; border: 2px solid #2f8b46; border-radius: 12px; font-size: 18px; }
-        #Block_600 { background-color: #a8c24a; border: 2px solid #d7ef5a; border-radius: 12px; font-size: 18px; }
+        #Block_200 { background-color: #24733a; border: 2px solid #44a35d; border-radius: 12px; font-size: 12px; }
+        #Block_400 { background-color: #145c25; border: 2px solid #2f8b46; border-radius: 12px; font-size: 12px; }
+        #Block_600 { background-color: #a8c24a; border: 2px solid #d7ef5a; border-radius: 12px; font-size: 12px; }
         #Block_0:checked, #Block_200:checked, #Block_400:checked, #Block_600:checked {
             border: 6px solid #facc15;
             background-color: #0f766e;
             color: #ffffff;
         }
 
-        #LogBox { background-color: #050505; border: 1px solid #333333; border-radius: 14px; color: #e5e7eb; padding: 8px; font-family: "Consolas", "Microsoft YaHei"; font-size: 12px; }
-        QProgressBar { border: 1px solid #333333; border-radius: 10px; text-align: center; background-color: #171717; color: #ffffff; height: 24px; font-size: 14px; } QProgressBar::chunk { background-color: #22c55e; border-radius: 10px; }
+        #LogBox { background-color: #050505; border: 1px solid #333333; border-radius: 14px; color: #e5e7eb; padding: 8px; font-family: "Consolas", "Microsoft YaHei"; font-size: 9px; }
+        QProgressBar { border: 1px solid #333333; border-radius: 10px; text-align: center; background-color: #171717; color: #ffffff; height: 16px; font-size: 10px; } QProgressBar::chunk { background-color: #22c55e; border-radius: 10px; }
         ''')
 
     def goto_home(self): self.stack.setCurrentWidget(self.home_page)
