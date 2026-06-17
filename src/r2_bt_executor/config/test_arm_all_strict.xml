@@ -1,0 +1,49 @@
+<root BTCPP_format="4" main_tree_to_execute="TestArmAllStrict">
+  <BehaviorTree ID="TestArmAllStrict">
+    <Sequence name="Test_Arm_All_Strict">
+
+```
+  <Script code=" arm_test_done := 0 " />
+
+  <R2SetEndEffectorNode io_id="1" state="1" hold_ms="500" result_timeout_ms="3000" />
+  <R2SetEndEffectorNode io_id="1" state="0" hold_ms="500" result_timeout_ms="3000" />
+
+  <R2SetEndEffectorNode io_id="2" state="1" hold_ms="500" result_timeout_ms="3000" />
+  <R2SetEndEffectorNode io_id="2" state="0" hold_ms="500" result_timeout_ms="3000" />
+
+  <R2SetEndEffectorNode io_id="3" state="1" hold_ms="500" result_timeout_ms="3000" />
+  <R2SetEndEffectorNode io_id="3" state="0" hold_ms="500" result_timeout_ms="3000" />
+
+  <R2ExecuteArmActionNode action_name="/r2_arm/execute_action" target_id="1" action_id="257" timeout_ms="8000" param="0" flags="0" result_timeout_ms="10000" />
+  <R2ExecuteArmActionNode action_name="/r2_arm/execute_action" target_id="1" action_id="258" timeout_ms="8000" param="0" flags="0" result_timeout_ms="10000" />
+  <R2ExecuteArmActionNode action_name="/r2_arm/execute_action" target_id="1" action_id="259" timeout_ms="8000" param="0" flags="0" result_timeout_ms="10000" />
+
+  <R2ExecuteArmActionNode action_name="/r2_arm/execute_action" target_id="2" action_id="513" timeout_ms="10000" param="0" flags="0" result_timeout_ms="12000" />
+  <R2ExecuteArmActionNode action_name="/r2_arm/execute_action" target_id="2" action_id="514" timeout_ms="10000" param="0" flags="0" result_timeout_ms="12000" />
+
+  <R2ExecuteArmActionNode action_name="/r2_arm/execute_action" target_id="2" action_id="528" timeout_ms="12000" param="0" flags="0" result_timeout_ms="15000" />
+  <R2ExecuteArmActionNode action_name="/r2_arm/execute_action" target_id="2" action_id="529" timeout_ms="12000" param="0" flags="0" result_timeout_ms="15000" />
+  <R2ExecuteArmActionNode action_name="/r2_arm/execute_action" target_id="2" action_id="530" timeout_ms="12000" param="0" flags="0" result_timeout_ms="15000" />
+  <R2ExecuteArmActionNode action_name="/r2_arm/execute_action" target_id="2" action_id="531" timeout_ms="12000" param="0" flags="0" result_timeout_ms="15000" />
+  <R2ExecuteArmActionNode action_name="/r2_arm/execute_action" target_id="2" action_id="532" timeout_ms="12000" param="0" flags="0" result_timeout_ms="15000" />
+
+  <R2ExecuteArmActionNode action_name="/r2_arm/execute_action" target_id="2" action_id="544" timeout_ms="10000" param="0" flags="0" result_timeout_ms="12000" />
+  <R2ExecuteArmActionNode action_name="/r2_arm/execute_action" target_id="2" action_id="560" timeout_ms="12000" param="0" flags="0" result_timeout_ms="15000" />
+  <R2ExecuteArmActionNode action_name="/r2_arm/execute_action" target_id="2" action_id="576" timeout_ms="10000" param="0" flags="0" result_timeout_ms="12000" />
+
+  <R2ExecuteArmActionNode action_name="/r2_arm/execute_action" target_id="3" action_id="769" timeout_ms="15000" param="0" flags="0" result_timeout_ms="18000" />
+
+  <R2SetEndEffectorNode io_id="1" state="0" hold_ms="300" result_timeout_ms="3000" />
+  <R2SetEndEffectorNode io_id="2" state="0" hold_ms="300" result_timeout_ms="3000" />
+  <R2SetEndEffectorNode io_id="3" state="0" hold_ms="300" result_timeout_ms="3000" />
+
+  <R2ExecuteArmActionNode action_name="/r2_arm/execute_action" target_id="1" action_id="257" timeout_ms="8000" param="0" flags="0" result_timeout_ms="10000" />
+  <R2ExecuteArmActionNode action_name="/r2_arm/execute_action" target_id="2" action_id="513" timeout_ms="10000" param="0" flags="0" result_timeout_ms="12000" />
+
+  <Script code=" arm_test_done := 1 " />
+
+</Sequence>
+```
+
+  </BehaviorTree>
+</root>

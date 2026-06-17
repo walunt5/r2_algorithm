@@ -1,0 +1,333 @@
+<root BTCPP_format="4" main_tree_to_execute="TestArmAll">
+
+  <BehaviorTree ID="TestArmAll">
+
+```
+<Sequence name="Test_Arm_All_Functions">
+
+  <!-- =========================================================
+       0. 测试开始
+       ========================================================= -->
+  <Script code=" arm_test_done := 0 " />
+
+  <!-- =========================================================
+       1. 测试末端执行器 IO
+       io_id=1: 夹爪
+       io_id=2: 机械臂吸盘泵
+       io_id=3: 后部存储吸盘泵
+       ========================================================= -->
+
+  <!-- 1.1 夹爪闭合 -->
+  <ForceSuccess name="Test_Gripper_Close_ForceSuccess">
+    <R2SetEndEffectorNode
+      io_id="1"
+      state="1"
+      hold_ms="500"
+      result_timeout_ms="3000" />
+  </ForceSuccess>
+
+  <!-- 1.2 夹爪打开 -->
+  <ForceSuccess name="Test_Gripper_Open_ForceSuccess">
+    <R2SetEndEffectorNode
+      io_id="1"
+      state="0"
+      hold_ms="500"
+      result_timeout_ms="3000" />
+  </ForceSuccess>
+
+  <!-- 1.3 机械臂吸盘泵打开 -->
+  <ForceSuccess name="Test_Arm_Suction_On_ForceSuccess">
+    <R2SetEndEffectorNode
+      io_id="2"
+      state="1"
+      hold_ms="500"
+      result_timeout_ms="3000" />
+  </ForceSuccess>
+
+  <!-- 1.4 机械臂吸盘泵关闭 -->
+  <ForceSuccess name="Test_Arm_Suction_Off_ForceSuccess">
+    <R2SetEndEffectorNode
+      io_id="2"
+      state="0"
+      hold_ms="500"
+      result_timeout_ms="3000" />
+  </ForceSuccess>
+
+  <!-- 1.5 后部存储吸盘泵打开 -->
+  <ForceSuccess name="Test_Rear_Storage_Pump_On_ForceSuccess">
+    <R2SetEndEffectorNode
+      io_id="3"
+      state="1"
+      hold_ms="500"
+      result_timeout_ms="3000" />
+  </ForceSuccess>
+
+  <!-- 1.6 后部存储吸盘泵关闭 -->
+  <ForceSuccess name="Test_Rear_Storage_Pump_Off_ForceSuccess">
+    <R2SetEndEffectorNode
+      io_id="3"
+      state="0"
+      hold_ms="500"
+      result_timeout_ms="3000" />
+  </ForceSuccess>
+
+  <!-- =========================================================
+       2. 测试夹爪机械臂动作
+       target_id=1: 夹爪机械臂
+       action_id=257: 平放
+       action_id=258: 抬起/旋转90度
+       action_id=259: 斜放
+       ========================================================= -->
+
+  <!-- 2.1 夹爪机械臂平放 -->
+  <ForceSuccess name="Test_Gripper_Arm_Flat_ForceSuccess">
+    <R2ExecuteArmActionNode
+      action_name="/r2_arm/execute_action"
+      target_id="1"
+      action_id="257"
+      timeout_ms="8000"
+      param="0"
+      flags="0"
+      result_timeout_ms="10000" />
+  </ForceSuccess>
+
+  <!-- 2.2 夹爪机械臂抬起/旋转90度 -->
+  <ForceSuccess name="Test_Gripper_Arm_Lift_Up_ForceSuccess">
+    <R2ExecuteArmActionNode
+      action_name="/r2_arm/execute_action"
+      target_id="1"
+      action_id="258"
+      timeout_ms="8000"
+      param="0"
+      flags="0"
+      result_timeout_ms="10000" />
+  </ForceSuccess>
+
+  <!-- 2.3 夹爪机械臂斜放 -->
+  <ForceSuccess name="Test_Gripper_Arm_Tilt_ForceSuccess">
+    <R2ExecuteArmActionNode
+      action_name="/r2_arm/execute_action"
+      target_id="1"
+      action_id="259"
+      timeout_ms="8000"
+      param="0"
+      flags="0"
+      result_timeout_ms="10000" />
+  </ForceSuccess>
+
+  <!-- =========================================================
+       3. 测试中心吸盘/KFS 机械臂动作
+       target_id=2: 中心吸盘/KFS 机械臂
+       action_id=513: 回零
+       action_id=514: 梅林准备位
+       action_id=528: KFS 高度差 0
+       action_id=529: KFS 高度差 +200
+       action_id=530: KFS 高度差 -200
+       action_id=531: KFS 高度差 +400
+       action_id=532: KFS 高度差 -400
+       action_id=544: KFS 抬起
+       action_id=560: 转移到存储吸盘
+       action_id=576: 携带姿态
+       ========================================================= -->
+
+  <!-- 3.1 中心吸盘机械臂回零 -->
+  <ForceSuccess name="Test_Suction_Arm_Home_ForceSuccess">
+    <R2ExecuteArmActionNode
+      action_name="/r2_arm/execute_action"
+      target_id="2"
+      action_id="513"
+      timeout_ms="10000"
+      param="0"
+      flags="0"
+      result_timeout_ms="12000" />
+  </ForceSuccess>
+
+  <!-- 3.2 中心吸盘机械臂梅林准备位 -->
+  <ForceSuccess name="Test_Suction_Arm_Meilin_Ready_ForceSuccess">
+    <R2ExecuteArmActionNode
+      action_name="/r2_arm/execute_action"
+      target_id="2"
+      action_id="514"
+      timeout_ms="10000"
+      param="0"
+      flags="0"
+      result_timeout_ms="12000" />
+  </ForceSuccess>
+
+  <!-- 3.3 KFS 吸取：高度差 0 -->
+  <ForceSuccess name="Test_KFS_Pick_Delta_0_ForceSuccess">
+    <R2ExecuteArmActionNode
+      action_name="/r2_arm/execute_action"
+      target_id="2"
+      action_id="528"
+      timeout_ms="12000"
+      param="0"
+      flags="0"
+      result_timeout_ms="15000" />
+  </ForceSuccess>
+
+  <!-- 3.4 KFS 吸取：高度差 +200 -->
+  <ForceSuccess name="Test_KFS_Pick_Delta_Plus_200_ForceSuccess">
+    <R2ExecuteArmActionNode
+      action_name="/r2_arm/execute_action"
+      target_id="2"
+      action_id="529"
+      timeout_ms="12000"
+      param="0"
+      flags="0"
+      result_timeout_ms="15000" />
+  </ForceSuccess>
+
+  <!-- 3.5 KFS 吸取：高度差 -200 -->
+  <ForceSuccess name="Test_KFS_Pick_Delta_Minus_200_ForceSuccess">
+    <R2ExecuteArmActionNode
+      action_name="/r2_arm/execute_action"
+      target_id="2"
+      action_id="530"
+      timeout_ms="12000"
+      param="0"
+      flags="0"
+      result_timeout_ms="15000" />
+  </ForceSuccess>
+
+  <!-- 3.6 KFS 吸取：高度差 +400 -->
+  <ForceSuccess name="Test_KFS_Pick_Delta_Plus_400_ForceSuccess">
+    <R2ExecuteArmActionNode
+      action_name="/r2_arm/execute_action"
+      target_id="2"
+      action_id="531"
+      timeout_ms="12000"
+      param="0"
+      flags="0"
+      result_timeout_ms="15000" />
+  </ForceSuccess>
+
+  <!-- 3.7 KFS 吸取：高度差 -400 -->
+  <ForceSuccess name="Test_KFS_Pick_Delta_Minus_400_ForceSuccess">
+    <R2ExecuteArmActionNode
+      action_name="/r2_arm/execute_action"
+      target_id="2"
+      action_id="532"
+      timeout_ms="12000"
+      param="0"
+      flags="0"
+      result_timeout_ms="15000" />
+  </ForceSuccess>
+
+  <!-- 3.8 KFS 抬起 -->
+  <ForceSuccess name="Test_KFS_Lift_Up_ForceSuccess">
+    <R2ExecuteArmActionNode
+      action_name="/r2_arm/execute_action"
+      target_id="2"
+      action_id="544"
+      timeout_ms="10000"
+      param="0"
+      flags="0"
+      result_timeout_ms="12000" />
+  </ForceSuccess>
+
+  <!-- 3.9 KFS 转移到后部存储吸盘 -->
+  <ForceSuccess name="Test_KFS_Transfer_To_Storage_ForceSuccess">
+    <R2ExecuteArmActionNode
+      action_name="/r2_arm/execute_action"
+      target_id="2"
+      action_id="560"
+      timeout_ms="12000"
+      param="0"
+      flags="0"
+      result_timeout_ms="15000" />
+  </ForceSuccess>
+
+  <!-- 3.10 中心吸盘机械臂携带姿态 -->
+  <ForceSuccess name="Test_Suction_Arm_Carry_Pose_ForceSuccess">
+    <R2ExecuteArmActionNode
+      action_name="/r2_arm/execute_action"
+      target_id="2"
+      action_id="576"
+      timeout_ms="10000"
+      param="0"
+      flags="0"
+      result_timeout_ms="12000" />
+  </ForceSuccess>
+
+  <!-- =========================================================
+       4. 测试复合任务
+       target_id=3: 复合任务
+       action_id=769: 取端头复合任务
+       ========================================================= -->
+
+  <!-- 4.1 取端头复合任务 -->
+  <ForceSuccess name="Test_Composite_Take_Head_ForceSuccess">
+    <R2ExecuteArmActionNode
+      action_name="/r2_arm/execute_action"
+      target_id="3"
+      action_id="769"
+      timeout_ms="15000"
+      param="0"
+      flags="0"
+      result_timeout_ms="18000" />
+  </ForceSuccess>
+
+  <!-- =========================================================
+       5. 测试结束：全部 IO 关闭，机械臂回安全状态
+       ========================================================= -->
+
+  <!-- 5.1 夹爪打开 -->
+  <ForceSuccess name="Final_Gripper_Open_ForceSuccess">
+    <R2SetEndEffectorNode
+      io_id="1"
+      state="0"
+      hold_ms="300"
+      result_timeout_ms="3000" />
+  </ForceSuccess>
+
+  <!-- 5.2 机械臂吸盘泵关闭 -->
+  <ForceSuccess name="Final_Arm_Suction_Off_ForceSuccess">
+    <R2SetEndEffectorNode
+      io_id="2"
+      state="0"
+      hold_ms="300"
+      result_timeout_ms="3000" />
+  </ForceSuccess>
+
+  <!-- 5.3 后部存储吸盘泵关闭 -->
+  <ForceSuccess name="Final_Rear_Storage_Pump_Off_ForceSuccess">
+    <R2SetEndEffectorNode
+      io_id="3"
+      state="0"
+      hold_ms="300"
+      result_timeout_ms="3000" />
+  </ForceSuccess>
+
+  <!-- 5.4 夹爪机械臂平放 -->
+  <ForceSuccess name="Final_Gripper_Arm_Flat_ForceSuccess">
+    <R2ExecuteArmActionNode
+      action_name="/r2_arm/execute_action"
+      target_id="1"
+      action_id="257"
+      timeout_ms="8000"
+      param="0"
+      flags="0"
+      result_timeout_ms="10000" />
+  </ForceSuccess>
+
+  <!-- 5.5 中心吸盘机械臂回零 -->
+  <ForceSuccess name="Final_Suction_Arm_Home_ForceSuccess">
+    <R2ExecuteArmActionNode
+      action_name="/r2_arm/execute_action"
+      target_id="2"
+      action_id="513"
+      timeout_ms="10000"
+      param="0"
+      flags="0"
+      result_timeout_ms="12000" />
+  </ForceSuccess>
+
+  <Script code=" arm_test_done := 1 " />
+
+</Sequence>
+```
+
+  </BehaviorTree>
+
+</root>

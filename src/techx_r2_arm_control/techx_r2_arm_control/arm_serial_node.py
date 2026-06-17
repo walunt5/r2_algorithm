@@ -32,6 +32,7 @@ from .protocol import (
     TARGET_COMPOSITE_TASK,
     TARGET_GRIPPER_ARM,
     TARGET_KFS_SUCTION_ARM,
+    TARGET_GRIPPER_CLAW,
     action_id_to_name,
     bytes_to_hex,
     error_to_name,
@@ -398,6 +399,7 @@ class ArmSerialNode(Node):
             TARGET_GRIPPER_ARM,
             TARGET_KFS_SUCTION_ARM,
             TARGET_COMPOSITE_TASK,
+            TARGET_GRIPPER_CLAW,
         )
 
         result = ExecuteAction.Result()

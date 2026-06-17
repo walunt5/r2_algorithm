@@ -515,10 +515,10 @@ BT::NodeStatus R2ExecuteArmActionNode::onStart()
   getInput("server_timeout_ms", server_timeout_ms);
   getInput("result_timeout_ms", result_timeout_ms);
 
-  if (target_id < 1 || target_id > 3) {
+  if (target_id < 1 || target_id > 4) {
     RCLCPP_ERROR(
       node_->get_logger(),
-      "[R2ExecuteArmActionNode] Invalid target_id=%d. Valid values: 1, 2, 3.",
+      "[R2ExecuteArmActionNode] Invalid target_id=%d. Valid values: 1, 2, 3, 4.",
       target_id);
     return BT::NodeStatus::FAILURE;
   }

@@ -3,21 +3,11 @@
 
     <Sequence name="Gym_Task_Tree">
 
-      <!-- =========================================================
-          1. 初始化一区黑板
-          ========================================================= -->
       <Script code=" head_dock_done_count := 0 " />
       <Script code=" target_head_dock_count := 1 " />
       <Script code=" head_dock_success := 0 " />
       <Script code=" gym_task_done := 0 " />
 
-      <!-- =========================================================
-          2. 端头对接循环
-          child 成功时继续循环；
-          当次数够了，ScriptCondition 返回 FAILURE；
-          KeepRunningUntilFailure 因 child 失败而结束；
-          外层 ForceSuccess 把“循环结束”转换为 SUCCESS。
-          ========================================================= -->
       <ForceSuccess name="Head_Dock_Loop_Exit_As_Success">
         <KeepRunningUntilFailure name="Head_Dock_Loop">
 
@@ -26,45 +16,35 @@
             <!-- 2.1 判断端头对接完成次数是否小于目标次数 -->
             <ScriptCondition code=" head_dock_done_count &lt; target_head_dock_count " />
 
-            <!-- 2.2 本次端头对接是否成功 := 否 -->
             <Script code=" head_dock_success := 0 " />
 
-            <!-- =================================================
-                2.3 单次端头对接容错
-                正常流程失败后，进入失败清理流程
-                ================================================= -->
             <Fallback name="Single_Head_Dock_Fallback">
 
-              <!-- =============================================
-                  2.3.1 正常端头取放与 R1 对接
-                  ============================================= -->
               <Sequence name="Normal_Head_Pick_And_Dock">
 
-                <!-- 导航到一区取端头预设点 -->
                 <!-- <R2NavigateToPoseActionNode
                   goal_name="GYM_HEAD_PICK_PRESET"
                   timeout_sec="60.0"
                   result_timeout_ms="70000" /> -->
                 <R2ForceSuccess name="Skip_Nav_To_GYM_HEAD_PICK_PRESET_In_Mock" />
 
-                <!-- 底盘升高到取端头高度：300mm 暂定，后续按实测修改 -->
                 <R2LiftControlNode
                   target_h_mm="300"
                   mask="7"
                   timeout_sec="5.0"
                   result_timeout_ms="8000" />
 
-                <!-- 视觉伺服对准端头：暂停，等待 techx_vision_bridge 稳定后再接 -->
                 <R2ForceSuccess name="Skip_VisionServo_AlignHead" />
 
-                <!-- 夹爪闭合：io_id=1 是夹爪，state=1 是闭合 -->
-                <R2SetEndEffectorNode
-                  io_id="1"
-                  state="1"
-                  hold_ms="300"
-                  result_timeout_ms="3000" />
+                <R2ExecuteArmActionNode
+                  action_name="/r2_arm/execute_action"
+                  target_id="4"
+                  action_id="1026"
+                  timeout_ms="3000"
+                  param="0"
+                  flags="0"
+                  result_timeout_ms="5000" />
 
-                <!-- 夹爪机械臂旋转90度：对应 GRIPPER_ARM_LIFT_UP，action_id=0x0102=258 -->
                 <R2ExecuteArmActionNode
                   action_name="/r2_arm/execute_action"
                   target_id="1"
@@ -74,20 +54,16 @@
                   flags="0"
                   result_timeout_ms="10000" />
 
-                <!-- vx 向后底盘速度指令：当前还没有定时 cmd_vel 节点，先跳过 -->
                 <R2ForceSuccess name="Skip_Backward_CmdVel" />
 
-                <!-- 停止底盘运动：当前还没有 StopCmdVel 节点，先跳过 -->
                 <R2ForceSuccess name="Skip_Stop_Chassis" />
 
-                <!-- 底盘下降到对接准备高度 -->
                 <R2LiftControlNode
                   target_h_mm="100"
                   mask="7"
                   timeout_sec="5.0"
                   result_timeout_ms="8000" />
 
-                <!-- Odin 位姿 PID 对齐到一区取端头后对齐预设点 -->
                 <!-- <R2OdinPosePidAlignActionNode
                   goal_name="GYM_HEAD_AFTER_PICK_ALIGN"
                   use_goal_name="true"
@@ -95,17 +71,17 @@
                   result_timeout_ms="8000" /> -->
                 <R2ForceSuccess name="Skip_Odin_Align_In_Mock" />
 
-                <!-- 等待视觉装配完成信号：暂未实现，先跳过 -->
                 <R2ForceSuccess name="Skip_Wait_Assembly_Done" />
 
-                <!-- 夹爪打开：io_id=1 是夹爪，state=0 是打开 -->
-                <R2SetEndEffectorNode
-                  io_id="1"
-                  state="0"
-                  hold_ms="300"
-                  result_timeout_ms="3000" />
+                <R2ExecuteArmActionNode
+                  action_name="/r2_arm/execute_action"
+                  target_id="4"
+                  action_id="1025"
+                  timeout_ms="3000"
+                  param="0"
+                  flags="0"
+                  result_timeout_ms="5000" />
 
-                <!-- 夹爪机械臂斜放：对应 GRIPPER_ARM_TILT，action_id=0x0103=259 -->
                 <R2ExecuteArmActionNode
                   action_name="/r2_arm/execute_action"
                   target_id="1"
@@ -115,37 +91,31 @@
                   flags="0"
                   result_timeout_ms="10000" />
 
-                <!-- 本次端头对接是否成功 := 是 -->
                 <Script code=" head_dock_success := 1 " />
 
-                <!-- 端头对接完成次数 += 1 -->
                 <Script code=" head_dock_done_count += 1 " />
 
               </Sequence>
 
-              <!-- =============================================
-                  2.3.2 端头对接失败清理
-                  ============================================= -->
               <Sequence name="Head_Dock_Failure_Cleanup">
 
-                <!-- 停止底盘运动：当前还没有 StopCmdVel 节点，先跳过 -->
                 <R2ForceSuccess name="Skip_Stop_Chassis_OnFail" />
 
-                <!-- 夹爪打开 -->
-                <R2SetEndEffectorNode
-                  io_id="1"
-                  state="0"
-                  hold_ms="300"
-                  result_timeout_ms="3000" />
+                <R2ExecuteArmActionNode
+                  action_name="/r2_arm/execute_action"
+                  target_id="4"
+                  action_id="1025"
+                  timeout_ms="3000"
+                  param="0"
+                  flags="0"
+                  result_timeout_ms="5000" />
 
-                <!-- 底盘下降到安全高度 -->
                 <R2LiftControlNode
                   target_h_mm="100"
                   mask="7"
                   timeout_sec="5.0"
                   result_timeout_ms="8000" />
 
-                <!-- 夹爪机械臂平放：对应 GRIPPER_ARM_FLAT，action_id=0x0101=257 -->
                 <R2ExecuteArmActionNode
                   action_name="/r2_arm/execute_action"
                   target_id="1"
@@ -155,20 +125,16 @@
                   flags="0"
                   result_timeout_ms="10000" />
 
-                <!-- 本次端头对接是否成功 := 否 -->
                 <Script code=" head_dock_success := 0 " />
 
-                <!-- 清理动作本身返回成功，让 Fallback 继续往下走 -->
                 <R2ForceSuccess name="Failure_Cleanup_Return_Success" />
 
               </Sequence>
 
             </Fallback>
 
-            <!-- 2.4 拦截假成功：如果只是执行了失败清理，这里会失败 -->
             <ScriptCondition code=" head_dock_success == 1 " />
 
-            <!-- 2.5 本轮成功，返回 SUCCESS，让 KeepRunningUntilFailure 继续下一轮 -->
             <R2ForceSuccess name="Single_Head_Dock_Return_Success" />
 
           </Sequence>
@@ -176,19 +142,19 @@
         </KeepRunningUntilFailure>
       </ForceSuccess>
 
-      <!-- =========================================================
-          3. 判断一区端头对接次数是否已经完成
-          ========================================================= -->
       <ScriptCondition code=" head_dock_done_count &gt;= target_head_dock_count " />
 
-      <!-- =========================================================
-          4. 一区完成收尾
-          ========================================================= -->
-
-      <!-- 停止底盘运动：当前还没有 StopCmdVel 节点，先跳过 -->
       <R2ForceSuccess name="Skip_Final_Stop_Chassis" />
 
-      <!-- 夹爪机械臂斜放：对应 GRIPPER_ARM_TILT，action_id=0x0103=259 -->
+      <R2ExecuteArmActionNode
+        action_name="/r2_arm/execute_action"
+        target_id="4"
+        action_id="1025"
+        timeout_ms="3000"
+        param="0"
+        flags="0"
+        result_timeout_ms="5000" />
+
       <R2ExecuteArmActionNode
         action_name="/r2_arm/execute_action"
         target_id="1"
@@ -198,10 +164,8 @@
         flags="0"
         result_timeout_ms="10000" />
 
-      <!-- 一区任务是否完成 := 是 -->
       <Script code=" gym_task_done := 1 " />
 
-      <!-- 屏幕显示提示信息由 UI 在行为树 SUCCESS 后自动处理 -->
       <R2ForceSuccess name="Gym_Task_Return_Success" />
 
     </Sequence>
