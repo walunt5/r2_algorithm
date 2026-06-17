@@ -46,6 +46,13 @@ class MissionManagerSim(QObject):
 
         self.odin_ok = True
         self.lower_mcu_ok = True
+
+        #定位状态：用于判断 map-> chassis_base_link是否可用
+        self.localization_ok = False
+        self.localization_status = "未检查"
+        self.localization_last_error = ""
+        self.localization_check_deadline = 0.0
+
         self.current_step = "-"
         self.assembly_count = 0
         self.target_assembly_count = 1
@@ -60,6 +67,10 @@ class MissionManagerSim(QObject):
         self._process_monitor_timer = QTimer()
         self._process_monitor_timer.timeout.connect(self._monitor_processes)
         self._process_monitor_timer.start(500)
+
+        # 启动系统后，周期性检测定位 TF 是否可用
+        self._localization_check_timer = QTimer()
+        self._localization_check_timer.timeout.connect(self._poll_localization_ready)
 
         self._sequence = []
         self._seq_index = 0
@@ -289,6 +300,9 @@ class MissionManagerSim(QObject):
             "active_profile": self.active_profile,
             "odin_ok": self.odin_ok,
             "lower_mcu_ok": self.lower_mcu_ok,
+            "localization_ok": self.localization_ok,
+            "localization_status": self.localization_status,
+            "localization_last_error": self.localization_last_error,
             "current_step": self.current_step,
             "assembly_count": self.assembly_count,
             "target_assembly_count": self.target_assembly_count,
@@ -313,6 +327,196 @@ class MissionManagerSim(QObject):
             "source install/setup.bash && "
             f"{ros_cmd}"
         )
+    
+    def check_localization_tf_once(
+        self,
+        target_frame: str = "map",
+        source_frame: str = "chassis_base_link",
+        timeout_sec: float = 0.8,
+        max_age_sec: float = 2.0,
+        allow_static_tf: bool = True,
+    ):
+        """
+        检查是否能查到 target_frame -> source_frame。
+
+        对当前工程来说：
+        - target_frame = map
+        - source_frame = chassis_base_link
+
+        能查到这个 TF，说明导航和 Odin PID 至少有可用位姿。
+        """
+        py_code = f"""
+import sys
+import time
+import rclpy
+from rclpy.node import Node
+from rclpy.time import Time
+from tf2_ros import Buffer, TransformListener, TransformException
+
+target_frame = {target_frame!r}
+source_frame = {source_frame!r}
+timeout_sec = {float(timeout_sec)!r}
+max_age_sec = {float(max_age_sec)!r}
+allow_static_tf = {bool(allow_static_tf)!r}
+
+rclpy.init()
+node = Node("ui_localization_tf_check")
+buffer = Buffer()
+listener = TransformListener(buffer, node, spin_thread=False)
+
+deadline = time.time() + timeout_sec
+last_error = ""
+
+try:
+    while time.time() < deadline:
+        rclpy.spin_once(node, timeout_sec=0.05)
+        try:
+            tf = buffer.lookup_transform(target_frame, source_frame, Time())
+
+            stamp = tf.header.stamp.sec + tf.header.stamp.nanosec * 1e-9
+            now = node.get_clock().now().nanoseconds * 1e-9
+
+            # 静态 TF 或某些驱动可能给 stamp=0。
+            # 实机动态定位时，一般应该有正常时间戳。
+            if stamp > 0.0:
+                age = now - stamp
+                if age > max_age_sec:
+                    print(f"STALE TF age={{age:.3f}}s > {{max_age_sec:.3f}}s")
+                    sys.exit(2)
+            else:
+                if not allow_static_tf:
+                    print("TF exists, but stamp=0. It may be static/fake TF.")
+                    sys.exit(3)
+
+            x = tf.transform.translation.x
+            y = tf.transform.translation.y
+            z = tf.transform.translation.z
+            print(f"OK {{target_frame}} -> {{source_frame}} x={{x:.3f}} y={{y:.3f}} z={{z:.3f}}")
+            sys.exit(0)
+
+        except Exception as e:
+            last_error = str(e)
+
+    print(f"NO TF {{target_frame}} -> {{source_frame}}, last_error={{last_error}}")
+    sys.exit(1)
+
+finally:
+    node.destroy_node()
+    rclpy.shutdown()
+"""
+
+        ros_cmd = "python3 - <<'PY'\n" + py_code + "\nPY"
+
+        try:
+            result = subprocess.run(
+                ["bash", "-lc", self.make_ros_bash_cmd(ros_cmd)],
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                text=True,
+                timeout=timeout_sec + 2.0,
+                check=False,
+            )
+            output = (result.stdout or "").strip()
+
+            if result.returncode == 0:
+                return True, output
+
+            return False, output or f"TF 检查失败，returncode={result.returncode}"
+
+        except subprocess.TimeoutExpired:
+            return False, f"TF 检查超时：{target_frame} -> {source_frame}"
+        except Exception as e:
+            return False, f"TF 检查异常：{e}"
+
+    def start_wait_localization(self, wait_timeout_sec: float = 20.0):
+        """
+        总系统启动后调用。
+        在 wait_timeout_sec 时间内持续等待 map -> chassis_base_link。
+        """
+        self.localization_ok = False
+        self.localization_status = "等待定位"
+        self.localization_last_error = ""
+        self.localization_check_deadline = time.time() + wait_timeout_sec
+
+        self.system_ready = False
+        self.system_started = True
+        self.system_starting = False
+        self.state = "SYSTEM_WAIT_LOCALIZATION"
+        self.system_step = "系统已启动，正在等待定位 map -> chassis_base_link"
+        self.current_step = self.system_step
+        self.system_progress = 80
+        self.progress = 80
+
+        self.emit_state("系统已启动，正在等待定位成功后再允许开始任务")
+        self._localization_check_timer.start(1000)
+
+    def _poll_localization_ready(self):
+        """
+        QTimer 周期调用。
+        定位成功后，把 system_ready 置为 True。
+        """
+        if not self.system_started or not self.is_process_running(self.system_process):
+            self._localization_check_timer.stop()
+            self.localization_ok = False
+            self.localization_status = "系统未运行"
+            self.localization_last_error = "总系统进程未运行"
+            return
+
+        ok, msg = self.check_localization_tf_once(
+            target_frame="map",
+            source_frame="chassis_base_link",
+            timeout_sec=0.6,
+            max_age_sec=2.0,
+            allow_static_tf=True,
+        )
+
+        if ok:
+            self._localization_check_timer.stop()
+
+            self.localization_ok = True
+            self.localization_status = "定位成功"
+            self.localization_last_error = ""
+
+            self.system_ready = True
+            self.system_started = True
+            self.system_starting = False
+            self.state = "SYSTEM_READY"
+            self.system_step = "系统已启动，定位成功"
+            self.current_step = "系统已启动，定位成功，可以开始任务"
+            self.system_progress = 100
+            self.progress = 100
+
+            self.load_meilin_map_cache()
+            self.emit_state(f"定位成功：{msg}")
+            return
+
+        self.localization_ok = False
+        self.localization_status = "等待定位"
+        self.localization_last_error = msg
+
+        if time.time() > self.localization_check_deadline:
+            self._localization_check_timer.stop()
+
+            self.localization_status = "定位失败"
+            self.system_ready = False
+            self.state = "SYSTEM_WAIT_LOCALIZATION"
+            self.system_step = "系统已启动，但定位未成功"
+            self.current_step = "系统已启动，但定位未成功，不能开始任务"
+            self.system_progress = 80
+            self.progress = 80
+
+            self.emit_state("定位失败：未检测到 map -> chassis_base_link")
+            self.error_emitted.emit(
+                "系统已经启动，但当前还没有检测到定位成功。\n\n"
+                "判断标准：TF 中能查到 map -> chassis_base_link。\n\n"
+                f"最近一次错误：\n{msg}\n\n"
+                "请检查 Odin 是否启动、地图是否加载、重定位是否成功。"
+            )
+            return
+
+        self.current_step = "等待定位中：map -> chassis_base_link"
+        self.system_step = self.current_step
+        self.emit_state("等待定位中")    
 
     def is_process_running(self, proc) -> bool:
         return proc is not None and proc.poll() is None
@@ -830,20 +1034,10 @@ class MissionManagerSim(QObject):
                 "system",
                 "ros2 launch r2_bt_bringup r2_task_real_bringup.launch.py",
             )
-            self.system_starting = False
-            self.system_ready = True
-            self.system_started = True
-            self.system_progress = 100
-            self.progress = 100
+
             self.current_task = "无"
-            self.state = "SYSTEM_READY"
-            self.system_step = "系统已启动"
-            self.current_step = "系统已启动"
-            self.load_meilin_map_cache()
-            self.emit_state(
-                "系统已启动：r2_task_real_bringup.launch.py。"
-                "请不要再手动启动 chassis_serial.launch.py，避免抢占 /dev/ttyUSB0。"
-            )
+            self.start_wait_localization(wait_timeout_sec=20.0)
+
         except Exception as e:
             self.system_process = None
             self.system_starting = False
@@ -917,6 +1111,29 @@ class MissionManagerSim(QObject):
         if not self.system_ready:
             self.error_emitted.emit("系统尚未准备完成，不能开始一区")
             return
+        if not self.localization_ok:
+            ok, msg = self.check_localization_tf_once(
+                target_frame="map",
+                source_frame="chassis_base_link",
+                timeout_sec=1.0,
+                max_age_sec=2.0,
+                allow_static_tf=True,
+            )
+            if not ok:
+                self.localization_ok = False
+                self.localization_status = "定位失败"
+                self.localization_last_error = msg
+                self.emit_state("定位未成功，不能开始一区")
+                self.error_emitted.emit(
+                    "当前定位未成功，不能开始一区任务。\n\n"
+                    "判断标准：TF 中能查到 map -> chassis_base_link。\n\n"
+                    f"错误信息：\n{msg}"
+                )
+                return
+
+            self.localization_ok = True
+            self.localization_status = "定位成功"
+            self.localization_last_error = ""
 
         xml_file_name = "gym_task.xml"
         ok, info = self.check_bt_xml_ready(xml_file_name)

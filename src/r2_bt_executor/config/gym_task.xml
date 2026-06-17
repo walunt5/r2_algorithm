@@ -41,10 +41,11 @@
               <Sequence name="Normal_Head_Pick_And_Dock">
 
                 <!-- 导航到一区取端头预设点 -->
-                <R2NavigateToPoseActionNode
+                <!-- <R2NavigateToPoseActionNode
                   goal_name="GYM_HEAD_PICK_PRESET"
                   timeout_sec="60.0"
-                  result_timeout_ms="70000" />
+                  result_timeout_ms="70000" /> -->
+                <R2ForceSuccess name="Skip_Nav_To_GYM_HEAD_PICK_PRESET_In_Mock" />
 
                 <!-- 底盘升高到取端头高度：300mm 暂定，后续按实测修改 -->
                 <R2LiftControlNode
@@ -87,11 +88,12 @@
                   result_timeout_ms="8000" />
 
                 <!-- Odin 位姿 PID 对齐到一区取端头后对齐预设点 -->
-                <R2OdinPosePidAlignActionNode
+                <!-- <R2OdinPosePidAlignActionNode
                   goal_name="GYM_HEAD_AFTER_PICK_ALIGN"
                   use_goal_name="true"
                   timeout_sec="5.0"
-                  result_timeout_ms="8000" />
+                  result_timeout_ms="8000" /> -->
+                <R2ForceSuccess name="Skip_Odin_Align_In_Mock" />
 
                 <!-- 等待视觉装配完成信号：暂未实现，先跳过 -->
                 <R2ForceSuccess name="Skip_Wait_Assembly_Done" />
