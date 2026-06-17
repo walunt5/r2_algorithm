@@ -239,3 +239,15 @@ goals:
     y: 0.0
     z: 0.0
     yaw: 0.0
+  GYM_HEAD_PICK_PRESET:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+  GYM_HEAD_AFTER_PICK_ALIGN:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
