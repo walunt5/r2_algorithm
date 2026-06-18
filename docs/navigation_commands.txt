@@ -1,0 +1,213 @@
+R2 导航命令行速查
+=================
+
+适用范围
+--------
+这些命令用于通过 ROS2 命令行启动导航系统、发送导航目标、停止导航。
+
+默认前提：
+
+  cd ~/techx_R2_algorithm/r2_algorithm
+  source /opt/ros/humble/setup.bash
+  source install/setup.bash
+
+
+一、启动导航相关系统
+====================
+
+启动真实总系统
+--------------
+总系统会启动真实导航、机械臂串口、底盘串口、Odin PID。
+
+  ros2 launch r2_bt_bringup r2_task_real_bringup.launch.py
+
+如果不想启动 Odin PID action server：
+
+  ros2 launch r2_bt_bringup r2_task_real_bringup.launch.py launch_odin_pose_pid:=false
+
+单独启动导航系统
+----------------
+启动 Odin 驱动、OctoMap 地图、规划器、控制器、rosbridge、导航 action server 等：
+
+  ros2 launch r2_nav_bringup r2_odin_web_nav.launch.py
+
+常用可选参数：
+
+  ros2 launch r2_nav_bringup r2_odin_web_nav.launch.py launch_rviz:=false launch_map_gui:=false launch_web:=true launch_rosbridge:=true
+
+不启动旧 cmd_vel_to_serial_node：
+
+  ros2 launch r2_nav_bringup r2_odin_web_nav.launch.py launch_serial:=false
+
+只启动导航 action server 依赖的导航链路时，通常仍需要：
+- map -> chassis_base_link TF 可用
+- /planned_path 能由 jie_path_node 发布
+- d1_controller 能订阅 /start_navigation 并执行 /cmd_vel
+
+
+二、/r2_navigate_to_pose 按 goal_name 导航
+========================================
+
+说明：
+- /r2_navigate_to_pose 的 action 类型是 r2_nav_interfaces/action/NavigateToPose。
+- goal_name 来自 r2_nav_goals.yaml。
+- 如果 goal_name 非空，action server 会优先用 YAML 中的目标点。
+- timeout_sec <= 0 时，服务端默认使用 60 秒。
+
+通用格式：
+
+  ros2 action send_goal /r2_navigate_to_pose r2_nav_interfaces/action/NavigateToPose "{goal_name: 'ENTRY_TO_B1_APPROACH', timeout_sec: 60.0}" --feedback
+
+导航到 ENTRY_TO_B1_APPROACH：
+
+  ros2 action send_goal /r2_navigate_to_pose r2_nav_interfaces/action/NavigateToPose "{goal_name: 'ENTRY_TO_B1_APPROACH', timeout_sec: 60.0}" --feedback
+
+导航到 ENTRY_TO_B2_APPROACH：
+
+  ros2 action send_goal /r2_navigate_to_pose r2_nav_interfaces/action/NavigateToPose "{goal_name: 'ENTRY_TO_B2_APPROACH', timeout_sec: 60.0}" --feedback
+
+导航到 ENTRY_TO_B3_APPROACH：
+
+  ros2 action send_goal /r2_navigate_to_pose r2_nav_interfaces/action/NavigateToPose "{goal_name: 'ENTRY_TO_B3_APPROACH', timeout_sec: 60.0}" --feedback
+
+导航到一区取端头预设点 GYM_HEAD_PICK_PRESET：
+
+  ros2 action send_goal /r2_navigate_to_pose r2_nav_interfaces/action/NavigateToPose "{goal_name: 'GYM_HEAD_PICK_PRESET', timeout_sec: 60.0}" --feedback
+
+导航到一区取端头后对准点 GYM_HEAD_AFTER_PICK_ALIGN：
+
+  ros2 action send_goal /r2_navigate_to_pose r2_nav_interfaces/action/NavigateToPose "{goal_name: 'GYM_HEAD_AFTER_PICK_ALIGN', timeout_sec: 60.0}" --feedback
+
+导航到出口点 B10_TO_EXIT_ZONE_APPROACH：
+
+  ros2 action send_goal /r2_navigate_to_pose r2_nav_interfaces/action/NavigateToPose "{goal_name: 'B10_TO_EXIT_ZONE_APPROACH', timeout_sec: 60.0}" --feedback
+
+
+三、/r2_navigate_to_pose 直接 pose 导航
+=====================================
+
+说明：
+- goal_name 留空时，action server 使用 target_pose。
+- frame_id 通常使用 map。
+- orientation 下面示例使用 yaw=0 对应的四元数 z=0, w=1。
+
+导航到 map 坐标 x=1.0, y=0.5, yaw=0：
+
+  ros2 action send_goal /r2_navigate_to_pose r2_nav_interfaces/action/NavigateToPose "{goal_name: '', timeout_sec: 60.0, target_pose: {header: {frame_id: 'map'}, pose: {position: {x: 1.0, y: 0.5, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}}}}" --feedback
+
+导航到 map 坐标 x=0.0, y=0.0, yaw=0：
+
+  ros2 action send_goal /r2_navigate_to_pose r2_nav_interfaces/action/NavigateToPose "{goal_name: '', timeout_sec: 60.0, target_pose: {header: {frame_id: 'map'}, pose: {position: {x: 0.0, y: 0.0, z: 0.0}, orientation: {x: 0.0, y: 0.0, z: 0.0, w: 1.0}}}}" --feedback
+
+
+四、停止导航
+============
+
+发布停止导航：
+
+  ros2 topic pub --once /stop_navigation std_msgs/msg/Bool "{data: true}"
+
+补发 /cmd_vel=0：
+
+  ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}"
+
+
+五、Odin 精对准 action
+=====================
+
+说明：
+- Odin PID action 使用 r2_odin_interfaces/action/OdinPosePidAlign。
+- use_goal_name=true 时，goal_name 同样来自 r2_nav_goals.yaml。
+- 它会发布 /cmd_vel 做精对准。
+
+对准 ENTRY_TO_B1_APPROACH：
+
+  ros2 action send_goal /r2_odin_pose_pid/align r2_odin_interfaces/action/OdinPosePidAlign "{goal_name: 'ENTRY_TO_B1_APPROACH', use_goal_name: true, timeout_sec: 5.0}" --feedback
+
+对准 GYM_HEAD_AFTER_PICK_ALIGN：
+
+  ros2 action send_goal /r2_odin_pose_pid/align r2_odin_interfaces/action/OdinPosePidAlign "{goal_name: 'GYM_HEAD_AFTER_PICK_ALIGN', use_goal_name: true, timeout_sec: 5.0}" --feedback
+
+
+六、当前 r2_nav_goals.yaml 中的 goal_name
+========================================
+
+当前目标点配置来源：
+
+  src/r2_nav_bringup/config/r2_nav_goals.yaml
+
+当前可用 goal_name 列表：
+
+  ENTRY_TO_B1_APPROACH
+  ENTRY_TO_B2_APPROACH
+  ENTRY_TO_B3_APPROACH
+  B1_TO_B2_APPROACH
+  B2_TO_B1_APPROACH
+  B2_TO_B3_APPROACH
+  B3_TO_B2_APPROACH
+  B1_TO_B4_APPROACH
+  B4_TO_B1_APPROACH
+  B2_TO_B5_APPROACH
+  B5_TO_B2_APPROACH
+  B3_TO_B6_APPROACH
+  B6_TO_B3_APPROACH
+  B4_TO_B5_APPROACH
+  B5_TO_B4_APPROACH
+  B5_TO_B6_APPROACH
+  B6_TO_B5_APPROACH
+  B4_TO_B7_APPROACH
+  B7_TO_B4_APPROACH
+  B5_TO_B8_APPROACH
+  B8_TO_B5_APPROACH
+  B6_TO_B9_APPROACH
+  B9_TO_B6_APPROACH
+  B7_TO_B8_APPROACH
+  B8_TO_B7_APPROACH
+  B8_TO_B9_APPROACH
+  B9_TO_B8_APPROACH
+  B7_TO_B10_APPROACH
+  B10_TO_B7_APPROACH
+  B8_TO_B11_APPROACH
+  B11_TO_B8_APPROACH
+  B9_TO_B12_APPROACH
+  B12_TO_B9_APPROACH
+  B10_TO_B11_APPROACH
+  B11_TO_B10_APPROACH
+  B11_TO_B12_APPROACH
+  B12_TO_B11_APPROACH
+  B10_TO_EXIT_ZONE_APPROACH
+  B11_TO_EXIT_ZONE_APPROACH
+  B12_TO_EXIT_ZONE_APPROACH
+  GYM_HEAD_PICK_PRESET
+  GYM_HEAD_AFTER_PICK_ALIGN
+
+
+七、常用检查命令
+================
+
+查看导航 action：
+
+  ros2 action list | grep navigate
+
+查看导航 action 信息：
+
+  ros2 action info /r2_navigate_to_pose
+
+查看当前目标点文件：
+
+  sed -n '1,220p' src/r2_nav_bringup/config/r2_nav_goals.yaml
+
+查看 TF：
+
+  ros2 run tf2_ros tf2_echo map chassis_base_link
+
+查看规划路径：
+
+  ros2 topic echo /planned_path
+
+查看启动/停止导航 topic：
+
+  ros2 topic echo /start_navigation
+
+  ros2 topic echo /stop_navigation
+

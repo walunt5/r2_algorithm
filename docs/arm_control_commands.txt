@@ -1,0 +1,263 @@
+R2 机械臂控制命令行速查
+========================
+
+适用范围
+--------
+这些命令用于通过 ROS2 命令行向机械臂 STM32 下发指令。
+
+默认前提：
+
+  cd ~/techx_R2_algorithm/r2_algorithm
+  source /opt/ros/humble/setup.bash
+  source install/setup.bash
+
+真实机械臂串口启动
+------------------
+
+  ros2 launch techx_r2_arm_control arm_serial.launch.py
+
+该 launch 默认读取：
+
+  install/techx_r2_arm_control/share/techx_r2_arm_control/config/arm_serial.yaml
+
+当前实机端口配置为：
+
+  /dev/r2_arm
+
+mock 机械臂串口启动
+-------------------
+启动虚拟串口 + mock STM32 + arm_serial_node：
+
+  ros2 launch techx_r2_arm_control mock_take_head.launch.py
+
+mock 返回成功：
+
+  ros2 launch techx_r2_arm_control mock_take_head.launch.py result_mode:=success
+
+mock 返回错误：
+
+  ros2 launch techx_r2_arm_control mock_take_head.launch.py result_mode:=error
+
+mock 不回 ACK：
+
+  ros2 launch techx_r2_arm_control mock_take_head.launch.py result_mode:=no_ack
+
+mock 超时：
+
+  ros2 launch techx_r2_arm_control mock_take_head.launch.py result_mode:=timeout
+
+
+一、/r2_arm/execute_action 动作控制
+==================================
+
+说明：
+- /r2_arm/execute_action 会由 arm_serial_node 转成 EXECUTE_ACTION 18 字节串口帧发给 STM32。
+- goal 字段：
+  - target_id: 目标模块
+  - action_id: 动作 ID
+  - timeout_ms: 下发给 STM32，同时也用于上位机等待 DONE
+  - param: int16 可选参数，当前大多填 0
+  - flags: uint8 可选标志，当前大多填 0
+
+推荐短命令格式：
+
+  ros2 run techx_r2_arm_control test_execute_action_client <target_id> <action_id> <timeout_ms> <param> <flags>
+
+原生 ros2 action send_goal 格式：
+
+  ros2 action send_goal /r2_arm/execute_action techx_r2_arm_interfaces/action/ExecuteAction "{target_id: 4, action_id: 1025, timeout_ms: 3000, param: 0, flags: 0}" --feedback
+
+
+target_id=4：GRIPPER_CLAW 夹爪本体
+---------------------------------
+重要：夹爪当前不再走 SET_END_EFFECTOR / IO_STATUS。
+夹爪打开/闭合统一走 EXECUTE_ACTION / ACTION_FEEDBACK。
+
+夹爪打开，action_id=0x0401=1025：
+
+  ros2 run techx_r2_arm_control test_execute_action_client 4 1025 3000 0 0
+
+原生写法：
+
+  ros2 action send_goal /r2_arm/execute_action techx_r2_arm_interfaces/action/ExecuteAction "{target_id: 4, action_id: 1025, timeout_ms: 3000, param: 0, flags: 0}" --feedback
+
+夹爪闭合，action_id=0x0402=1026：
+
+  ros2 run techx_r2_arm_control test_execute_action_client 4 1026 3000 0 0
+
+原生写法：
+
+  ros2 action send_goal /r2_arm/execute_action techx_r2_arm_interfaces/action/ExecuteAction "{target_id: 4, action_id: 1026, timeout_ms: 3000, param: 0, flags: 0}" --feedback
+
+夹爪闭合对应 data 区应为：
+
+  04 02 04 B8 0B 00 00 00
+
+
+target_id=1：GRIPPER_ARM 夹爪机械臂
+----------------------------------
+夹爪机械臂平放，action_id=0x0101=257：
+
+  ros2 run techx_r2_arm_control test_execute_action_client 1 257 8000 0 0
+
+原生写法：
+
+  ros2 action send_goal /r2_arm/execute_action techx_r2_arm_interfaces/action/ExecuteAction "{target_id: 1, action_id: 257, timeout_ms: 8000, param: 0, flags: 0}" --feedback
+
+夹爪机械臂抬起/旋转 90 度，action_id=0x0102=258：
+
+  ros2 run techx_r2_arm_control test_execute_action_client 1 258 8000 0 0
+
+原生写法：
+
+  ros2 action send_goal /r2_arm/execute_action techx_r2_arm_interfaces/action/ExecuteAction "{target_id: 1, action_id: 258, timeout_ms: 8000, param: 0, flags: 0}" --feedback
+
+夹爪机械臂斜放，action_id=0x0103=259：
+
+  ros2 run techx_r2_arm_control test_execute_action_client 1 259 8000 0 0
+
+原生写法：
+
+  ros2 action send_goal /r2_arm/execute_action techx_r2_arm_interfaces/action/ExecuteAction "{target_id: 1, action_id: 259, timeout_ms: 8000, param: 0, flags: 0}" --feedback
+
+
+target_id=2：KFS_SUCTION_ARM 中心吸盘/KFS 机械臂
+------------------------------------------------
+中心吸盘机械臂回零，action_id=0x0201=513：
+
+  ros2 run techx_r2_arm_control test_execute_action_client 2 513 10000 0 0
+
+中心吸盘机械臂梅林准备位，action_id=0x0202=514：
+
+  ros2 run techx_r2_arm_control test_execute_action_client 2 514 10000 0 0
+
+KFS 吸取，高度差 0，action_id=0x0210=528：
+
+  ros2 run techx_r2_arm_control test_execute_action_client 2 528 12000 0 0
+
+KFS 吸取，高度差 +200，action_id=0x0211=529：
+
+  ros2 run techx_r2_arm_control test_execute_action_client 2 529 12000 0 0
+
+KFS 吸取，高度差 -200，action_id=0x0212=530：
+
+  ros2 run techx_r2_arm_control test_execute_action_client 2 530 12000 0 0
+
+KFS 吸取，高度差 +400，action_id=0x0213=531：
+
+  ros2 run techx_r2_arm_control test_execute_action_client 2 531 12000 0 0
+
+KFS 吸取，高度差 -400，action_id=0x0214=532：
+
+  ros2 run techx_r2_arm_control test_execute_action_client 2 532 12000 0 0
+
+KFS 抬起，action_id=0x0220=544：
+
+  ros2 run techx_r2_arm_control test_execute_action_client 2 544 10000 0 0
+
+KFS 转移到存储吸盘，action_id=0x0230=560：
+
+  ros2 run techx_r2_arm_control test_execute_action_client 2 560 12000 0 0
+
+中心吸盘机械臂携带姿态，action_id=0x0240=576：
+
+  ros2 run techx_r2_arm_control test_execute_action_client 2 576 10000 0 0
+
+原生写法示例，KFS 高度差 +200：
+
+  ros2 action send_goal /r2_arm/execute_action techx_r2_arm_interfaces/action/ExecuteAction "{target_id: 2, action_id: 529, timeout_ms: 12000, param: 0, flags: 0}" --feedback
+
+
+target_id=3：COMPOSITE_TASK 复合任务
+------------------------------------
+取端头复合任务，action_id=0x0301=769：
+
+  ros2 run techx_r2_arm_control test_execute_action_client 3 769 15000 0 0
+
+原生写法：
+
+  ros2 action send_goal /r2_arm/execute_action techx_r2_arm_interfaces/action/ExecuteAction "{target_id: 3, action_id: 769, timeout_ms: 15000, param: 0, flags: 0}" --feedback
+
+
+二、/r2_arm/get_head 取端头复合 action
+=====================================
+
+这是旧的 GetHead action client，内部在 arm_serial_node 里等价于发送：
+- target_id=3
+- action_id=0x0301
+- timeout_ms=take_head_timeout_ms
+
+推荐短命令：
+
+  ros2 run techx_r2_arm_control test_get_head_client
+
+原生写法：
+
+  ros2 action send_goal /r2_arm/get_head techx_r2_arm_interfaces/action/GetHead "{}" --feedback
+
+
+三、/r2_arm/set_end_effector 末端 IO 控制
+=======================================
+
+重要：
+- 夹爪本体现在不再使用 /r2_arm/set_end_effector。
+- 夹爪打开/闭合请使用 target_id=4 的 /r2_arm/execute_action。
+- /r2_arm/set_end_effector 目前只用于吸盘泵等 IO：
+  - io_id=2: ARM_SUCTION_PUMP 机械臂吸盘泵
+  - io_id=3: REAR_STORAGE_PUMP 后部存储吸盘泵
+
+机械臂吸盘泵打开，io_id=2 state=1：
+
+  ros2 run techx_r2_arm_control test_set_end_effector_client 2 1 0
+
+机械臂吸盘泵关闭，io_id=2 state=0：
+
+  ros2 run techx_r2_arm_control test_set_end_effector_client 2 0 0
+
+后部存储吸盘泵打开，io_id=3 state=1：
+
+  ros2 run techx_r2_arm_control test_set_end_effector_client 3 1 0
+
+后部存储吸盘泵关闭，io_id=3 state=0：
+
+  ros2 run techx_r2_arm_control test_set_end_effector_client 3 0 0
+
+原生写法，机械臂吸盘泵打开：
+
+  ros2 action send_goal /r2_arm/set_end_effector techx_r2_arm_interfaces/action/SetEndEffector "{io_id: 2, state: 1, hold_ms: 0}" --feedback
+
+原生写法，机械臂吸盘泵关闭：
+
+  ros2 action send_goal /r2_arm/set_end_effector techx_r2_arm_interfaces/action/SetEndEffector "{io_id: 2, state: 0, hold_ms: 0}" --feedback
+
+原生写法，后部存储吸盘泵打开：
+
+  ros2 action send_goal /r2_arm/set_end_effector techx_r2_arm_interfaces/action/SetEndEffector "{io_id: 3, state: 1, hold_ms: 0}" --feedback
+
+原生写法，后部存储吸盘泵关闭：
+
+  ros2 action send_goal /r2_arm/set_end_effector techx_r2_arm_interfaces/action/SetEndEffector "{io_id: 3, state: 0, hold_ms: 0}" --feedback
+
+
+四、常用检查命令
+================
+
+查看机械臂 action：
+
+  ros2 action list | grep r2_arm
+
+查看机械臂节点：
+
+  ros2 node list | grep arm
+
+查看 action 类型：
+
+  ros2 action info /r2_arm/execute_action
+
+查看串口节点日志时重点关注：
+
+  send EXECUTE_ACTION
+  TX raw frame
+  ACTION_FEEDBACK
+  DONE
+

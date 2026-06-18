@@ -1,0 +1,274 @@
+R2 底盘控制命令行速查
+========================
+
+适用范围
+--------
+这些命令用于通过 ROS2 命令行向底盘 STM32 下发指令。
+
+默认前提：
+
+  cd ~/techx_R2_algorithm/r2_algorithm
+  source /opt/ros/humble/setup.bash
+  source install/setup.bash
+
+真实底盘串口启动
+----------------
+注意：当前 chassis_serial.launch.py 默认 port 是 /dev/ttyUSB0。
+实机建议显式指定 /dev/r2_chassis，避免接错串口。
+
+  ros2 launch techx_r2_chassis_control chassis_serial.launch.py port:=/dev/r2_chassis
+
+mock 底盘串口启动
+-----------------
+启动虚拟串口 + mock STM32 + chassis_serial_node：
+
+  ros2 launch techx_r2_chassis_control mock_chassis.launch.py
+
+mock 返回成功：
+
+  ros2 launch techx_r2_chassis_control mock_chassis.launch.py result_mode:=success
+
+mock 返回错误：
+
+  ros2 launch techx_r2_chassis_control mock_chassis.launch.py result_mode:=error
+
+mock 不回 ACK：
+
+  ros2 launch techx_r2_chassis_control mock_chassis.launch.py result_mode:=no_ack
+
+mock 超时：
+
+  ros2 launch techx_r2_chassis_control mock_chassis.launch.py result_mode:=timeout
+
+
+一、/cmd_vel 直接速度控制
+=========================
+
+说明：
+- /cmd_vel 会由 chassis_serial_node 转成 CHASSIS_VEL_CMD 串口帧发给 STM32。
+- 参数单位：
+  - linear.x: m/s，前进为正，后退为负
+  - linear.y: m/s，左移为正，右移为负
+  - angular.z: rad/s，逆时针为正，顺时针为负
+- 实机配置里速度有限幅，见 chassis_serial.yaml。
+
+推荐短命令：使用测试发布器
+-------------------------
+前进 3 秒：
+
+  ros2 run techx_r2_chassis_control test_cmd_vel_pub --vx 0.05 --vy 0.0 --omega 0.0 --duration-sec 3.0
+
+后退 3 秒：
+
+  ros2 run techx_r2_chassis_control test_cmd_vel_pub --vx -0.05 --vy 0.0 --omega 0.0 --duration-sec 3.0
+
+左移 3 秒：
+
+  ros2 run techx_r2_chassis_control test_cmd_vel_pub --vx 0.0 --vy 0.05 --omega 0.0 --duration-sec 3.0
+
+右移 3 秒：
+
+  ros2 run techx_r2_chassis_control test_cmd_vel_pub --vx 0.0 --vy -0.05 --omega 0.0 --duration-sec 3.0
+
+原地逆时针旋转 3 秒：
+
+  ros2 run techx_r2_chassis_control test_cmd_vel_pub --vx 0.0 --vy 0.0 --omega 0.05 --duration-sec 3.0
+
+原地顺时针旋转 3 秒：
+
+  ros2 run techx_r2_chassis_control test_cmd_vel_pub --vx 0.0 --vy 0.0 --omega -0.05 --duration-sec 3.0
+
+停止底盘：
+
+  ros2 run techx_r2_chassis_control test_cmd_vel_pub --vx 0.0 --vy 0.0 --omega 0.0 --duration-sec 1.0
+
+原生 ros2 topic pub 写法
+-----------------------
+发布一次停止命令：
+
+  ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}"
+
+连续前进，Ctrl+C 停止：
+
+  ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.05, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}"
+
+连续左移，Ctrl+C 停止：
+
+  ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.0, y: 0.05, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}"
+
+连续原地旋转，Ctrl+C 停止：
+
+  ros2 topic pub -r 10 /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.05}}"
+
+
+二、/r2_chassis/step_command 跨台阶/平台动作
+===========================================
+
+说明：
+- /r2_chassis/step_command 会由 chassis_serial_node 转成 STEP_COMMAND 串口帧发给 STM32。
+- 当前支持的 cmd_type：
+  - MOVE_FLAT
+  - CLIMB_200
+  - CLIMB_400
+  - DESCEND_200
+  - DESCEND_400
+- current_h 和 target_h 单位是 mm。
+- edge_id 可以是数字，也可以是字符串；字符串会被协议层转换成 uint8。
+
+推荐短命令：使用测试 action client
+---------------------------------
+平地移动：
+
+  ros2 run techx_r2_chassis_control test_step_command_client MOVE_FLAT --from-block TEST_START --target-block TEST_FLAT --current-h 0 --target-h 0 --edge-id TEST_MOVE_FLAT --timeout-sec 10.0
+
+爬 200mm 台阶：
+
+  ros2 run techx_r2_chassis_control test_step_command_client CLIMB_200 --from-block TEST_0MM --target-block TEST_200MM --current-h 0 --target-h 200 --edge-id TEST_CLIMB_200 --timeout-sec 15.0
+
+下 200mm 台阶：
+
+  ros2 run techx_r2_chassis_control test_step_command_client DESCEND_200 --from-block TEST_200MM --target-block TEST_0MM --current-h 200 --target-h 0 --edge-id TEST_DESCEND_200 --timeout-sec 15.0
+
+爬 400mm 台阶：
+
+  ros2 run techx_r2_chassis_control test_step_command_client CLIMB_400 --from-block TEST_0MM --target-block TEST_400MM --current-h 0 --target-h 400 --edge-id TEST_CLIMB_400 --timeout-sec 20.0
+
+下 400mm 台阶：
+
+  ros2 run techx_r2_chassis_control test_step_command_client DESCEND_400 --from-block TEST_400MM --target-block TEST_0MM --current-h 400 --target-h 0 --edge-id TEST_DESCEND_400 --timeout-sec 20.0
+
+原生 ros2 action send_goal 写法
+------------------------------
+爬 200mm 台阶：
+
+  ros2 action send_goal /r2_chassis/step_command techx_r2_chassis_interfaces/action/StepCommand "{cmd_type: 'CLIMB_200', from_block: 'TEST_0MM', target_block: 'TEST_200MM', current_h: 0, target_h: 200, edge_id: 'TEST_CLIMB_200', timeout_sec: 15.0}" --feedback
+
+下 200mm 台阶：
+
+  ros2 action send_goal /r2_chassis/step_command techx_r2_chassis_interfaces/action/StepCommand "{cmd_type: 'DESCEND_200', from_block: 'TEST_200MM', target_block: 'TEST_0MM', current_h: 200, target_h: 0, edge_id: 'TEST_DESCEND_200', timeout_sec: 15.0}" --feedback
+
+爬 400mm 台阶：
+
+  ros2 action send_goal /r2_chassis/step_command techx_r2_chassis_interfaces/action/StepCommand "{cmd_type: 'CLIMB_400', from_block: 'TEST_0MM', target_block: 'TEST_400MM', current_h: 0, target_h: 400, edge_id: 'TEST_CLIMB_400', timeout_sec: 20.0}" --feedback
+
+下 400mm 台阶：
+
+  ros2 action send_goal /r2_chassis/step_command techx_r2_chassis_interfaces/action/StepCommand "{cmd_type: 'DESCEND_400', from_block: 'TEST_400MM', target_block: 'TEST_0MM', current_h: 400, target_h: 0, edge_id: 'TEST_DESCEND_400', timeout_sec: 20.0}" --feedback
+
+
+三、/r2_chassis/lift_control 升降控制
+====================================
+
+说明：
+- /r2_chassis/lift_control 会由 chassis_serial_node 转成 LIFT_CONTROL 串口帧发给 STM32。
+- target_h_mm 单位是 mm。
+- mask：
+  - 1 = 只控制 1 号升降
+  - 2 = 只控制 2 号升降
+  - 4 = 只控制 3 号升降
+  - 7 = 同时控制 1/2/3 号升降，整车一起升降
+
+推荐短命令：使用测试 action client
+---------------------------------
+整车降到 0mm：
+
+  ros2 run techx_r2_chassis_control test_lift_control_client --target-h-mm 0 --mask 0x07 --timeout-sec 10.0
+
+整车升到 100mm：
+
+  ros2 run techx_r2_chassis_control test_lift_control_client --target-h-mm 100 --mask 0x07 --timeout-sec 15.0
+
+整车升到 200mm：
+
+  ros2 run techx_r2_chassis_control test_lift_control_client --target-h-mm 200 --mask 0x07 --timeout-sec 20.0
+
+整车升到 300mm：
+
+  ros2 run techx_r2_chassis_control test_lift_control_client --target-h-mm 300 --mask 0x07 --timeout-sec 20.0
+
+整车升到 400mm：
+
+  ros2 run techx_r2_chassis_control test_lift_control_client --target-h-mm 400 --mask 0x07 --timeout-sec 25.0
+
+整车升到 600mm：
+
+  ros2 run techx_r2_chassis_control test_lift_control_client --target-h-mm 600 --mask 0x07 --timeout-sec 30.0
+
+只控制 1 号升降到 100mm：
+
+  ros2 run techx_r2_chassis_control test_lift_control_client --target-h-mm 100 --mask 0x01 --timeout-sec 15.0
+
+只控制 2 号升降到 100mm：
+
+  ros2 run techx_r2_chassis_control test_lift_control_client --target-h-mm 100 --mask 0x02 --timeout-sec 15.0
+
+只控制 3 号升降到 100mm：
+
+  ros2 run techx_r2_chassis_control test_lift_control_client --target-h-mm 100 --mask 0x04 --timeout-sec 15.0
+
+原生 ros2 action send_goal 写法
+------------------------------
+整车升到 300mm：
+
+  ros2 action send_goal /r2_chassis/lift_control techx_r2_chassis_interfaces/action/LiftControl "{target_h_mm: 300, mask: 7, timeout_sec: 20.0}" --feedback
+
+整车降到 0mm：
+
+  ros2 action send_goal /r2_chassis/lift_control techx_r2_chassis_interfaces/action/LiftControl "{target_h_mm: 0, mask: 7, timeout_sec: 10.0}" --feedback
+
+只控制 1 号升降：
+
+  ros2 action send_goal /r2_chassis/lift_control techx_r2_chassis_interfaces/action/LiftControl "{target_h_mm: 100, mask: 1, timeout_sec: 15.0}" --feedback
+
+只控制 2 号升降：
+
+  ros2 action send_goal /r2_chassis/lift_control techx_r2_chassis_interfaces/action/LiftControl "{target_h_mm: 100, mask: 2, timeout_sec: 15.0}" --feedback
+
+只控制 3 号升降：
+
+  ros2 action send_goal /r2_chassis/lift_control techx_r2_chassis_interfaces/action/LiftControl "{target_h_mm: 100, mask: 4, timeout_sec: 15.0}" --feedback
+
+查看升降状态：
+
+  ros2 topic echo /r2_chassis/lift_status
+
+
+四、/r2_chassis/estop 急停
+=========================
+
+推荐短命令：
+
+  ros2 run techx_r2_chassis_control test_estop_client
+
+原生 ros2 service call 写法：
+
+  ros2 service call /r2_chassis/estop techx_r2_chassis_interfaces/srv/EStop "{trigger: true}"
+
+急停后再补发一次 /cmd_vel=0：
+
+  ros2 topic pub --once /cmd_vel geometry_msgs/msg/Twist "{linear: {x: 0.0, y: 0.0, z: 0.0}, angular: {x: 0.0, y: 0.0, z: 0.0}}"
+
+
+五、常用检查命令
+================
+
+查看底盘 action：
+
+  ros2 action list | grep r2_chassis
+
+查看底盘 service：
+
+  ros2 service list | grep r2_chassis
+
+查看底盘 topic：
+
+  ros2 topic list | grep r2_chassis
+
+查看 /cmd_vel：
+
+  ros2 topic echo /cmd_vel
+
+查看节点：
+
+  ros2 node list | grep chassis
+

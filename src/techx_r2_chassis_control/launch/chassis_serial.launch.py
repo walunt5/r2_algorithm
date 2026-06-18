@@ -11,7 +11,7 @@ def generate_launch_description():
     default_config = os.path.join(pkg_share, 'config', 'chassis_serial.yaml')
 
     config_arg = DeclareLaunchArgument('config', default_value=default_config)
-    port_arg = DeclareLaunchArgument('port', default_value='/dev/ttyUSB0')
+    port_arg = DeclareLaunchArgument('port', default_value='/dev/r2_chassis')
 
     return LaunchDescription([
         config_arg,

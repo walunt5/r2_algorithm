@@ -835,6 +835,46 @@ finally:
         except Exception as e:
             self.log(f"调用 /r2_chassis/estop 失败：{e}")
 
+    def open_gripper_claw(self):
+        ros_cmd = (
+            "python3 ui/open_gripper_claw_until_feedback.py "
+            "--target-id 4 "
+            "--action-id 1025 "
+            "--timeout-ms 3000 "
+            "--param 0 "
+            "--flags 0 "
+            "--server-timeout 1.0 "
+            "--goal-response-timeout 1.0 "
+            "--feedback-timeout 1.0"
+        )
+        try:
+            result = subprocess.run(
+                ["bash", "-lc", self.make_ros_bash_cmd(ros_cmd)],
+                timeout=4.0,
+                check=False,
+                capture_output=True,
+                text=True,
+            )
+            output = "\n".join(
+                part.strip()
+                for part in (result.stdout, result.stderr)
+                if part and part.strip()
+            )
+            if result.returncode == 0:
+                if output:
+                    self.log(f"夹爪打开首帧反馈：{output.splitlines()[-1]}")
+                self.log("已下发夹爪打开命令：target_id=4 action_id=1025，不等待最终结果")
+            else:
+                self.log(
+                    "夹爪打开命令未确认首帧反馈："
+                    f"returncode={result.returncode}"
+                    + (f"，{output.splitlines()[-1]}" if output else "")
+                )
+        except subprocess.TimeoutExpired:
+            self.log("夹爪打开命令等待首帧反馈超时：请检查 /r2_arm/execute_action 是否可用或机械臂是否 busy")
+        except Exception as e:
+            self.log(f"夹爪打开命令失败：{e}")
+
     # -------------------------
     # 旧模拟进度保留，但真实流程不依赖它
     # -------------------------
@@ -1032,7 +1072,7 @@ finally:
         try:
             self.system_process = self.start_ros_process(
                 "system",
-                "ros2 launch r2_bt_bringup r2_task_real_bringup.launch.py",
+                "ros2 launch r2_bt_bringup r2_task_mock_bringup.launch.py",
             )
 
             self.current_task = "无"
@@ -1225,6 +1265,8 @@ finally:
         self._timer.stop()
         self.log("执行急停：先发布 /cmd_vel=0")
         self.publish_zero_cmd_vel()
+        self.log("执行急停：打开夹爪")
+        self.open_gripper_claw()
         self.log("执行急停：调用 /r2_chassis/estop")
         self.call_chassis_estop()
         self.log("执行急停：停止当前行为树")
@@ -1244,6 +1286,8 @@ finally:
         self._timer.stop()
         self.log("执行复位：先发布 /cmd_vel=0")
         self.publish_zero_cmd_vel()
+        self.log("执行复位：打开夹爪")
+        self.open_gripper_claw()
         time.sleep(0.2)
         self.log("执行复位：停止行为树")
         self.stop_process(self.meilin_bt_process, "meilin_bt_process")
