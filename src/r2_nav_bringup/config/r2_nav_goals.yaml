@@ -7,16 +7,16 @@ goals:
     yaw: 1.57
   ENTRY_TO_B2_APPROACH:
     frame_id: map
-    x: 0.0
-    y: 0.0
-    z: 0.0
-    yaw: 0.0
+    x: 1.902416
+    y: -1.400247
+    z: -0.133932
+    yaw: -0.19061
   ENTRY_TO_B3_APPROACH:
     frame_id: map
-    x: 1.788801
-    y: -0.360666
-    z: -0.124356
-    yaw: -0.110665
+    x: 1.903064
+    y: -1.400446
+    z: -0.134156
+    yaw: -0.190661
   B1_TO_B2_APPROACH:
     frame_id: map
     x: 0.0

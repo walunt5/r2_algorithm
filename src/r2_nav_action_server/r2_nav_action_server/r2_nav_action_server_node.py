@@ -7,6 +7,7 @@ import yaml
 import rclpy
 from rclpy.action import ActionServer, CancelResponse, GoalResponse
 from rclpy.callback_groups import ReentrantCallbackGroup
+from rclpy.duration import Duration
 from rclpy.executors import MultiThreadedExecutor
 from rclpy.node import Node
 from rclpy.time import Time
@@ -63,6 +64,7 @@ class R2NavActionServer(Node):
         self.declare_parameter("planned_path_topic", "/planned_path")
 
         self.declare_parameter("path_wait_timeout_sec", 5.0)
+        self.declare_parameter("path_source_mode", "planner")
         self.declare_parameter("goal_position_tolerance", 0.10)
         self.declare_parameter("goal_yaw_tolerance", 0.20)
         self.declare_parameter("feedback_rate_hz", 10.0)
@@ -76,6 +78,14 @@ class R2NavActionServer(Node):
         self.path_wait_timeout_sec = float(
             self.get_parameter("path_wait_timeout_sec").value
         )
+        self.path_source_mode = str(
+            self.get_parameter("path_source_mode").value
+        ).strip()
+        if self.path_source_mode not in ("planner", "direct_goal"):
+            self.get_logger().warn(
+                f"未知 path_source_mode={self.path_source_mode}，回退到 planner"
+            )
+            self.path_source_mode = "planner"
         self.goal_position_tolerance = float(
             self.get_parameter("goal_position_tolerance").value
         )
@@ -125,6 +135,11 @@ class R2NavActionServer(Node):
             self.get_parameter("stop_navigation_topic").value,
             10,
         )
+        self.planned_path_pub = self.create_publisher(
+            Path,
+            self.get_parameter("planned_path_topic").value,
+            planning_qos,
+        )
 
         # Path 订阅
         self.path_event = threading.Event()
@@ -158,7 +173,8 @@ class R2NavActionServer(Node):
         self.get_logger().info(
             f"map_frame={self.map_frame}, base_frame={self.base_frame}, "
             f"tf_wait_timeout_sec={self.tf_wait_timeout_sec:.1f}, "
-            f"path_wait_timeout_sec={self.path_wait_timeout_sec:.1f}"
+            f"path_wait_timeout_sec={self.path_wait_timeout_sec:.1f}, "
+            f"path_source_mode={self.path_source_mode}"
         )
 
     def load_goals(self, goals_file: str):
@@ -297,6 +313,49 @@ class R2NavActionServer(Node):
             self.goal_point_pub.publish(goal_point)
             time.sleep(0.15)
 
+    def transform_pose_to_map(self, pose: PoseStamped) -> PoseStamped:
+        if not pose.header.frame_id:
+            pose.header.frame_id = self.map_frame
+
+        if pose.header.frame_id == self.map_frame:
+            pose.header.stamp = self.get_clock().now().to_msg()
+            return pose
+
+        return self.tf_buffer.transform(
+            pose,
+            self.map_frame,
+            timeout=Duration(seconds=0.2),
+        )
+
+    def publish_direct_path(self, start_pose: PoseStamped, target_pose: PoseStamped):
+        now = self.get_clock().now().to_msg()
+
+        path = Path()
+        path.header.stamp = now
+        path.header.frame_id = self.map_frame
+
+        start = PoseStamped()
+        start.header = path.header
+        start.pose = start_pose.pose
+
+        target = PoseStamped()
+        target.header = path.header
+        target.pose = target_pose.pose
+
+        path.poses = [start, target]
+        self.last_path = path
+        self.path_event.set()
+
+        for _ in range(3):
+            self.planned_path_pub.publish(path)
+            time.sleep(0.05)
+
+        self.get_logger().info(
+            "direct_goal 模式：已发布两点 /planned_path，"
+            f"start=({start.pose.position.x:.3f}, {start.pose.position.y:.3f}), "
+            f"goal=({target.pose.position.x:.3f}, {target.pose.position.y:.3f})"
+        )
+
     def publish_start_navigation(self):
         msg = Bool()
         msg.data = True
@@ -359,24 +418,33 @@ class R2NavActionServer(Node):
                 goal_handle.abort()
                 return self.make_result(False, f"等待当前 TF 失败: {e}")
 
-            # 3. 发布起点、终点、目标姿态，触发规划
-            feedback.state = "PUBLISH_GOAL"
+            try:
+                target_pose = self.transform_pose_to_map(target_pose)
+            except Exception as e:
+                goal_handle.abort()
+                return self.make_result(False, f"目标位姿转换到 map 失败: {e}")
+
+            # 3. 发布路径。planner 模式走规划器；direct_goal 模式直接发布两点路径。
+            feedback.state = "PUBLISH_PATH"
             goal_handle.publish_feedback(feedback)
 
             self.path_event.clear()
             self.last_path = None
-            self.publish_planning_topics(start_pose, target_pose)
+            if self.path_source_mode == "direct_goal":
+                self.publish_direct_path(start_pose, target_pose)
+            else:
+                self.publish_planning_topics(start_pose, target_pose)
 
-            # 4. 等待 /planned_path
-            feedback.state = "WAIT_PATH"
-            goal_handle.publish_feedback(feedback)
+                # 4. 等待 /planned_path
+                feedback.state = "WAIT_PATH"
+                goal_handle.publish_feedback(feedback)
 
-            got_path = self.path_event.wait(timeout=self.path_wait_timeout_sec)
-            if not got_path:
-                goal_handle.abort()
-                return self.make_result(False, "等待 /planned_path 超时，规划失败或没有收到路径")
+                got_path = self.path_event.wait(timeout=self.path_wait_timeout_sec)
+                if not got_path:
+                    goal_handle.abort()
+                    return self.make_result(False, "等待 /planned_path 超时，规划失败或没有收到路径")
 
-            self.get_logger().info("收到 /planned_path，准备启动导航")
+                self.get_logger().info("收到 /planned_path，准备启动导航")
 
             # 5. 启动导航
             feedback.state = "START_NAVIGATION"

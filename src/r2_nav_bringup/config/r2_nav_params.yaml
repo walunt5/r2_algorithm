@@ -1,9 +1,7 @@
 maps:
-  relocalization_bin_file: /home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/red/map_20260614_154214.bin
-  relocalization_pcd_file: /home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/red/Relocation
-    Map.pcd
-  map_package_dir: /home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/red/Relocation
-    Map
+  relocalization_bin_file: /home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/test/map_20260622_193358.bin
+  relocalization_pcd_file: /home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/test/Relocation Map2.pcd
+  map_package_dir: /home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/test/Relocation Map2
 ui:
   show_rviz: true
   show_map_gui: false
@@ -37,6 +35,7 @@ planner:
 d1_controller:
   ros__parameters:
     enable_lateral_motion: true
+    tracking_target_mode: final_goal_direct
     exclusive_motion_mode: false
     translate_then_final_yaw_mode: true
     rotate_only_heading_threshold: 0.25
@@ -48,9 +47,9 @@ d1_controller:
     heading_gain: 0.8
     cross_track_angular_gain: 0.5
     final_yaw_gain: 0.3
-    goal_position_tolerance: 0.1
-    goal_yaw_tolerance: 0.2
-    tracking_point_reached_xy_tolerance: 0.3
+    goal_position_tolerance: 0.09
+    goal_yaw_tolerance: 0.1
+    tracking_point_reached_xy_tolerance: 0.2
     align_final_yaw: true
     linear_deadband: 0.03
     lateral_deadband: 0.03
@@ -66,6 +65,7 @@ d1_controller:
 action_server:
   ros__parameters:
     action_name: /r2_navigate_to_pose
+    path_source_mode: direct_goal
     tf_wait_timeout_sec: 5.0
     path_wait_timeout_sec: 20.0
     feedback_rate_hz: 10.0

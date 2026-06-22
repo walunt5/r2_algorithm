@@ -46,6 +46,7 @@ public:
     declare_parameter<double>("robot_center_offset_y", 0.0);
     declare_parameter<double>("robot_center_offset_z", 0.0);
     declare_parameter<bool>("require_start_command", true);
+    declare_parameter<std::string>("tracking_target_mode", "path_points");
     declare_parameter<double>("control_frequency", 20.0);
     declare_parameter<double>("lookahead_distance", 0.20);
     declare_parameter<double>("tracking_point_reached_xy_tolerance", 0.20);
@@ -115,12 +116,14 @@ public:
     RCLCPP_INFO(
       get_logger(),
       "d1_controller started. path=%s start_navigation=%s stop_navigation=%s cmd_vel=%s "
-      "manual_cmd_vel=%s tracking_marker=%s map_frame=%s base_frame=%s require_start_command=%s",
+      "manual_cmd_vel=%s tracking_marker=%s map_frame=%s base_frame=%s require_start_command=%s "
+      "tracking_target_mode=%s",
       path_topic.c_str(), start_navigation_topic.c_str(), stop_navigation_topic.c_str(),
       cmd_vel_topic.c_str(), manual_cmd_vel_topic.c_str(), tracking_point_marker_topic.c_str(),
       get_parameter("map_frame").as_string().c_str(),
       get_parameter("base_frame").as_string().c_str(),
-      get_parameter("require_start_command").as_bool() ? "true" : "false");
+      get_parameter("require_start_command").as_bool() ? "true" : "false",
+      get_parameter("tracking_target_mode").as_string().c_str());
   }
 
 private:
@@ -199,8 +202,9 @@ private:
     goal_reached_ = global_plan_.empty();
     publishTrackingPointMarker();
     RCLCPP_INFO(
-      get_logger(), "Navigation execution started with %zu poses. initial_target_index=%d",
-      global_plan_.size(), target_index_);
+      get_logger(), "Navigation execution started with %zu poses. tracking_target_mode=%s "
+      "initial_target_index=%d",
+      global_plan_.size(), get_parameter("tracking_target_mode").as_string().c_str(), target_index_);
   }
 
   void clearActivePlan()
@@ -385,6 +389,10 @@ private:
       return 0;
     }
 
+    if (isFinalGoalDirectMode()) {
+      return static_cast<int>(global_plan_.size()) - 1;
+    }
+
     RobotPose2D robot_pose;
     if (!lookupRobotPose2D(robot_pose)) {
       RCLCPP_WARN(get_logger(), "Failed to get robot pose. Start tracking from path index 0.");
@@ -418,23 +426,31 @@ private:
       return false;
     }
 
-    const double reached_tolerance =
-      get_parameter("tracking_point_reached_xy_tolerance").as_double();
-    const double target_dist = xyDistanceToPlanPoint(robot_pose, target_index_);
-    if (target_dist < reached_tolerance && target_index_ < static_cast<int>(global_plan_.size()) - 1) {
-      int next_index = target_index_;
-      for (int i = target_index_ + 1; i < static_cast<int>(global_plan_.size()); ++i) {
-        if (xyDistanceToPlanPoint(robot_pose, i) > reached_tolerance) {
-          next_index = i;
-          break;
-        }
-        if (i == static_cast<int>(global_plan_.size()) - 1) {
-          next_index = i;
-        }
-      }
-      if (next_index != target_index_) {
-        target_index_ = next_index;
+    if (isFinalGoalDirectMode()) {
+      const int final_index = static_cast<int>(global_plan_.size()) - 1;
+      if (target_index_ != final_index) {
+        target_index_ = final_index;
         publishTrackingPointMarker();
+      }
+    } else {
+      const double reached_tolerance =
+        get_parameter("tracking_point_reached_xy_tolerance").as_double();
+      const double target_dist = xyDistanceToPlanPoint(robot_pose, target_index_);
+      if (target_dist < reached_tolerance && target_index_ < static_cast<int>(global_plan_.size()) - 1) {
+        int next_index = target_index_;
+        for (int i = target_index_ + 1; i < static_cast<int>(global_plan_.size()); ++i) {
+          if (xyDistanceToPlanPoint(robot_pose, i) > reached_tolerance) {
+            next_index = i;
+            break;
+          }
+          if (i == static_cast<int>(global_plan_.size()) - 1) {
+            next_index = i;
+          }
+        }
+        if (next_index != target_index_) {
+          target_index_ = next_index;
+          publishTrackingPointMarker();
+        }
       }
     }
 
@@ -484,6 +500,11 @@ private:
     const double dx = point.x - robot_pose.x;
     const double dy = point.y - robot_pose.y;
     return std::sqrt(dx * dx + dy * dy);
+  }
+
+  bool isFinalGoalDirectMode() const
+  {
+    return get_parameter("tracking_target_mode").as_string() == "final_goal_direct";
   }
 
   void publishTrackingPointMarker()
