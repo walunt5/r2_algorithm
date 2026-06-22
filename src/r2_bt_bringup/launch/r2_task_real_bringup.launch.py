@@ -35,6 +35,12 @@ def generate_launch_description():
         description="Allow vision servo to publish non-zero /cmd_vel.",
     )
 
+    vision_servo_config_file_arg = DeclareLaunchArgument(
+        "vision_servo_config_file",
+        default_value=os.path.join(vision_servo_share, "config", "vision_servo.yaml"),
+        description="Path to r2_vision_servo parameter YAML.",
+    )
+
     nav_launch = IncludeLaunchDescription(
         PythonLaunchDescriptionSource(
             os.path.join(
@@ -90,6 +96,7 @@ def generate_launch_description():
             )
         ),
         launch_arguments={
+            "config_file": LaunchConfiguration("vision_servo_config_file"),
             "enable_cmd_vel": LaunchConfiguration("vision_servo_enable_cmd_vel"),
         }.items(),
         condition=IfCondition(LaunchConfiguration("launch_vision_servo")),
@@ -99,6 +106,7 @@ def generate_launch_description():
         launch_odin_pose_pid_arg,
         launch_vision_servo_arg,
         vision_servo_enable_cmd_vel_arg,
+        vision_servo_config_file_arg,
         nav_launch,
         arm_serial_launch,
         chassis_serial_launch,

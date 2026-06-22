@@ -675,12 +675,22 @@ def main(args=None):
     except KeyboardInterrupt:
         pass
     finally:
-        node.publish_stop()
-        node.destroy_node()
+        try:
+            node.publish_stop()
+        except BaseException:
+            pass
+        try:
+            executor.shutdown()
+        except BaseException:
+            pass
+        try:
+            node.destroy_node()
+        except BaseException:
+            pass
         try:
             if rclpy.ok():
                 rclpy.shutdown()
-        except Exception:
+        except BaseException:
             pass
 
 

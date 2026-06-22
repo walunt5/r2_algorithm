@@ -1,0 +1,30 @@
+vision_servo_action_server:
+  ros__parameters:
+    action_name: /r2_chassis/vision_servo
+    request_topic: /techx/vision/request
+    selected_topic: /techx/vision/selected
+    cmd_vel_topic: /cmd_vel
+
+    global_frame: map
+    robot_frame: chassis_base_link
+
+    control_rate_hz: 20.0
+    tf_timeout_sec: 0.10
+    request_republish_sec: 0.5
+
+    enable_cmd_vel: true
+
+    kp_x: 0.8
+    ki_x: 0.0
+    kd_x: 0.03
+    kp_y: 0.8
+    ki_y: 0.0
+    kd_y: 0.03
+    kp_yaw: 1.2
+    ki_yaw: 0.0
+    kd_yaw: 0.05
+    i_limit: 0.2
+
+    max_vx: 0.06
+    max_vy: 0.06
+    max_wz: 0.20
