@@ -34,7 +34,32 @@
                   timeout_sec="5.0"
                   result_timeout_ms="8000" />
 
-                <R2ForceSuccess name="Skip_VisionServo_AlignHead" />
+                <R2VisionServoActionNode
+                  name="VisionServo_AlignHead"
+                  action_name="/r2_chassis/vision_servo"
+                  target_type="1"
+                  zone_id="1"
+                  use_class_id="true"
+                  class_id="100"
+                  use_color="false"
+                  color="0"
+                  desired_robot_x="0.300"
+                  desired_robot_y="0.000"
+                  desired_robot_z="1.400"
+                  tolerance_x="0.030"
+                  tolerance_y="0.020"
+                  tolerance_z="999.0"
+                  align_strategy="yaw_then_y_then_x"
+                  yaw_mode="hold_current_odin_yaw"
+                  target_yaw_rad="0.0"
+                  yaw_tolerance_rad="0.035"
+                  yaw_gate_rad="0.100"
+                  min_confidence="0.50"
+                  max_frame_age_sec="0.20"
+                  timeout_ms="6000"
+                  stable_required_frames="5"
+                  server_timeout_ms="3000"
+                  result_timeout_ms="8000" />
 
                 <R2ExecuteArmActionNode
                   action_name="/r2_arm/execute_action"

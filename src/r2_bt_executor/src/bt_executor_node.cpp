@@ -15,6 +15,7 @@
 #include "r2_bt_nodes/odin_mock_nodes.hpp"
 #include "r2_bt_nodes/blackboard_nodes.hpp"
 #include "r2_bt_nodes/odin_nodes.hpp"
+#include "r2_bt_nodes/vision_servo_nodes.hpp"
 
 using namespace std::chrono_literals;
 
@@ -172,6 +173,15 @@ int main(int argc, char ** argv)
     "R2OdinPosePidAlignActionNode",
     [node](const std::string & name, const BT::NodeConfig & config) {
       return std::make_unique<r2_bt_nodes::R2OdinPosePidAlignActionNode>(
+        name,
+        config,
+        node);
+    });
+
+  factory.registerBuilder<r2_bt_nodes::R2VisionServoActionNode>(
+    "R2VisionServoActionNode",
+    [node](const std::string & name, const BT::NodeConfig & config) {
+      return std::make_unique<r2_bt_nodes::R2VisionServoActionNode>(
         name,
         config,
         node);

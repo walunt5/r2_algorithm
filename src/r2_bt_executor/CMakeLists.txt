@@ -10,6 +10,7 @@ find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(behaviortree_cpp REQUIRED)
 find_package(r2_bt_nodes REQUIRED)
+find_package(r2_vision_servo_interfaces REQUIRED)
 
 # =========================
 # Executable
@@ -22,6 +23,7 @@ ament_target_dependencies(r2_bt_executor_node
   rclcpp
   behaviortree_cpp
   r2_bt_nodes
+  r2_vision_servo_interfaces
 )
 
 target_compile_features(r2_bt_executor_node PUBLIC cxx_std_17)

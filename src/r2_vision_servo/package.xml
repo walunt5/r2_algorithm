@@ -1,20 +1,21 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
-  <name>r2_bt_bringup</name>
+  <name>r2_vision_servo</name>
   <version>0.0.0</version>
-  <description>TODO: Package description</description>
+  <description>R2 upper-computer visual servo action server.</description>
   <maintainer email="a15992282905@gmail.com">xie</maintainer>
   <license>TODO: License declaration</license>
 
-  <depend>rclpy</depend>
+  <buildtool_depend>ament_python</buildtool_depend>
+
+  <exec_depend>geometry_msgs</exec_depend>
+  <exec_depend>r2_vision_servo_interfaces</exec_depend>
+  <exec_depend>rclpy</exec_depend>
+  <exec_depend>techx_vision_bridge</exec_depend>
+  <exec_depend>tf2_ros</exec_depend>
   <exec_depend>launch</exec_depend>
   <exec_depend>launch_ros</exec_depend>
-  <exec_depend>r2_nav_bringup</exec_depend>
-  <exec_depend>techx_r2_arm_control</exec_depend>
-  <exec_depend>techx_r2_chassis_control</exec_depend>
-  <exec_depend>r2_odin_pose_pid</exec_depend>
-  <exec_depend>r2_vision_servo</exec_depend>
 
   <test_depend>ament_copyright</test_depend>
   <test_depend>ament_flake8</test_depend>
