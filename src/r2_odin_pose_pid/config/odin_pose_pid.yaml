@@ -18,37 +18,37 @@ strategy:
   mode: yaw_gate_xy_pid
 
   # yaw 小于这个值，允许从“只旋转”进入“只平移”
-  yaw_enter_xy_threshold: 0.08
+  yaw_enter_xy_threshold: 0.05
 
   # 平移过程中 yaw 大于这个值，退回“只旋转”
-  yaw_exit_xy_threshold: 0.12
+  yaw_exit_xy_threshold: 0.09
 
 tolerance:
-  x: 0.02
-  y: 0.02
-  yaw: 0.03
-  stable_time_ms: 300
+  x: 0.03
+  y: 0.03
+  yaw: 0.04
+  stable_time_ms: 400
 
 pid:
   x:
-    kp: 0.8
+    kp: 0.45
     ki: 0.0
-    kd: 0.03
-    i_limit: 0.2
+    kd: 0.02
+    i_limit: 0.1
 
   y:
-    kp: 0.8
+    kp: 0.45
     ki: 0.0
-    kd: 0.03
-    i_limit: 0.2
+    kd: 0.02
+    i_limit: 0.1
 
   yaw:
-    kp: 1.2
+    kp: 0.75
     ki: 0.0
-    kd: 0.05
-    i_limit: 0.2
+    kd: 0.03
+    i_limit: 0.1
 
 limits:
-  max_vx: 0.20
-  max_vy: 0.20
-  max_wz: 0.45
+  max_vx: 0.04
+  max_vy: 0.04
+  max_wz: 0.03

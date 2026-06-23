@@ -1,22 +1,22 @@
 goals:
   ENTRY_TO_B1_APPROACH:
     frame_id: map
-    x: 1.6
-    y: 0.9
-    z: 0.0
-    yaw: 1.57
+    x: 2.054239
+    y: -2.747977
+    z: -0.136655
+    yaw: 0.004702
   ENTRY_TO_B2_APPROACH:
     frame_id: map
-    x: 1.902416
-    y: -1.400247
-    z: -0.133932
-    yaw: -0.19061
+    x: 2.099432
+    y: -1.546507
+    z: -0.145395
+    yaw: -0.115381
   ENTRY_TO_B3_APPROACH:
     frame_id: map
-    x: 1.903064
-    y: -1.400446
-    z: -0.134156
-    yaw: -0.190661
+    x: 2.171686
+    y: -0.349776
+    z: -0.139786
+    yaw: -0.093789
   B1_TO_B2_APPROACH:
     frame_id: map
     x: 0.0
@@ -241,10 +241,10 @@ goals:
     yaw: 0.0
   GYM_HEAD_PICK_PRESET:
     frame_id: map
-    x: 0.0
-    y: 0.0
-    z: 0.0
-    yaw: 0.0
+    x: 0.366136
+    y: 0.893472
+    z: -0.110629
+    yaw: 1.582385
   GYM_HEAD_AFTER_PICK_ALIGN:
     frame_id: map
     x: 0.0
