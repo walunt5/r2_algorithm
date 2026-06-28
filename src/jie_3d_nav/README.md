@@ -122,6 +122,25 @@ ros2 launch jie_octomap import_pcd_map.launch.py
 - `pcd_map_import_gui`
 - `octo_planner/jie_path_node`
 
+### 从 PCD 离线选择导航点位
+
+如果已经有建图后的 PCD 文件，可以直接打开点云点击候选导航点，不需要让机器人实际走到点位后再记录 TF：
+
+```bash
+ros2 run jie_octomap pcd_goal_picker_gui
+```
+
+工具会按 PCD 文件中的坐标作为 `map` 坐标显示。右键轻点点云后会输出 `x/y/z/yaw`，并用“机器人半径 + 额外安全余量”在候选点周围做 XY 圆形占用检查。碰撞检查只统计相对候选点高度区间内的点云，默认高度为 `[+0.10m, +1.20m]`，这样地面点不会被误判为障碍。
+
+常用流程：
+
+- 选择 `chassis_maps/red/Relocation Map.pcd` 或 `chassis_maps/blue/Relocation Map.pcd`。
+- 设置机器人半径，例如 `0.25m`，必要时增加安全余量。
+- 在右侧点云中右键轻点候选点，绿色圆表示半径内安全，红色圆表示该高度范围内有点云障碍。
+- 用 `W/S` 或上下方向键微调 map `x` 坐标，用 `A/D` 或左右方向键微调 map `y` 坐标，用 `Q/E` 微调 `z` 坐标；`Shift` 为 5 倍步长，`Alt` 为 0.2 倍步长。
+- 拖动黄色 yaw 端点调整导航朝向，也可以直接在左侧输入 yaw。
+- 复制坐标或选择点位名后保存到 `src/r2_nav_bringup/config/r2_nav_goals.yaml`。
+
 ### 导入 ROS 2D 栅格地图
 
 ```bash

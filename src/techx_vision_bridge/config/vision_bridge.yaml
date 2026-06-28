@@ -64,7 +64,7 @@ vision_bridge_node:
     # T_arm1_robot:  point_arm1  = R * point_robot  + t
     # T_arm2_robot:  point_arm2  = R * point_robot  + t
     enable_transforms: true
-    T_robot_camera_xyz_rpy: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
+    T_robot_camera_xyz_rpy: [0.0, 0.0, 0.0, -1.57079632679, 0.0, -1.57079632679]
     T_arm1_robot_xyz_rpy: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     T_arm2_robot_xyz_rpy: [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
 

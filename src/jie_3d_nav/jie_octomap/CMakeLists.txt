@@ -116,6 +116,7 @@ install(PROGRAMS
   scripts/world_file_picker_gui.py
   scripts/world_selector_gui.py
   scripts/web_click_selector.py
+  scripts/pcd_goal_picker_gui
   scripts/map_package_manager
   scripts/map_save_gui
   scripts/map_viewer_gui

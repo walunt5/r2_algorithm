@@ -235,16 +235,16 @@ goals:
     yaw: 0.0
   B12_TO_EXIT_ZONE_APPROACH:
     frame_id: map
-    x: 0.0
-    y: 0.0
-    z: 0.0
+    x: 6.982457
+    y: -2.883449
+    z: 0.11347
     yaw: 0.0
   GYM_HEAD_PICK_PRESET:
     frame_id: map
-    x: 0.366136
-    y: 0.893472
-    z: -0.110629
-    yaw: 1.582385
+    x: 0.599812
+    y: 0.093483
+    z: -0.098987
+    yaw: -0.012615
   GYM_HEAD_AFTER_PICK_ALIGN:
     frame_id: map
     x: 0.0
