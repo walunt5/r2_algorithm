@@ -1,0 +1,77 @@
+<root BTCPP_format="4" main_tree_to_execute="TestHeadPickSequence">
+  <BehaviorTree ID="TestHeadPickSequence">
+    <Sequence name="test_head_pick_sequence">
+
+      <!-- 1. 导航到夹取端头预设点 -->
+      <R2NavigateToPoseActionNode
+        action_name="/r2_navigate_to_pose"
+        goal_name="GYM_HEAD_PICK_PRESET"
+        timeout_sec="60.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="70000" />
+
+      <!-- 2. 三组升降机构同时升高到绝对高度 66 mm -->
+      <R2LiftControlNode
+        action_name="/r2_chassis/lift_control"
+        target_h_mm="66"
+        mask="7"
+        timeout_sec="15.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="20000" />
+
+      <!-- 3. 夹爪机械臂放平：target_id=1, action_id=257 -->
+      <R2ExecuteArmActionNode
+        action_name="/r2_arm/execute_action"
+        target_id="1"
+        action_id="257"
+        timeout_ms="8000"
+        param="0"
+        flags="0"
+        server_timeout_ms="3000"
+        result_timeout_ms="10000" />
+
+      <!-- 4. 松开夹爪：target_id=4, action_id=1025 -->
+      <R2ExecuteArmActionNode
+        action_name="/r2_arm/execute_action"
+        target_id="4"
+        action_id="1025"
+        timeout_ms="3000"
+        param="0"
+        flags="0"
+        server_timeout_ms="3000"
+        result_timeout_ms="5000" />
+
+      <!-- 5. 闭合夹爪：target_id=4, action_id=1026 -->
+      <R2ExecuteArmActionNode
+        action_name="/r2_arm/execute_action"
+        target_id="4"
+        action_id="1026"
+        timeout_ms="3000"
+        param="0"
+        flags="0"
+        server_timeout_ms="3000"
+        result_timeout_ms="5000" />
+
+      <!-- 6. 夹爪机械臂旋转到 90 度：target_id=1, action_id=258 -->
+      <R2ExecuteArmActionNode
+        action_name="/r2_arm/execute_action"
+        target_id="1"
+        action_id="258"
+        timeout_ms="8000"
+        param="0"
+        flags="0"
+        server_timeout_ms="3000"
+        result_timeout_ms="10000" />
+
+      <!-- 7. 三组升降机构同时降低到绝对高度 2 mm -->
+      <R2LiftControlNode
+        action_name="/r2_chassis/lift_control"
+        target_h_mm="2"
+        mask="7"
+        timeout_sec="15.0"
+        server_timeout_ms="3000"
+        result_timeout_ms="20000" />
+
+    </Sequence>
+  </BehaviorTree>
+</root>

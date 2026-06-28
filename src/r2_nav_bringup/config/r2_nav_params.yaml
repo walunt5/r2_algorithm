@@ -48,7 +48,7 @@ d1_controller:
     cross_track_angular_gain: 0.5
     final_yaw_gain: 0.3
     goal_position_tolerance: 0.09
-    goal_yaw_tolerance: 0.06
+    goal_yaw_tolerance: 0.09
     tracking_point_reached_xy_tolerance: 0.2
     align_final_yaw: true
     linear_deadband: 0.03
