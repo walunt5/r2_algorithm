@@ -208,9 +208,9 @@ mock 超时：
 
 原生 ros2 action send_goal 写法
 ------------------------------
-整车升到 66mm：
+整车升到 65mm：
 
-  ros2 action send_goal /r2_chassis/lift_control techx_r2_chassis_interfaces/action/LiftControl "{target_h_mm: 66, mask: 7, timeout_sec: 20.0}" --feedback
+  ros2 action send_goal /r2_chassis/lift_control techx_r2_chassis_interfaces/action/LiftControl "{target_h_mm: 65, mask: 7, timeout_sec: 20.0}" --feedback
 
 整车降到 2mm：
 

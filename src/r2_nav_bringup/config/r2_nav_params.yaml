@@ -39,11 +39,11 @@ d1_controller:
     exclusive_motion_mode: false
     translate_then_final_yaw_mode: true
     rotate_only_heading_threshold: 0.25
-    max_linear_speed: 0.9
-    max_lateral_speed: 0.9
-    max_angular_speed: 0.5
-    linear_gain: 0.8
-    lateral_gain: 0.8
+    max_linear_speed: 1.2
+    max_lateral_speed: 1.2
+    max_angular_speed: 0.7
+    linear_gain: 0.9
+    lateral_gain: 0.9
     heading_gain: 0.8
     cross_track_angular_gain: 0.5
     final_yaw_gain: 0.3

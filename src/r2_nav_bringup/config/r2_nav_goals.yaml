@@ -241,10 +241,10 @@ goals:
     yaw: 0.0
   GYM_HEAD_PICK_PRESET:
     frame_id: map
-    x: 0.599812
-    y: 0.093483
-    z: -0.098987
-    yaw: -0.012615
+    x: 0.564825
+    y: 0.004871
+    z: -0.083427
+    yaw: 0.009712
   GYM_HEAD_AFTER_PICK_ALIGN:
     frame_id: map
     x: 0.0
