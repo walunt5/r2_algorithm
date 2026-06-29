@@ -1,0 +1,32 @@
+map_id: imported_pcd_map
+frame_id: map
+resolution: 0.2
+octomap_file: octomap_msg.npz
+layers_file: layers.npz
+source_world_file: ''
+snapshot_stamp:
+  sec: 1782730104
+  nanosec: 285104396
+bounds:
+  min:
+  - -14.6
+  - -1.8000000000000003
+  - -0.4
+  max:
+  - 9.4
+  - 18.599999999999998
+  - 9.4
+planner:
+  robot_radius: 0.25
+  snap_search_radius_cells: 12
+  require_ground_support: true
+  strict_direct_ground_support: false
+  ground_support_xy_radius_cells: 1
+  ground_support_depth_cells: 1
+  enable_preblocked_costmap: true
+  preblocked_costmap_radius_cells: 3
+  preblocked_costmap_weight: 2.5
+layers:
+  preblocked_count: 18713
+  traversable_count: 2449
+  risk_cost_count: 2437
