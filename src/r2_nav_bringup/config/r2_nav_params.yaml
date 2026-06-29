@@ -36,11 +36,14 @@ d1_controller:
   ros__parameters:
     enable_lateral_motion: true
     tracking_target_mode: final_goal_direct
+    translation_direction_mode: fixed_map
+    fixed_direction_max_speed: 2.2
+    fixed_direction_speed_gain: 1.9
     exclusive_motion_mode: false
     translate_then_final_yaw_mode: true
     rotate_only_heading_threshold: 0.25
-    max_linear_speed: 1.2
-    max_lateral_speed: 1.2
+    max_linear_speed: 2.0
+    max_lateral_speed: 2.0
     max_angular_speed: 0.7
     linear_gain: 2.2
     lateral_gain: 2.2
@@ -49,7 +52,7 @@ d1_controller:
     final_yaw_gain: 0.3
     goal_position_tolerance: 0.09
     goal_yaw_tolerance: 0.09
-    tracking_point_reached_xy_tolerance: 0.2
+    tracking_point_reached_xy_tolerance: 0.1
     align_final_yaw: true
     linear_deadband: 0.03
     lateral_deadband: 0.03

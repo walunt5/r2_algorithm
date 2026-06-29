@@ -33,7 +33,7 @@ ament_target_dependencies(jie_path_node
 target_link_libraries(jie_path_node octomap)
 
 add_executable(d1_controller src/d1_controller.cpp)
-target_include_directories(d1_controller PRIVATE ${OpenCV_INCLUDE_DIRS})
+target_include_directories(d1_controller PRIVATE include ${OpenCV_INCLUDE_DIRS})
 ament_target_dependencies(d1_controller
   geometry_msgs
   nav_msgs
@@ -68,8 +68,11 @@ install(DIRECTORY
   DESTINATION share/${PROJECT_NAME}
 )
 
+install(DIRECTORY include/ DESTINATION include)
+
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
+  find_package(ament_cmake_gtest REQUIRED)
   # the following line skips the linter which checks for copyrights
   # comment the line when a copyright and license is added to all source files
   set(ament_cmake_copyright_FOUND TRUE)
@@ -78,6 +81,9 @@ if(BUILD_TESTING)
   # a copyright and license is added to all source files
   set(ament_cmake_cpplint_FOUND TRUE)
   ament_lint_auto_find_test_dependencies()
+
+  ament_add_gtest(test_fixed_direction_control test/test_fixed_direction_control.cpp)
+  target_include_directories(test_fixed_direction_control PRIVATE include)
 endif()
 
 ament_package()

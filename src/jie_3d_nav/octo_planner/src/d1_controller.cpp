@@ -11,6 +11,7 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 #include "nav_msgs/msg/path.hpp"
+#include "octo_planner/fixed_direction_control.hpp"
 #include "rclcpp/rclcpp.hpp"
 #include "std_msgs/msg/bool.hpp"
 #include "tf2/utils.h"
@@ -47,6 +48,9 @@ public:
     declare_parameter<double>("robot_center_offset_z", 0.0);
     declare_parameter<bool>("require_start_command", true);
     declare_parameter<std::string>("tracking_target_mode", "path_points");
+    declare_parameter<std::string>("translation_direction_mode", "live_error");
+    declare_parameter<double>("fixed_direction_max_speed", 0.60);
+    declare_parameter<double>("fixed_direction_speed_gain", 1.5);
     declare_parameter<double>("control_frequency", 20.0);
     declare_parameter<double>("lookahead_distance", 0.20);
     declare_parameter<double>("tracking_point_reached_xy_tolerance", 0.20);
@@ -117,13 +121,24 @@ public:
       get_logger(),
       "d1_controller started. path=%s start_navigation=%s stop_navigation=%s cmd_vel=%s "
       "manual_cmd_vel=%s tracking_marker=%s map_frame=%s base_frame=%s require_start_command=%s "
-      "tracking_target_mode=%s",
+      "tracking_target_mode=%s translation_direction_mode=%s",
       path_topic.c_str(), start_navigation_topic.c_str(), stop_navigation_topic.c_str(),
       cmd_vel_topic.c_str(), manual_cmd_vel_topic.c_str(), tracking_point_marker_topic.c_str(),
       get_parameter("map_frame").as_string().c_str(),
       get_parameter("base_frame").as_string().c_str(),
       get_parameter("require_start_command").as_bool() ? "true" : "false",
-      get_parameter("tracking_target_mode").as_string().c_str());
+      get_parameter("tracking_target_mode").as_string().c_str(),
+      get_parameter("translation_direction_mode").as_string().c_str());
+
+    if (
+      get_parameter("translation_direction_mode").as_string() == "fixed_map" &&
+      !get_parameter("enable_lateral_motion").as_bool())
+    {
+      RCLCPP_WARN(
+        get_logger(),
+        "translation_direction_mode=fixed_map requires enable_lateral_motion=true. "
+        "The controller will use legacy live-error translation instead.");
+    }
   }
 
 private:
@@ -200,6 +215,7 @@ private:
     target_index_ = findInitialTargetIndex3D();
     pose_adjusting_ = false;
     goal_reached_ = global_plan_.empty();
+    resetFixedMapDirection();
     publishTrackingPointMarker();
     RCLCPP_INFO(
       get_logger(), "Navigation execution started with %zu poses. tracking_target_mode=%s "
@@ -213,6 +229,7 @@ private:
     target_index_ = 0;
     pose_adjusting_ = false;
     goal_reached_ = true;
+    resetFixedMapDirection();
     clearTrackingPointMarker();
   }
 
@@ -280,7 +297,9 @@ private:
 
     if (isFinalTrackingPointReached(target)) {
       pose_adjusting_ = true;
-      RCLCPP_INFO(get_logger(), "Final tracking point reached. Switching to final yaw adjustment.");
+      RCLCPP_INFO(
+        get_logger(),
+        "Final tracking point reached. Switching to live-error final pose adjustment.");
       geometry_msgs::msg::PoseStamped final_pose_base;
       if (!transformToBase(global_plan_.back(), final_pose_base)) {
         return;
@@ -288,6 +307,42 @@ private:
       trackFinalPose(final_pose_base, global_plan_.back());
       return;
     }
+
+    if (usesFixedMapDirection()) {
+      if (!initializeFixedMapDirection(target)) {
+        return;
+      }
+
+      const double target_distance = std::hypot(target.map_x, target.map_y);
+      const double speed = octo_planner::fixedDirectionSpeed(
+        target_distance,
+        get_parameter("fixed_direction_max_speed").as_double(),
+        get_parameter("fixed_direction_speed_gain").as_double());
+      const auto direction_base = octo_planner::mapDirectionToBase(
+        fixed_map_direction_, target.robot_yaw);
+
+      geometry_msgs::msg::Twist cmd_vel;
+      cmd_vel.linear.x = direction_base.x * speed;
+      cmd_vel.linear.y = direction_base.y * speed;
+      cmd_vel.angular.z = 0.0;
+
+      RCLCPP_INFO_THROTTLE(
+        get_logger(), *get_clock(), 1000,
+        "Fixed-map translation: error_map=(%.3f, %.3f) direction_map=(%.4f, %.4f) "
+        "distance=%.3f speed=%.3f cmd=(%.3f, %.3f, 0.000)",
+        target.map_x,
+        target.map_y,
+        fixed_map_direction_.x,
+        fixed_map_direction_.y,
+        target_distance,
+        speed,
+        cmd_vel.linear.x,
+        cmd_vel.linear.y);
+      publishCmd(cmd_vel);
+      return;
+    }
+
+    resetFixedMapDirection();
 
     geometry_msgs::msg::Twist cmd_vel;
     const double linear_gain = get_parameter("linear_gain").as_double();
@@ -371,6 +426,9 @@ private:
   {
     double base_x;
     double base_y;
+    double map_x;
+    double map_y;
+    double robot_yaw;
   };
 
   bool isFinalTrackingPointReached(const TrackingTarget & target) const
@@ -379,8 +437,15 @@ private:
       return false;
     }
 
-    const double target_xy_dist = std::hypot(target.base_x, target.base_y);
-    return target_xy_dist < get_parameter("tracking_point_reached_xy_tolerance").as_double();
+    const double reached_tolerance =
+      get_parameter("tracking_point_reached_xy_tolerance").as_double();
+    const octo_planner::Vector2 target_error_map{target.map_x, target.map_y};
+    if (usesFixedMapDirection() && fixed_map_direction_initialized_) {
+      return octo_planner::shouldSwitchToNearGoal(
+        target_error_map, fixed_map_direction_, reached_tolerance);
+    }
+
+    return octo_planner::norm(target_error_map) <= reached_tolerance;
   }
 
   int findInitialTargetIndex3D()
@@ -461,6 +526,9 @@ private:
     const double sin_yaw = std::sin(robot_pose.yaw);
     target.base_x = cos_yaw * dx_map + sin_yaw * dy_map;
     target.base_y = -sin_yaw * dx_map + cos_yaw * dy_map;
+    target.map_x = dx_map;
+    target.map_y = dy_map;
+    target.robot_yaw = robot_pose.yaw;
     return true;
   }
 
@@ -505,6 +573,44 @@ private:
   bool isFinalGoalDirectMode() const
   {
     return get_parameter("tracking_target_mode").as_string() == "final_goal_direct";
+  }
+
+  bool usesFixedMapDirection() const
+  {
+    return
+      isFinalGoalDirectMode() &&
+      get_parameter("translation_direction_mode").as_string() == "fixed_map" &&
+      get_parameter("enable_lateral_motion").as_bool();
+  }
+
+  void resetFixedMapDirection()
+  {
+    fixed_map_direction_ = octo_planner::Vector2{};
+    fixed_map_direction_initialized_ = false;
+  }
+
+  bool initializeFixedMapDirection(const TrackingTarget & target)
+  {
+    if (fixed_map_direction_initialized_) {
+      return true;
+    }
+
+    const octo_planner::Vector2 target_error_map{target.map_x, target.map_y};
+    if (!octo_planner::normalize(target_error_map, fixed_map_direction_)) {
+      RCLCPP_WARN(
+        get_logger(),
+        "Cannot initialize fixed map direction because the target position error is zero.");
+      return false;
+    }
+
+    fixed_map_direction_initialized_ = true;
+    RCLCPP_INFO(
+      get_logger(),
+      "Locked map translation direction=(%.6f, %.6f), initial_distance=%.3f m.",
+      fixed_map_direction_.x,
+      fixed_map_direction_.y,
+      octo_planner::norm(target_error_map));
+    return true;
   }
 
   void publishTrackingPointMarker()
@@ -963,6 +1069,8 @@ private:
   bool goal_reached_;
   bool debug_view_disabled_{false};
   std::string active_base_frame_;
+  octo_planner::Vector2 fixed_map_direction_;
+  bool fixed_map_direction_initialized_{false};
   geometry_msgs::msg::Twist last_cmd_vel_;
 };
 
