@@ -45,6 +45,10 @@ BT::PortsList R2NavigateToPoseActionNode::providedPorts()
       "",
       "Preset goal name. If empty, target_pose from frame_id/x/y/z/yaw will be used"),
     BT::InputPort<std::string>(
+      "control_mode",
+      "",
+      "Translation control mode: empty/x_then_y or fixed_map"),
+    BT::InputPort<std::string>(
       "frame_id",
       "map",
       "Target pose frame id"),
@@ -83,6 +87,7 @@ BT::NodeStatus R2NavigateToPoseActionNode::onStart()
 {
   std::string action_name = "/r2_navigate_to_pose";
   std::string goal_name = "";
+  std::string control_mode = "";
   std::string frame_id = "map";
   double x = 0.0;
   double y = 0.0;
@@ -94,6 +99,7 @@ BT::NodeStatus R2NavigateToPoseActionNode::onStart()
 
   getInput("action_name", action_name);
   getInput("goal_name", goal_name);
+  getInput("control_mode", control_mode);
   getInput("frame_id", frame_id);
   getInput("x", x);
   getInput("y", y);
@@ -154,6 +160,7 @@ BT::NodeStatus R2NavigateToPoseActionNode::onStart()
 
   auto goal_msg = NavigateToPose::Goal();
   goal_msg.goal_name = goal_name;
+  goal_msg.control_mode = control_mode;
   goal_msg.timeout_sec = static_cast<float>(timeout_sec);
 
   goal_msg.target_pose.header.stamp = node_->get_clock()->now();
@@ -166,18 +173,22 @@ BT::NodeStatus R2NavigateToPoseActionNode::onStart()
   if (!goal_name.empty()) {
     RCLCPP_INFO(
       node_->get_logger(),
-      "[R2NavigateToPoseActionNode] Sending goal by goal_name=%s timeout_sec=%.2f",
+      "[R2NavigateToPoseActionNode] Sending goal by goal_name=%s control_mode=%s "
+      "timeout_sec=%.2f",
       goal_name.c_str(),
+      control_mode.empty() ? "x_then_y(default)" : control_mode.c_str(),
       timeout_sec);
   } else {
     RCLCPP_INFO(
       node_->get_logger(),
-      "[R2NavigateToPoseActionNode] Sending goal pose: frame=%s x=%.3f y=%.3f z=%.3f yaw=%.3f timeout_sec=%.2f",
+      "[R2NavigateToPoseActionNode] Sending goal pose: frame=%s x=%.3f y=%.3f z=%.3f "
+      "yaw=%.3f control_mode=%s timeout_sec=%.2f",
       frame_id.c_str(),
       x,
       y,
       z,
       yaw,
+      control_mode.empty() ? "x_then_y(default)" : control_mode.c_str(),
       timeout_sec);
   }
 

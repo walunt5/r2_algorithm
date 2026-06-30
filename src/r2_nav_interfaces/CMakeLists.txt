@@ -14,6 +14,7 @@ find_package(rosidl_default_generators REQUIRED)
 
 rosidl_generate_interfaces(${PROJECT_NAME}
   "action/NavigateToPose.action"
+  "msg/NavigationStart.msg"
   DEPENDENCIES geometry_msgs builtin_interfaces action_msgs
 )
 

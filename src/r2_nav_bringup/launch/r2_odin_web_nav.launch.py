@@ -392,6 +392,7 @@ def generate_launch_description():
             {
                 "path_topic": "/planned_path",
                 "start_navigation_topic": "/start_navigation",
+                "navigation_start_request_topic": "/navigation_start_request",
                 "stop_navigation_topic": "/stop_navigation",
                 "require_start_command": True,
                 "cmd_vel_topic": "/cmd_vel",
@@ -486,6 +487,7 @@ def generate_launch_description():
                 "goals_file": goals_file,
                 "map_frame": frames.get("map_frame", "map"),
                 "base_frame": frames.get("base_frame", "chassis_base_link"),
+                "navigation_start_request_topic": "/navigation_start_request",
                 "goal_position_tolerance": float(
                     d1_controller_params.get("goal_position_tolerance", 0.10)
                 ),

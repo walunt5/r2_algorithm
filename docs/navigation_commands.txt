@@ -11,6 +11,14 @@ R2 导航命令行速查
   source /opt/ros/humble/setup.bash
   source install/setup.bash
 
+接口或控制器代码更新后，构建相关包：
+
+  colcon build --symlink-install --packages-select r2_nav_interfaces octo_planner r2_nav_action_server r2_bt_nodes r2_nav_bringup r2_bt_executor
+
+构建完成后重新执行：
+
+  source install/setup.bash
+
 
 一、启动导航相关系统
 ====================
@@ -52,11 +60,22 @@ R2 导航命令行速查
 - /r2_navigate_to_pose 的 action 类型是 r2_nav_interfaces/action/NavigateToPose。
 - goal_name 来自 r2_nav_goals.yaml。
 - 如果 goal_name 非空，action server 会优先用 YAML 中的目标点。
+- control_mode 留空时默认使用 x_then_y。
+- control_mode=x_then_y：先仅输出 vx，再仅输出 vy，最后使用 vx/vy 做终点精调。
+- control_mode=fixed_map：使用锁定 map 平移方向的原有模式。
 - timeout_sec <= 0 时，服务端默认使用 60 秒。
 
 通用格式：
 
   ros2 action send_goal /r2_navigate_to_pose r2_nav_interfaces/action/NavigateToPose "{goal_name: 'ENTRY_TO_B1_APPROACH', timeout_sec: 60.0}" --feedback
+
+显式使用 x_then_y：
+
+  ros2 action send_goal /r2_navigate_to_pose r2_nav_interfaces/action/NavigateToPose "{goal_name: 'ENTRY_TO_B1_APPROACH', control_mode: 'x_then_y', timeout_sec: 60.0}" --feedback
+
+显式使用 fixed_map：
+
+  ros2 action send_goal /r2_navigate_to_pose r2_nav_interfaces/action/NavigateToPose "{goal_name: 'ENTRY_TO_B1_APPROACH', control_mode: 'fixed_map', timeout_sec: 60.0}" --feedback
 
 导航到 ENTRY_TO_B1_APPROACH：
 
@@ -209,5 +228,6 @@ R2 导航命令行速查
 
   ros2 topic echo /start_navigation
 
-  ros2 topic echo /stop_navigation
+  ros2 topic echo /navigation_start_request
 
+  ros2 topic echo /stop_navigation

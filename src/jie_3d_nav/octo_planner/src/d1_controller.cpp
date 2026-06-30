@@ -11,8 +11,10 @@
 #include "geometry_msgs/msg/pose_stamped.hpp"
 #include "geometry_msgs/msg/twist.hpp"
 #include "nav_msgs/msg/path.hpp"
+#include "octo_planner/axis_sequential_control.hpp"
 #include "octo_planner/fixed_direction_control.hpp"
 #include "rclcpp/rclcpp.hpp"
+#include "r2_nav_interfaces/msg/navigation_start.hpp"
 #include "std_msgs/msg/bool.hpp"
 #include "tf2/utils.h"
 #include "tf2_geometry_msgs/tf2_geometry_msgs.hpp"
@@ -34,6 +36,8 @@ public:
   {
     declare_parameter<std::string>("path_topic", "/planned_path");
     declare_parameter<std::string>("start_navigation_topic", "/start_navigation");
+    declare_parameter<std::string>(
+      "navigation_start_request_topic", "/navigation_start_request");
     declare_parameter<std::string>("stop_navigation_topic", "/stop_navigation");
     declare_parameter<std::string>("cmd_vel_topic", "/cmd_vel");
     declare_parameter<std::string>("manual_cmd_vel_topic", "/web_cmd_vel");
@@ -84,6 +88,8 @@ public:
 
     const auto path_topic = get_parameter("path_topic").as_string();
     const auto start_navigation_topic = get_parameter("start_navigation_topic").as_string();
+    const auto navigation_start_request_topic =
+      get_parameter("navigation_start_request_topic").as_string();
     const auto stop_navigation_topic = get_parameter("stop_navigation_topic").as_string();
     const auto cmd_vel_topic = get_parameter("cmd_vel_topic").as_string();
     const auto manual_cmd_vel_topic = get_parameter("manual_cmd_vel_topic").as_string();
@@ -97,6 +103,10 @@ public:
     start_navigation_sub_ = create_subscription<std_msgs::msg::Bool>(
       start_navigation_topic, rclcpp::QoS(10).reliable(),
       std::bind(&D1ControllerNode::onStartNavigation, this, std::placeholders::_1));
+    navigation_start_request_sub_ =
+      create_subscription<r2_nav_interfaces::msg::NavigationStart>(
+      navigation_start_request_topic, rclcpp::QoS(10).reliable(),
+      std::bind(&D1ControllerNode::onNavigationStartRequest, this, std::placeholders::_1));
     stop_navigation_sub_ = create_subscription<std_msgs::msg::Bool>(
       stop_navigation_topic, rclcpp::QoS(10).reliable(),
       std::bind(&D1ControllerNode::onStopNavigation, this, std::placeholders::_1));
@@ -119,11 +129,13 @@ public:
 
     RCLCPP_INFO(
       get_logger(),
-      "d1_controller started. path=%s start_navigation=%s stop_navigation=%s cmd_vel=%s "
+      "d1_controller started. path=%s start_navigation=%s navigation_start_request=%s "
+      "stop_navigation=%s cmd_vel=%s "
       "manual_cmd_vel=%s tracking_marker=%s map_frame=%s base_frame=%s require_start_command=%s "
       "tracking_target_mode=%s translation_direction_mode=%s",
-      path_topic.c_str(), start_navigation_topic.c_str(), stop_navigation_topic.c_str(),
-      cmd_vel_topic.c_str(), manual_cmd_vel_topic.c_str(), tracking_point_marker_topic.c_str(),
+      path_topic.c_str(), start_navigation_topic.c_str(), navigation_start_request_topic.c_str(),
+      stop_navigation_topic.c_str(), cmd_vel_topic.c_str(), manual_cmd_vel_topic.c_str(),
+      tracking_point_marker_topic.c_str(),
       get_parameter("map_frame").as_string().c_str(),
       get_parameter("base_frame").as_string().c_str(),
       get_parameter("require_start_command").as_bool() ? "true" : "false",
@@ -162,7 +174,7 @@ private:
       return;
     }
 
-    activatePlan(msg->poses);
+    activatePlan(msg->poses, get_parameter("translation_direction_mode").as_string());
   }
 
   void onStartNavigation(const std_msgs::msg::Bool::SharedPtr msg)
@@ -178,11 +190,37 @@ private:
     }
 
     try {
-      activatePlan(pending_plan_);
+      activatePlan(pending_plan_, get_parameter("translation_direction_mode").as_string());
       pending_plan_.clear();
     } catch (const std::exception & ex) {
       stopNavigation("Start navigation failed. Holding position.");
       RCLCPP_ERROR(get_logger(), "Start navigation exception: %s", ex.what());
+    }
+  }
+
+  void onNavigationStartRequest(
+    const r2_nav_interfaces::msg::NavigationStart::SharedPtr msg)
+  {
+    if (msg->control_mode != "x_then_y" && msg->control_mode != "fixed_map") {
+      RCLCPP_ERROR(
+        get_logger(), "Reject navigation start request with unsupported control_mode=%s.",
+        msg->control_mode.c_str());
+      return;
+    }
+
+    if (pending_plan_.empty()) {
+      RCLCPP_WARN(
+        get_logger(),
+        "Navigation start request received, but no pending planned_path is available.");
+      return;
+    }
+
+    try {
+      activatePlan(pending_plan_, msg->control_mode);
+      pending_plan_.clear();
+    } catch (const std::exception & ex) {
+      stopNavigation("Navigation start request failed. Holding position.");
+      RCLCPP_ERROR(get_logger(), "Navigation start request exception: %s", ex.what());
     }
   }
 
@@ -209,18 +247,45 @@ private:
     publishCmd(*msg);
   }
 
-  void activatePlan(const std::vector<geometry_msgs::msg::PoseStamped> & plan)
+  void activatePlan(
+    const std::vector<geometry_msgs::msg::PoseStamped> & plan,
+    const std::string & control_mode)
   {
+    active_translation_direction_mode_ = control_mode;
+    if (
+      active_translation_direction_mode_ != "fixed_map" &&
+      active_translation_direction_mode_ != "x_then_y" &&
+      active_translation_direction_mode_ != "live_error")
+    {
+      RCLCPP_WARN(
+        get_logger(), "Unsupported configured translation_direction_mode=%s. Use live_error.",
+        active_translation_direction_mode_.c_str());
+      active_translation_direction_mode_ = "live_error";
+    }
+
+    if (
+      (active_translation_direction_mode_ == "fixed_map" ||
+      active_translation_direction_mode_ == "x_then_y") &&
+      !get_parameter("enable_lateral_motion").as_bool())
+    {
+      RCLCPP_WARN(
+        get_logger(), "control_mode=%s requires enable_lateral_motion=true. Use live_error.",
+        active_translation_direction_mode_.c_str());
+      active_translation_direction_mode_ = "live_error";
+    }
+
     global_plan_ = plan;
     target_index_ = findInitialTargetIndex3D();
     pose_adjusting_ = false;
     goal_reached_ = global_plan_.empty();
     resetFixedMapDirection();
+    axis_sequential_phase_ = octo_planner::AxisSequentialPhase::X_ONLY;
     publishTrackingPointMarker();
     RCLCPP_INFO(
       get_logger(), "Navigation execution started with %zu poses. tracking_target_mode=%s "
-      "initial_target_index=%d",
-      global_plan_.size(), get_parameter("tracking_target_mode").as_string().c_str(), target_index_);
+      "control_mode=%s initial_target_index=%d",
+      global_plan_.size(), get_parameter("tracking_target_mode").as_string().c_str(),
+      active_translation_direction_mode_.c_str(), target_index_);
   }
 
   void clearActivePlan()
@@ -230,6 +295,8 @@ private:
     pose_adjusting_ = false;
     goal_reached_ = true;
     resetFixedMapDirection();
+    axis_sequential_phase_ = octo_planner::AxisSequentialPhase::X_ONLY;
+    active_translation_direction_mode_.clear();
     clearTrackingPointMarker();
   }
 
@@ -292,6 +359,59 @@ private:
 
     TrackingTarget target;
     if (!selectTrackingTarget(target)) {
+      return;
+    }
+
+    if (usesAxisSequentialDirection()) {
+      const auto previous_phase = axis_sequential_phase_;
+      const auto output = octo_planner::updateAxisSequentialControl(
+        axis_sequential_phase_,
+        target.base_x,
+        target.base_y,
+        get_parameter("tracking_point_reached_xy_tolerance").as_double(),
+        get_parameter("linear_gain").as_double(),
+        get_parameter("lateral_gain").as_double(),
+        get_parameter("max_linear_speed").as_double(),
+        get_parameter("max_lateral_speed").as_double(),
+        get_parameter("linear_deadband").as_double(),
+        get_parameter("lateral_deadband").as_double());
+      axis_sequential_phase_ = output.phase;
+
+      if (previous_phase != axis_sequential_phase_) {
+        RCLCPP_INFO(
+          get_logger(), "x_then_y phase transition: %s -> %s, error=(%.3f, %.3f).",
+          axisSequentialPhaseName(previous_phase),
+          axisSequentialPhaseName(axis_sequential_phase_),
+          target.base_x,
+          target.base_y);
+      }
+
+      if (output.use_final_live_error) {
+        pose_adjusting_ = true;
+        RCLCPP_INFO(
+          get_logger(),
+          "x_then_y translation completed. Switching to live-error final pose adjustment.");
+        geometry_msgs::msg::PoseStamped final_pose_base;
+        if (!transformToBase(global_plan_.back(), final_pose_base)) {
+          return;
+        }
+        trackFinalPose(final_pose_base, global_plan_.back());
+        return;
+      }
+
+      geometry_msgs::msg::Twist cmd_vel;
+      cmd_vel.linear.x = output.vx;
+      cmd_vel.linear.y = output.vy;
+      cmd_vel.angular.z = 0.0;
+      RCLCPP_INFO_THROTTLE(
+        get_logger(), *get_clock(), 1000,
+        "x_then_y phase=%s error=(%.3f, %.3f) cmd=(%.3f, %.3f, 0.000)",
+        axisSequentialPhaseName(axis_sequential_phase_),
+        target.base_x,
+        target.base_y,
+        cmd_vel.linear.x,
+        cmd_vel.linear.y);
+      publishCmd(cmd_vel);
       return;
     }
 
@@ -579,8 +699,30 @@ private:
   {
     return
       isFinalGoalDirectMode() &&
-      get_parameter("translation_direction_mode").as_string() == "fixed_map" &&
+      active_translation_direction_mode_ == "fixed_map" &&
       get_parameter("enable_lateral_motion").as_bool();
+  }
+
+  bool usesAxisSequentialDirection() const
+  {
+    return
+      isFinalGoalDirectMode() &&
+      active_translation_direction_mode_ == "x_then_y" &&
+      get_parameter("enable_lateral_motion").as_bool();
+  }
+
+  static const char * axisSequentialPhaseName(
+    octo_planner::AxisSequentialPhase phase)
+  {
+    switch (phase) {
+      case octo_planner::AxisSequentialPhase::X_ONLY:
+        return "X_ONLY";
+      case octo_planner::AxisSequentialPhase::Y_ONLY:
+        return "Y_ONLY";
+      case octo_planner::AxisSequentialPhase::FINAL_LIVE_ERROR:
+        return "FINAL_LIVE_ERROR";
+    }
+    return "UNKNOWN";
   }
 
   void resetFixedMapDirection()
@@ -1055,6 +1197,8 @@ private:
 
   rclcpp::Subscription<nav_msgs::msg::Path>::SharedPtr path_sub_;
   rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr start_navigation_sub_;
+  rclcpp::Subscription<r2_nav_interfaces::msg::NavigationStart>::SharedPtr
+    navigation_start_request_sub_;
   rclcpp::Subscription<std_msgs::msg::Bool>::SharedPtr stop_navigation_sub_;
   rclcpp::Subscription<geometry_msgs::msg::Twist>::SharedPtr manual_cmd_sub_;
   rclcpp::Publisher<geometry_msgs::msg::Twist>::SharedPtr cmd_pub_;
@@ -1069,6 +1213,9 @@ private:
   bool goal_reached_;
   bool debug_view_disabled_{false};
   std::string active_base_frame_;
+  std::string active_translation_direction_mode_;
+  octo_planner::AxisSequentialPhase axis_sequential_phase_{
+    octo_planner::AxisSequentialPhase::X_ONLY};
   octo_planner::Vector2 fixed_map_direction_;
   bool fixed_map_direction_initialized_{false};
   geometry_msgs::msg::Twist last_cmd_vel_;

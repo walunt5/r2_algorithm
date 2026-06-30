@@ -7,6 +7,7 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 find_package(rclcpp REQUIRED)
+find_package(r2_nav_interfaces REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(geometry_msgs REQUIRED)
 find_package(nav_msgs REQUIRED)
@@ -38,6 +39,7 @@ ament_target_dependencies(d1_controller
   geometry_msgs
   nav_msgs
   rclcpp
+  r2_nav_interfaces
   std_msgs
   tf2
   tf2_geometry_msgs
@@ -84,6 +86,9 @@ if(BUILD_TESTING)
 
   ament_add_gtest(test_fixed_direction_control test/test_fixed_direction_control.cpp)
   target_include_directories(test_fixed_direction_control PRIVATE include)
+
+  ament_add_gtest(test_axis_sequential_control test/test_axis_sequential_control.cpp)
+  target_include_directories(test_axis_sequential_control PRIVATE include)
 endif()
 
 ament_package()

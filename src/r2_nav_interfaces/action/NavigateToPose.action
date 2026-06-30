@@ -1,6 +1,7 @@
 # Goal
 geometry_msgs/PoseStamped target_pose
 string goal_name
+string control_mode
 float32 timeout_sec
 
 ---

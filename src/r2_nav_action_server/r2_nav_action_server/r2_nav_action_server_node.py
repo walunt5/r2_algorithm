@@ -19,6 +19,24 @@ from std_msgs.msg import Bool
 from tf2_ros import Buffer, TransformException, TransformListener
 
 from r2_nav_interfaces.action import NavigateToPose
+from r2_nav_interfaces.msg import NavigationStart
+
+
+DEFAULT_CONTROL_MODE = "x_then_y"
+VALID_CONTROL_MODES = {"fixed_map", "x_then_y"}
+
+
+def resolve_control_mode(control_mode: str) -> str:
+    """Normalize and validate the per-goal translation control mode."""
+    mode = str(control_mode).strip()
+    if not mode:
+        return DEFAULT_CONTROL_MODE
+    if mode not in VALID_CONTROL_MODES:
+        raise ValueError(
+            f"unsupported control_mode={mode!r}; expected one of "
+            f"{sorted(VALID_CONTROL_MODES)}"
+        )
+    return mode
 
 
 def yaw_to_quaternion(yaw: float):
@@ -59,7 +77,9 @@ class R2NavActionServer(Node):
         self.declare_parameter("start_point_topic", "/start_point")
         self.declare_parameter("goal_point_topic", "/goal_point")
         self.declare_parameter("goal_pose_topic", "/goal_pose")
-        self.declare_parameter("start_navigation_topic", "/start_navigation")
+        self.declare_parameter(
+            "navigation_start_request_topic", "/navigation_start_request"
+        )
         self.declare_parameter("stop_navigation_topic", "/stop_navigation")
         self.declare_parameter("planned_path_topic", "/planned_path")
 
@@ -125,9 +145,9 @@ class R2NavActionServer(Node):
             self.get_parameter("goal_pose_topic").value,
             planning_qos,
         )
-        self.start_nav_pub = self.create_publisher(
-            Bool,
-            self.get_parameter("start_navigation_topic").value,
+        self.navigation_start_pub = self.create_publisher(
+            NavigationStart,
+            self.get_parameter("navigation_start_request_topic").value,
             10,
         )
         self.stop_nav_pub = self.create_publisher(
@@ -203,8 +223,15 @@ class R2NavActionServer(Node):
                 self.get_logger().error(f"未知 goal_name: {goal_request.goal_name}")
                 return GoalResponse.REJECT
 
+        try:
+            control_mode = resolve_control_mode(goal_request.control_mode)
+        except ValueError as e:
+            self.get_logger().error(str(e))
+            return GoalResponse.REJECT
+
         self.get_logger().info(
-            f"接受导航目标: goal_name={goal_request.goal_name}, timeout={goal_request.timeout_sec}"
+            f"接受导航目标: goal_name={goal_request.goal_name}, "
+            f"control_mode={control_mode}, timeout={goal_request.timeout_sec}"
         )
         return GoalResponse.ACCEPT
 
@@ -356,10 +383,10 @@ class R2NavActionServer(Node):
             f"goal=({target.pose.position.x:.3f}, {target.pose.position.y:.3f})"
         )
 
-    def publish_start_navigation(self):
-        msg = Bool()
-        msg.data = True
-        self.start_nav_pub.publish(msg)
+    def publish_start_navigation(self, control_mode: str):
+        msg = NavigationStart()
+        msg.control_mode = control_mode
+        self.navigation_start_pub.publish(msg)
 
     def publish_stop_navigation(self):
         msg = Bool()
@@ -396,6 +423,7 @@ class R2NavActionServer(Node):
 
         try:
             feedback = NavigateToPose.Feedback()
+            control_mode = resolve_control_mode(goal.control_mode)
 
             # 1. 解析目标点
             feedback.state = "RESOLVE_GOAL"
@@ -449,7 +477,7 @@ class R2NavActionServer(Node):
             # 5. 启动导航
             feedback.state = "START_NAVIGATION"
             goal_handle.publish_feedback(feedback)
-            self.publish_start_navigation()
+            self.publish_start_navigation(control_mode)
 
             # 6. 监控是否到达
             feedback.state = "TRACKING"
