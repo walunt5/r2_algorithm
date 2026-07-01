@@ -3,193 +3,230 @@
 
     <Sequence name="Gym_Task_Tree">
 
-      <Script code=" head_dock_done_count := 0 " />
-      <Script code=" target_head_dock_count := 1 " />
-      <Script code=" head_dock_success := 0 " />
       <Script code=" gym_task_done := 0 " />
+      <Script code=" head_dock_success := 0 " />
 
-      <ForceSuccess name="Head_Dock_Loop_Exit_As_Success">
-        <KeepRunningUntilFailure name="Head_Dock_Loop">
+      <Fallback name="Gym_Task_With_Cleanup">
 
-          <Sequence name="Single_Head_Dock_Attempt">
+        <Sequence name="Normal_Gym_Head_Pick_And_Dock">
 
-            <!-- 2.1 判断端头对接完成次数是否小于目标次数 -->
-            <ScriptCondition code=" head_dock_done_count &lt; target_head_dock_count " />
+          <!-- 1. 导航到夹取端头预设点 -->
+          <R2NavigateToPoseActionNode
+            name="Nav_To_GYM_HEAD_PICK_PRESET"
+            action_name="/r2_navigate_to_pose"
+            goal_name="GYM_HEAD_PICK_PRESET"
+            control_mode="x_then_y"
+            timeout_sec="60.0"
+            server_timeout_ms="3000"
+            result_timeout_ms="70000" />
 
-            <Script code=" head_dock_success := 0 " />
+          <!-- 2. 底盘升高到 10 mm -->
+          <R2LiftControlNode
+            name="Lift_To_10mm"
+            target_h_mm="10"
+            mask="7"
+            timeout_sec="10.0"
+            result_timeout_ms="12000" />
 
-            <Fallback name="Single_Head_Dock_Fallback">
+          <!-- 3. 视觉伺服对准拳头 -->
+          <R2VisionServoActionNode
+            name="VisionServo_AlignFist"
+            action_name="/r2_chassis/vision_servo"
+            target_type="1"
+            zone_id="1"
+            use_class_id="true"
+            class_id="100"
+            use_color="false"
+            color="0"
+            desired_robot_x="0.300"
+            desired_robot_y="0.000"
+            desired_robot_z="1.400"
+            tolerance_x="0.030"
+            tolerance_y="0.020"
+            tolerance_z="999.0"
+            align_strategy="yaw_then_y_then_x"
+            yaw_mode="hold_current_odin_yaw"
+            target_yaw_rad="0.0"
+            yaw_tolerance_rad="0.035"
+            yaw_gate_rad="0.100"
+            min_confidence="0.50"
+            max_frame_age_sec="0.20"
+            timeout_ms="6000"
+            stable_required_frames="5"
+            server_timeout_ms="3000"
+            result_timeout_ms="8000" />
 
-              <Sequence name="Normal_Head_Pick_And_Dock">
+          <!-- 4. 底盘升高到 63 mm -->
+          <R2LiftControlNode
+            name="Lift_To_63mm"
+            target_h_mm="63"
+            mask="7"
+            timeout_sec="15.0"
+            result_timeout_ms="18000" />
 
-                <!-- <R2NavigateToPoseActionNode
-                  goal_name="GYM_HEAD_PICK_PRESET"
-                  timeout_sec="60.0"
-                  result_timeout_ms="70000" /> -->
-                <R2ForceSuccess name="Skip_Nav_To_GYM_HEAD_PICK_PRESET_In_Mock" />
+          <!-- 5. 下发夹爪机械臂平放指令 -->
+          <R2ExecuteArmActionNode
+            name="GripperArm_Flat"
+            action_name="/r2_arm/execute_action"
+            target_id="1"
+            action_id="257"
+            timeout_ms="8000"
+            param="0"
+            flags="0"
+            result_timeout_ms="10000" />
 
-                <R2LiftControlNode
-                  target_h_mm="300"
-                  mask="7"
-                  timeout_sec="5.0"
-                  result_timeout_ms="8000" />
+          <!-- 6. 死动作：往前走一段时间 -->
+          <R2TimedCmdVelNode
+            name="DeadMove_Forward_To_Fist"
+            cmd_vel_topic="/cmd_vel"
+            vx="0.20"
+            vy="0.00"
+            wz="0.00"
+            duration_sec="0.80"
+            rate_hz="20.0"
+            publish_stop="true" />
 
-                <R2VisionServoActionNode
-                  name="VisionServo_AlignHead"
-                  action_name="/r2_chassis/vision_servo"
-                  target_type="1"
-                  zone_id="1"
-                  use_class_id="true"
-                  class_id="100"
-                  use_color="false"
-                  color="0"
-                  desired_robot_x="0.300"
-                  desired_robot_y="0.000"
-                  desired_robot_z="1.400"
-                  tolerance_x="0.030"
-                  tolerance_y="0.020"
-                  tolerance_z="999.0"
-                  align_strategy="yaw_then_y_then_x"
-                  yaw_mode="hold_current_odin_yaw"
-                  target_yaw_rad="0.0"
-                  yaw_tolerance_rad="0.035"
-                  yaw_gate_rad="0.100"
-                  min_confidence="0.50"
-                  max_frame_age_sec="0.20"
-                  timeout_ms="6000"
-                  stable_required_frames="5"
-                  server_timeout_ms="3000"
-                  result_timeout_ms="8000" />
+          <!-- 7. 下发夹爪闭合指令 -->
+          <R2ExecuteArmActionNode
+            name="Gripper_Close"
+            action_name="/r2_arm/execute_action"
+            target_id="4"
+            action_id="1026"
+            timeout_ms="3000"
+            param="0"
+            flags="0"
+            result_timeout_ms="5000" />
 
-                <R2ExecuteArmActionNode
-                  action_name="/r2_arm/execute_action"
-                  target_id="4"
-                  action_id="1026"
-                  timeout_ms="3000"
-                  param="0"
-                  flags="0"
-                  result_timeout_ms="5000" />
+          <!-- 8. 延迟 1 秒：用 0 速度保持 1 秒 -->
+          <R2TimedCmdVelNode
+            name="Wait_1s_After_Gripper_Close"
+            cmd_vel_topic="/cmd_vel"
+            vx="0.00"
+            vy="0.00"
+            wz="0.00"
+            duration_sec="1.00"
+            rate_hz="20.0"
+            publish_stop="true" />
 
-                <R2ExecuteArmActionNode
-                  action_name="/r2_arm/execute_action"
-                  target_id="1"
-                  action_id="258"
-                  timeout_ms="8000"
-                  param="0"
-                  flags="0"
-                  result_timeout_ms="10000" />
+          <!-- 9. 下发夹爪机械臂旋转到 90 度指令 -->
+          <R2ExecuteArmActionNode
+            name="GripperArm_Rotate_90"
+            action_name="/r2_arm/execute_action"
+            target_id="1"
+            action_id="258"
+            timeout_ms="8000"
+            param="0"
+            flags="0"
+            result_timeout_ms="10000" />
 
-                <R2ForceSuccess name="Skip_Backward_CmdVel" />
+          <!-- 10. 死动作：vx 往后退一段时间 -->
+          <R2TimedCmdVelNode
+            name="DeadMove_Backward_After_Pick"
+            cmd_vel_topic="/cmd_vel"
+            vx="-0.20"
+            vy="0.00"
+            wz="0.00"
+            duration_sec="0.80"
+            rate_hz="20.0"
+            publish_stop="true" />
 
-                <R2ForceSuccess name="Skip_Stop_Chassis" />
+          <!-- 11. 控制底盘下降到 3 mm。
+               注意：LiftControl 的 target_h_mm 是 int32，不能写 2.5。
+               如果你说的 2.5 是 2.5 cm，请把这里改成 25。 -->
+          <R2LiftControlNode
+            name="Lift_Down_To_3mm"
+            target_h_mm="3"
+            mask="7"
+            timeout_sec="15.0"
+            result_timeout_ms="18000" />
 
-                <R2LiftControlNode
-                  target_h_mm="100"
-                  mask="7"
-                  timeout_sec="5.0"
-                  result_timeout_ms="8000" />
+          <!-- 12. 死动作：原地旋转一段时间 -->
+          <R2TimedCmdVelNode
+            name="DeadRotate_After_Lift_Down"
+            cmd_vel_topic="/cmd_vel"
+            vx="0.00"
+            vy="0.00"
+            wz="0.50"
+            duration_sec="1.20"
+            rate_hz="20.0"
+            publish_stop="true" />
 
-                <!-- <R2OdinPosePidAlignActionNode
-                  goal_name="GYM_HEAD_AFTER_PICK_ALIGN"
-                  use_goal_name="true"
-                  timeout_sec="5.0"
-                  result_timeout_ms="8000" /> -->
-                <R2ForceSuccess name="Skip_Odin_Align_In_Mock" />
+          <!-- 13. 导航到 GYM_HEAD_AFTER_PICK_ALIGN -->
+          <R2NavigateToPoseActionNode
+            name="Nav_To_GYM_HEAD_AFTER_PICK_ALIGN"
+            action_name="/r2_navigate_to_pose"
+            goal_name="GYM_HEAD_AFTER_PICK_ALIGN"
+            control_mode="x_then_y"
+            timeout_sec="60.0"
+            server_timeout_ms="3000"
+            result_timeout_ms="70000" />
 
-                <R2ForceSuccess name="Skip_Wait_Assembly_Done" />
+          <!-- 14. 死动作：最后后退一段时间 -->
+          <R2TimedCmdVelNode
+            name="DeadMove_Final_Backward"
+            cmd_vel_topic="/cmd_vel"
+            vx="-0.20"
+            vy="0.00"
+            wz="0.00"
+            duration_sec="0.60"
+            rate_hz="20.0"
+            publish_stop="true" />
 
-                <R2ExecuteArmActionNode
-                  action_name="/r2_arm/execute_action"
-                  target_id="4"
-                  action_id="1025"
-                  timeout_ms="3000"
-                  param="0"
-                  flags="0"
-                  result_timeout_ms="5000" />
+          <Script code=" head_dock_success := 1 " />
+          <Script code=" gym_task_done := 1 " />
 
-                <R2ExecuteArmActionNode
-                  action_name="/r2_arm/execute_action"
-                  target_id="1"
-                  action_id="259"
-                  timeout_ms="8000"
-                  param="0"
-                  flags="0"
-                  result_timeout_ms="10000" />
+        </Sequence>
 
-                <Script code=" head_dock_success := 1 " />
+        <!-- 失败清理：如果主流程任意一步失败，执行安全收尾 -->
+        <Sequence name="Gym_Task_Failure_Cleanup">
 
-                <Script code=" head_dock_done_count += 1 " />
+          <R2TimedCmdVelNode
+            name="Stop_Chassis_On_Failure"
+            cmd_vel_topic="/cmd_vel"
+            vx="0.00"
+            vy="0.00"
+            wz="0.00"
+            duration_sec="0.20"
+            rate_hz="20.0"
+            publish_stop="true" />
 
-              </Sequence>
+          <R2ExecuteArmActionNode
+            name="Open_Gripper_On_Failure"
+            action_name="/r2_arm/execute_action"
+            target_id="4"
+            action_id="1025"
+            timeout_ms="3000"
+            param="0"
+            flags="0"
+            result_timeout_ms="5000" />
 
-              <Sequence name="Head_Dock_Failure_Cleanup">
+          <R2LiftControlNode
+            name="Lift_Down_On_Failure"
+            target_h_mm="3"
+            mask="7"
+            timeout_sec="15.0"
+            result_timeout_ms="18000" />
 
-                <R2ForceSuccess name="Skip_Stop_Chassis_OnFail" />
+          <R2ExecuteArmActionNode
+            name="Arm_Flat_On_Failure"
+            action_name="/r2_arm/execute_action"
+            target_id="1"
+            action_id="257"
+            timeout_ms="8000"
+            param="0"
+            flags="0"
+            result_timeout_ms="10000" />
 
-                <R2ExecuteArmActionNode
-                  action_name="/r2_arm/execute_action"
-                  target_id="4"
-                  action_id="1025"
-                  timeout_ms="3000"
-                  param="0"
-                  flags="0"
-                  result_timeout_ms="5000" />
+          <Script code=" head_dock_success := 0 " />
+          <Script code=" gym_task_done := 0 " />
 
-                <R2LiftControlNode
-                  target_h_mm="100"
-                  mask="7"
-                  timeout_sec="5.0"
-                  result_timeout_ms="8000" />
+          <R2ForceSuccess name="Failure_Cleanup_Finished" />
 
-                <R2ExecuteArmActionNode
-                  action_name="/r2_arm/execute_action"
-                  target_id="1"
-                  action_id="257"
-                  timeout_ms="8000"
-                  param="0"
-                  flags="0"
-                  result_timeout_ms="10000" />
+        </Sequence>
 
-                <Script code=" head_dock_success := 0 " />
+      </Fallback>
 
-                <R2ForceSuccess name="Failure_Cleanup_Return_Success" />
-
-              </Sequence>
-
-            </Fallback>
-
-            <ScriptCondition code=" head_dock_success == 1 " />
-
-            <R2ForceSuccess name="Single_Head_Dock_Return_Success" />
-
-          </Sequence>
-
-        </KeepRunningUntilFailure>
-      </ForceSuccess>
-
-      <ScriptCondition code=" head_dock_done_count &gt;= target_head_dock_count " />
-
-      <R2ForceSuccess name="Skip_Final_Stop_Chassis" />
-
-      <R2ExecuteArmActionNode
-        action_name="/r2_arm/execute_action"
-        target_id="4"
-        action_id="1025"
-        timeout_ms="3000"
-        param="0"
-        flags="0"
-        result_timeout_ms="5000" />
-
-      <R2ExecuteArmActionNode
-        action_name="/r2_arm/execute_action"
-        target_id="1"
-        action_id="259"
-        timeout_ms="8000"
-        param="0"
-        flags="0"
-        result_timeout_ms="10000" />
-
-      <Script code=" gym_task_done := 1 " />
+      <ScriptCondition code=" gym_task_done == 1 " />
 
       <R2ForceSuccess name="Gym_Task_Return_Success" />
 

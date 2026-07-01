@@ -1122,7 +1122,7 @@ finally:
         self.system_starting = True
         self.system_step = f"正在启动 {team_name}{zone_name}总系统"
         self.state = "SYSTEM_STARTING"
-        self.current_task = "r2_task_mock_bringup.launch.py"
+        self.current_task = "r2_task_real_bringup.launch.py"
         self.current_step = self.system_step
         self.system_progress = 10
         self.progress = 10

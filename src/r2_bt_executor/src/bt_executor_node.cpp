@@ -16,6 +16,7 @@
 #include "r2_bt_nodes/blackboard_nodes.hpp"
 #include "r2_bt_nodes/odin_nodes.hpp"
 #include "r2_bt_nodes/vision_servo_nodes.hpp"
+#include "r2_bt_nodes/timed_cmd_vel_node.hpp"
 
 using namespace std::chrono_literals;
 
@@ -182,6 +183,15 @@ int main(int argc, char ** argv)
     "R2VisionServoActionNode",
     [node](const std::string & name, const BT::NodeConfig & config) {
       return std::make_unique<r2_bt_nodes::R2VisionServoActionNode>(
+        name,
+        config,
+        node);
+    });
+
+  factory.registerBuilder<r2_bt_nodes::R2TimedCmdVelNode>(
+    "R2TimedCmdVelNode",
+    [node](const std::string & name, const BT::NodeConfig & config) {
+      return std::make_unique<r2_bt_nodes::R2TimedCmdVelNode>(
         name,
         config,
         node);

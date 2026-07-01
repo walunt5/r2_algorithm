@@ -29,6 +29,7 @@ add_library(${PROJECT_NAME}
   src/blackboard_nodes.cpp
   src/odin_nodes.cpp
   src/vision_servo_nodes.cpp
+  src/timed_cmd_vel_node.cpp
 )
 
 target_include_directories(${PROJECT_NAME}
