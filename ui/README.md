@@ -1,156 +1,96 @@
-# R2 Touch UI KFS Route Editor
+# R2 Touch UI
 
-新增功能：二区路线模式/KFS模式，保存到 `~/techx_R2_algorithm/r2_algorithm/src/r2_bt_executor/config/meilin_map.yaml`。
+PyQt5 触控界面，固定分辨率为 `900x500`。界面负责选择红/蓝方、加载一区或三区地图、启动总系统，以及启动一区、二区和三区行为树。
 
-运行：
+## 运行
 
 ```bash
+cd /home/xie/techx_R2_algorithm/r2_algorithm/ui
 pip3 install -r requirements.txt
-python3 main.py
+./run.sh
 ```
 
-## 本版修改说明：路线合法性限制 + 颜色互换
-
-### 颜色修改
-
-保留“颜色随 YAML 高度变化”的版本，但是把 200mm 和 400mm 的颜色互换：
-
-- `Block_200` 使用原来 400mm 的颜色
-- `Block_400` 使用原来 200mm 的颜色
-
-### 路线选择限制
-
-在“路线模式”下：
-
-1. 第一个方块只能选择 `B1 / B2 / B3`
-2. 后续只能选择和上一个方块上下左右相邻的方块
-3. 已选路线中只能撤销最后一个方块
-4. 如果想从中间改路线，先点击 `CLEAR 清`
-
-### KFS 模式不受路线限制
-
-在“KFS模式”下，点击任意方块只会切换：
-
-```yaml
-blocks.Bx.has_kfs
-```
-
-不会影响路线顺序，也不会修改：
-
-```yaml
-height
-kfs_height
-```
-
-## 本版 UI 修改说明
-
-本工程可以直接覆盖到：
-
-```bash
-/home/xie/techx_R2_algorithm/r2_algorithm/ui
-```
-
-修改内容：
-
-1. 分辨率保持 `900x600`。
-2. 保留“方块颜色随 `meilin_map.yaml` 中 `height` 变化”的逻辑。
-3. 交换 200mm 和 400mm 的颜色：
-   - 200mm 使用原来 400mm 的颜色
-   - 400mm 使用原来 200mm 的颜色
-4. KFS 状态更醒目：
-   - 有 KFS 的方块显示 `★有KFS★`
-   - 有 KFS 的方块使用亮紫/亮粉色粗边框
-   - 有 KFS 的方块字体略微缩小，避免三行文字太挤
-5. 保留路线限制：
-   - 第一个方块只能选 B1/B2/B3
-   - 后续只能选上下左右相邻方块
-   - 只能撤销最后一个方块
-6. 保存配置时只修改：
-   - `routes.zone2_main.blocks`
-   - `blocks.Bx.has_kfs`
-7. 保存配置时不会修改：
-   - `blocks.Bx.height`
-   - `blocks.Bx.kfs_height`
-
-覆盖方法：
-
-```bash
-cd /home/xie/techx_R2_algorithm/r2_algorithm
-cp -r ui ui_backup_$(date +%Y%m%d_%H%M%S)
-unzip -o /你的下载路径/ui_kfs_bright_900x600_overwrite.zip -d ui
-cd ui
-python3 main.py
-```
-
-
-## 本版修改说明：KFS 改为字体颜色提示
-
-本版用于直接覆盖：
-
-```bash
-/home/xie/techx_R2_algorithm/r2_algorithm/ui
-```
-
-修改内容：
-
-1. 保留“方块颜色随 `meilin_map.yaml` 中 `height` 变化”的逻辑。
-2. 交换 200mm 和 400mm 的颜色：
-   - 200mm 使用原来 400mm 的颜色
-   - 400mm 使用原来 200mm 的颜色
-3. 不再给 KFS 方块添加紫色/粉色边框。
-4. KFS 状态通过方块内部第三行字体颜色提示：
-   - 有 KFS：显示 `★ 有KFS ★`，字体为金色
-   - 无 KFS：显示 `无KFS`，字体为白色
-5. KFS 第三行字体略微缩小，避免三行文字太挤。
-6. 保留路线限制：
-   - 第一个方块只能选 B1/B2/B3
-   - 后续只能选上下左右相邻方块
-   - 只能撤销最后一个方块
-
-覆盖方法：
-
-```bash
-cd /home/xie/techx_R2_algorithm/r2_algorithm
-cp -r ui ui_backup_$(date +%Y%m%d_%H%M%S)
-unzip -o /你的下载路径/ui_kfs_font_color_900x600_overwrite.zip -d ui
-cd ui
-python3 main.py
-```
-
-
-## 本版修改说明：去除路线限制 + 修复保存配置
-
-本版可以直接覆盖到：
-
-```bash
-/home/xie/techx_R2_algorithm/r2_algorithm/ui
-```
-
-修改内容：
-
-1. 去除路线选择限制：
-   - 第一个方块不再限制为 B1/B2/B3。
-   - 后续方块不再要求和上一个相邻。
-   - 已选择的任意方块再次点击即可移除。
-2. 修复保存配置：
-   - 保存路径会从当前 UI 文件位置反推工程根目录。
-   - 目标文件为：`r2_algorithm/src/r2_bt_executor/config/meilin_map.yaml`。
-   - 如果 UI 工程确实在 `r2_algorithm/ui` 下，点击“保存配置”会直接修改源码目录里的 `meilin_map.yaml`。
-3. 保存时只修改：
-   - `routes.zone2_main.blocks`
-   - `blocks.Bx.has_kfs`
-4. 保存时不会修改：
-   - `blocks.Bx.height`
-   - `blocks.Bx.kfs_height`
-5. 如果路线为空，会保留 YAML 里的原路线，只保存 KFS 状态。
-6. 保留 KFS 字体颜色提示：
-   - 有 KFS：金色 `★ 有KFS ★`
-   - 无 KFS：白色 `无KFS`
-7. 保留 200mm 和 400mm 方块颜色互换。
-
-如果你的工程根目录不是默认结构，可以启动前设置：
+也可以指定工程根目录：
 
 ```bash
 export R2_ALGORITHM_ROOT=/home/xie/techx_R2_algorithm/r2_algorithm
 python3 main.py
 ```
+
+## 系统启动模式
+
+1. 先选择红方或蓝方。
+2. 点击“启动一区系统”或“启动三区系统”。
+3. UI 根据队伍和区域读取 `config/field_profiles.yaml`。
+4. UI 将地图路径写入源码和 `install/share` 中的 `r2_nav_params.yaml`，并同步所选队伍的导航目标点文件。
+5. 两种模式都启动：
+
+   ```bash
+   ros2 launch r2_bt_bringup r2_task_mock_bringup.launch.py
+   ```
+
+6. 检测到 `map -> chassis_base_link` 后，系统进入 READY。
+
+入口互斥规则：
+
+- 一区系统 READY：允许进入一区和二区任务，禁用三区任务。
+- 三区系统 READY：只允许进入三区任务。
+- 切换队伍或区域前必须先复位当前系统。
+
+## 地图档案
+
+`config/field_profiles.yaml` 按“队伍 -> 区域”组织。红、蓝方各自共用一个导航目标点文件，不同区域可以把目标点继续保存在同一个文件中。
+
+```yaml
+red:
+  nav_goals_file: "/path/to/red_r2_nav_goals.yaml"
+  zone1:
+    relocalization_bin_file: "/path/to/zone1.bin"
+    relocalization_pcd_file: "/path/to/zone1.pcd"
+    map_package_dir: "/path/to/zone1_map_package"
+  zone3:
+    relocalization_bin_file: "/path/to/zone3.bin"
+    relocalization_pcd_file: "/path/to/zone3.pcd"
+    map_package_dir: "/path/to/zone3_map_package"
+```
+
+正式地图目录固定为：
+
+- `chassis_maps/red_zone1`
+- `chassis_maps/blue_zone1`
+- `chassis_maps/red_zone3`
+- `chassis_maps/blue_zone3`
+
+每个目录都包含重定位 BIN、可视化 PCD 和 OctoMap 地图包。后续替换地图时，修改对应目录内容并同步更新 `field_profiles.yaml` 中的文件名即可。
+
+## 行为树入口
+
+- 一区：`zone1_competition_task.xml`
+- 二区：`zone2_competition_task.xml`
+- 三区：`zone3_competition_task.xml`
+
+三个正式行为树统一放在：
+
+```text
+src/r2_bt_executor/config/zone1_competition_task.xml
+src/r2_bt_executor/config/zone2_competition_task.xml
+src/r2_bt_executor/config/zone3_competition_task.xml
+```
+
+UI 只启动这三个正式文件，目录中的其他 XML 均作为开发和单项测试文件。一区、二区正式文件当前分别复制自原有 `gym_task.xml` 和 `meilin_zone2_task.xml`；三区正式文件是安全等待占位树，不执行机器人动作。
+
+替换任一正式行为树后执行：
+
+```bash
+cd /home/xie/techx_R2_algorithm/r2_algorithm
+colcon build --symlink-install --packages-select r2_bt_executor r2_bt_bringup
+source install/setup.bash
+```
+
+## 二区路线和 KFS
+
+二区页面继续编辑 `src/r2_bt_executor/config/meilin_map.yaml`：
+
+- 路线模式用于选择方块顺序。
+- KFS 模式用于切换 `blocks.Bx.has_kfs`。
+- 保存时同步源码和 `install/share` 配置。

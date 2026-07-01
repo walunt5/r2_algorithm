@@ -1,11 +1,21 @@
 red:
-  relocalization_bin_file: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/red/map_20260614_154214.bin"
-  relocalization_pcd_file: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/red/Relocation Map.pcd"
-  map_package_dir: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/red/Relocation Map"
   nav_goals_file: "/home/xie/techx_R2_algorithm/r2_algorithm/ui/config/red_r2_nav_goals.yaml"
+  zone1:
+    relocalization_bin_file: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/red_zone1/map_20260614_154214.bin"
+    relocalization_pcd_file: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/red_zone1/Relocation Map.pcd"
+    map_package_dir: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/red_zone1/Relocation Map"
+  zone3:
+    relocalization_bin_file: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/red_zone3/map_20260629_183751.bin"
+    relocalization_pcd_file: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/red_zone3/Relocation Map4_edited.pcd"
+    map_package_dir: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/red_zone3/Relocation Map4"
 
 blue:
-  relocalization_bin_file: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/blue/map_20260614_154214.bin"
-  relocalization_pcd_file: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/blue/Relocation Map.pcd"
-  map_package_dir: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/blue/Relocation Map"
   nav_goals_file: "/home/xie/techx_R2_algorithm/r2_algorithm/ui/config/blue_r2_nav_goals.yaml"
+  zone1:
+    relocalization_bin_file: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/blue_zone1/map_20260614_154214.bin"
+    relocalization_pcd_file: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/blue_zone1/Relocation Map.pcd"
+    map_package_dir: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/blue_zone1/Relocation Map"
+  zone3:
+    relocalization_bin_file: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/blue_zone3/map_20260629_183751.bin"
+    relocalization_pcd_file: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/blue_zone3/Relocation Map4_edited.pcd"
+    map_package_dir: "/home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/blue_zone3/Relocation Map4"

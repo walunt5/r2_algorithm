@@ -1,22 +1,22 @@
 goals:
   ENTRY_TO_B1_APPROACH:
     frame_id: map
-    x: 0.139377
-    y: 3.042951
-    z: -0.113232
-    yaw: 1.558729
+    x: 1.6
+    y: 0.9
+    z: 0.0
+    yaw: 1.57
   ENTRY_TO_B2_APPROACH:
     frame_id: map
-    x: 2.117098
-    y: 0.058213
-    z: 0.304345
-    yaw: -0.016644
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
   ENTRY_TO_B3_APPROACH:
     frame_id: map
-    x: 2.171686
-    y: -0.349776
-    z: -0.139786
-    yaw: -0.093789
+    x: 1.845851
+    y: -0.315796
+    z: -0.122479
+    yaw: 0.075597
   B1_TO_B2_APPROACH:
     frame_id: map
     x: 0.0
@@ -199,10 +199,10 @@ goals:
     yaw: 0.0
   B10_TO_B11_APPROACH:
     frame_id: map
-    x: 0.151481
-    y: 3.04372
-    z: -0.1106
-    yaw: 1.560764
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
   B11_TO_B10_APPROACH:
     frame_id: map
     x: 0.0
@@ -235,17 +235,29 @@ goals:
     yaw: 0.0
   B12_TO_EXIT_ZONE_APPROACH:
     frame_id: map
-    x: 6.982457
-    y: -2.883449
-    z: 0.11347
+    x: 0.0
+    y: 0.0
+    z: 0.0
     yaw: 0.0
   GYM_HEAD_PICK_PRESET:
     frame_id: map
-    x: 0.564825
-    y: 0.004871
-    z: -0.083427
-    yaw: 0.009712
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
   GYM_HEAD_AFTER_PICK_ALIGN:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+  ZONE3_RETRY_POINT:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+  NINE_GRID_PRESET:
     frame_id: map
     x: 0.0
     y: 0.0

@@ -162,8 +162,8 @@ def generate_launch_description():
     )
     launch_serial_arg = DeclareLaunchArgument(
         "launch_serial",
-        default_value="true",
-        description="Launch serial communication node",
+        default_value="false",
+        description="Launch legacy serial_communication_pkg node",
     )
     launch_web_arg = DeclareLaunchArgument(
         "launch_web",

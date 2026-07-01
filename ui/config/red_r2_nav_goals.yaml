@@ -251,3 +251,15 @@ goals:
     y: 0.0
     z: 0.0
     yaw: 0.0
+  ZONE3_RETRY_POINT:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0
+  NINE_GRID_PRESET:
+    frame_id: map
+    x: 0.0
+    y: 0.0
+    z: 0.0
+    yaw: 0.0

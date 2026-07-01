@@ -26,6 +26,42 @@ def quaternion_to_yaw(q):
     return math.atan2(siny_cosp, cosy_cosp)
 
 
+def collect_goal_names_from_map(data):
+    """Collect route approach goals and standalone calibration goals."""
+    transitions = data.get("transitions", {})
+    calibration_goals = data.get("calibration_goals", {})
+
+    if not isinstance(transitions, dict):
+        raise RuntimeError("meilin_map.yaml 中 transitions 格式不正确")
+    if not isinstance(calibration_goals, dict):
+        raise RuntimeError("meilin_map.yaml 中 calibration_goals 格式不正确")
+
+    goal_name_to_source = {}
+
+    for edge_name, edge_info in transitions.items():
+        if not isinstance(edge_info, dict):
+            continue
+
+        approach_name = str(edge_info.get("approach_goal_name", "")).strip()
+        if not approach_name:
+            continue
+
+        goal_name_to_source[approach_name] = f"来自 transition: {edge_name}"
+
+    for goal_name, description in calibration_goals.items():
+        goal_name = str(goal_name).strip()
+        if not goal_name:
+            continue
+
+        description = str(description).strip() if description is not None else ""
+        source_text = "来自 calibration_goals"
+        if description:
+            source_text += f": {description}"
+        goal_name_to_source.setdefault(goal_name, source_text)
+
+    return sorted(goal_name_to_source), goal_name_to_source
+
+
 class GoalRecorderNode(Node):
     def __init__(self):
         super().__init__("r2_goal_recorder_gui_node")
@@ -65,7 +101,7 @@ class GoalRecorderGui:
     def __init__(self, ros_node):
         self.ros_node = ros_node
         self.current_pose = None
-        self.goal_name_to_edge = {}
+        self.goal_name_to_source = {}
 
         self.root = tk.Tk()
         self.root.title("R2 Nav Goals 标定工具")
@@ -85,7 +121,7 @@ class GoalRecorderGui:
         self.z_var = tk.StringVar(value="")
         self.yaw_var = tk.StringVar(value="")
 
-        self.status_var = tk.StringVar(value="请先点击“加载 approach 点位列表”")
+        self.status_var = tk.StringVar(value="请先点击“加载导航点位列表”")
 
         self.build_ui()
 
@@ -179,7 +215,7 @@ class GoalRecorderGui:
         tk.Button(self.root, text="选择 meilin_map.yaml", command=self.select_map_yaml).grid(
             row=row, column=1, sticky="w", **padding
         )
-        tk.Button(self.root, text="加载 approach 点位列表", command=self.load_goal_names_from_map_yaml).grid(
+        tk.Button(self.root, text="加载导航点位列表", command=self.load_goal_names_from_map_yaml).grid(
             row=row, column=2, sticky="w", **padding
         )
 
@@ -200,7 +236,7 @@ class GoalRecorderGui:
 
         row += 1
 
-        tk.Label(self.root, text="选择要保存的 approach 点位").grid(
+        tk.Label(self.root, text="选择要保存的导航点位").grid(
             row=row, column=0, sticky="e", **padding
         )
 
@@ -267,7 +303,7 @@ class GoalRecorderGui:
         help_text = (
             "使用方法：\n"
             "1. 启动真实定位/导航底座，让 TF 中存在 map -> chassis_base_link。\n"
-            "2. 点击“加载 approach 点位列表”，下拉框会读取 meilin_map.yaml 里的所有 approach_goal_name。\n"
+            "2. 点击“加载导航点位列表”，下拉框会读取路线 approach_goal_name 和 calibration_goals。\n"
             "3. 选择一个点位名，例如 ENTRY_TO_B2_APPROACH。\n"
             "4. 把机器人移动到要标定的位置。\n"
             "5. 点击“查询当前 TF”。\n"
@@ -335,37 +371,16 @@ class GoalRecorderGui:
 
         try:
             data = self.load_yaml_file(path)
-            transitions = data.get("transitions", {})
-
-            if not isinstance(transitions, dict):
-                messagebox.showerror("错误", "meilin_map.yaml 中 transitions 格式不正确")
-                return
-
-            goal_names = []
-            self.goal_name_to_edge = {}
-
-            for edge_name, edge_info in transitions.items():
-                if not isinstance(edge_info, dict):
-                    continue
-
-                approach_name = edge_info.get("approach_goal_name", "")
-
-                if not approach_name:
-                    continue
-
-                goal_names.append(approach_name)
-                self.goal_name_to_edge[approach_name] = edge_name
-
-            goal_names = sorted(set(goal_names))
+            goal_names, self.goal_name_to_source = collect_goal_names_from_map(data)
 
             if not goal_names:
                 self.goal_name_combo["values"] = []
                 self.goal_name_var.set("")
-                self.edge_info_var.set("未找到 approach_goal_name")
-                self.status_var.set("没有从 transitions 中找到 approach_goal_name")
+                self.edge_info_var.set("未找到导航点位")
+                self.status_var.set("没有找到路线点位或独立标定点位")
                 messagebox.showwarning(
                     "提示",
-                    "没有从 meilin_map.yaml 的 transitions 中找到 approach_goal_name",
+                    "没有从 meilin_map.yaml 中找到导航点位",
                 )
                 return
 
@@ -378,7 +393,7 @@ class GoalRecorderGui:
                 self.goal_name_var.set(goal_names[0])
 
             self.update_edge_info()
-            self.status_var.set(f"已加载 {len(goal_names)} 个 approach 点位")
+            self.status_var.set(f"已加载 {len(goal_names)} 个导航点位")
 
         except Exception as e:
             self.status_var.set(f"加载失败: {e}")
@@ -386,9 +401,9 @@ class GoalRecorderGui:
 
     def update_edge_info(self):
         goal_name = self.goal_name_var.get().strip()
-        edge_name = self.goal_name_to_edge.get(goal_name, "")
-        if edge_name:
-            self.edge_info_var.set(f"来自 transition: {edge_name}")
+        source_text = self.goal_name_to_source.get(goal_name, "")
+        if source_text:
+            self.edge_info_var.set(source_text)
         else:
             self.edge_info_var.set("")
 
@@ -446,7 +461,7 @@ class GoalRecorderGui:
         if not goal_name:
             messagebox.showerror(
                 "错误",
-                "请选择一个 approach 点位。若下拉框为空，请先点击“加载 approach 点位列表”。",
+                "请选择一个导航点位。若下拉框为空，请先点击“加载导航点位列表”。",
             )
             return
 

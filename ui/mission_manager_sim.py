@@ -10,6 +10,10 @@ from datetime import datetime
 import yaml
 from PyQt5.QtCore import QObject, pyqtSignal, QTimer
 
+ZONE1_COMPETITION_BT_XML = "zone1_competition_task.xml"
+ZONE2_COMPETITION_BT_XML = "zone2_competition_task.xml"
+ZONE3_COMPETITION_BT_XML = "zone3_competition_task.xml"
+
 
 class MissionManagerSim(QObject):
     state_changed = pyqtSignal(dict)
@@ -21,6 +25,7 @@ class MissionManagerSim(QObject):
         self.state = "IDLE"
         self.current_task = "无"
         self.current_team = "UNKNOWN"
+        self.active_zone = None
 
         self.manual_block_sequence = []
         self.block_has_kfs = {i: False for i in range(1, 13)}
@@ -38,6 +43,7 @@ class MissionManagerSim(QObject):
         self.system_process = None
         self.gym_bt_process = None
         self.meilin_bt_process = None
+        self.zone3_bt_process = None
         self.process_log_dir = self.get_workspace_root() / "log" / "ui_process"
         self.process_log_dir.mkdir(parents=True, exist_ok=True)
         self.process_log_files = {}
@@ -164,15 +170,17 @@ class MissionManagerSim(QObject):
         with open(yaml_path, "w", encoding="utf-8") as f:
             yaml.safe_dump(data, f, allow_unicode=True, sort_keys=False, default_flow_style=False)
 
-    def load_team_nav_profile(self):
+    def load_team_nav_profile(self, zone: str):
         """
-        启动系统前，根据 UI 当前选择的 RED / BLUE：
+        启动系统前，根据 UI 当前选择的 RED / BLUE 和 zone1 / zone3：
         1. 读取 ui/config/field_profiles.yaml
         2. 修改 src 和 install 里的 r2_nav_params.yaml
         3. 把对应红/蓝方 r2_nav_goals.yaml 同步到 src 和 install
         """
         if self.current_team not in ["RED", "BLUE"]:
             return False, "请先选择红方或蓝方"
+        if zone not in ["zone1", "zone3"]:
+            return False, "系统区域只能是 zone1 或 zone3"
 
         profile_key = "red" if self.current_team == "RED" else "blue"
         field_profiles_path = self.get_field_profiles_path()
@@ -189,23 +197,30 @@ class MissionManagerSim(QObject):
         if profile_key not in profiles:
             return False, f"field_profiles.yaml 中没有 {profile_key} 配置"
 
-        profile = profiles.get(profile_key) or {}
+        team_profile = profiles.get(profile_key) or {}
+        profile = team_profile.get(zone) or {}
+
+        if not profile:
+            return False, f"field_profiles.yaml 中没有 {profile_key}.{zone} 配置"
 
         required_keys = [
             "relocalization_bin_file",
             "relocalization_pcd_file",
             "map_package_dir",
-            "nav_goals_file",
         ]
 
         for key in required_keys:
             if key not in profile or not str(profile.get(key, "")).strip():
-                return False, f"{profile_key} 配置缺少字段：{key}"
+                return False, f"{profile_key}.{zone} 配置缺少字段：{key}"
+
+        nav_goals_value = str(team_profile.get("nav_goals_file", "")).strip()
+        if not nav_goals_value:
+            return False, f"{profile_key} 配置缺少字段：nav_goals_file"
 
         relocalization_bin_file = self.resolve_config_path(profile["relocalization_bin_file"])
         relocalization_pcd_file = self.resolve_config_path(profile["relocalization_pcd_file"])
         map_package_dir = self.resolve_config_path(profile["map_package_dir"])
-        nav_goals_file = self.resolve_config_path(profile["nav_goals_file"])
+        nav_goals_file = self.resolve_config_path(nav_goals_value)
 
         # 启动前检查文件/目录是否真的存在。这样可以避免 launch 启动一半才报错。
         if not relocalization_bin_file.is_file():
@@ -252,7 +267,7 @@ class MissionManagerSim(QObject):
             shutil.copyfile(nav_goals_file, install_nav_goals_path)
 
             msg = (
-                f"已加载{profile_key}方导航配置\n"
+                f"已加载{profile_key}方 {zone} 导航配置\n"
                 f"bin地图：{relocalization_bin_file}\n"
                 f"pcd地图：{relocalization_pcd_file}\n"
                 f"OctoMap目录：{map_package_dir}\n"
@@ -285,6 +300,7 @@ class MissionManagerSim(QObject):
             "state": self.state,
             "current_task": self.current_task,
             "current_team": self.current_team,
+            "active_zone": self.active_zone,
             "manual_block_sequence": list(self.manual_block_sequence),
             "manual_route_text": self.manual_route_text,
             "block_has_kfs": dict(self.block_has_kfs),
@@ -630,6 +646,10 @@ finally:
             self.current_step = f"一区正在执行：{display_name}\n节点：{node_name}{detail}"
             self.emit_state(self.current_step)
 
+        elif task_name == "zone3_bt":
+            self.current_step = f"三区正在执行：{display_name}\n节点：{node_name}{detail}"
+            self.emit_state(self.current_step)
+
     def poll_process_log_new_lines(self, name: str, max_read_chars: int = 12000):
         """只读取某个进程日志中新增加的内容，用来实时更新 UI。"""
         log_file = self.process_log_files.get(name)
@@ -687,8 +707,12 @@ finally:
         if self.gym_bt_process is not None and self.gym_bt_process.poll() is None:
             self.poll_process_log_new_lines("gym_bt")
 
+        if self.zone3_bt_process is not None and self.zone3_bt_process.poll() is None:
+            self.poll_process_log_new_lines("zone3_bt")
+
         self._monitor_meilin_bt_process()
         self._monitor_gym_bt_process()
+        self._monitor_zone3_bt_process()
         self._monitor_system_process()
 
     def _monitor_meilin_bt_process(self):
@@ -760,6 +784,32 @@ finally:
         self.current_step = "一区完成，请抬回重试区"
         self.emit_state("一区行为树成功结束")
 
+    def _monitor_zone3_bt_process(self):
+        proc = self.zone3_bt_process
+        if proc is None or proc.poll() is None:
+            return
+
+        self.poll_process_log_new_lines("zone3_bt")
+
+        returncode = proc.returncode
+        tail = self.read_process_log_tail("zone3_bt")
+        self.zone3_bt_process = None
+
+        self.tree_running = False
+        self.current_task = "无"
+        self.progress = 100
+
+        if returncode != 0 or self.bt_log_has_failure(tail):
+            self.state = "ZONE3_FAILED"
+            self.current_step = "三区行为树失败"
+            self.emit_state(f"三区行为树失败：returncode={returncode}")
+            self.error_emitted.emit("三区行为树已经失败并退出。请查看 zone3_bt 日志。")
+            return
+
+        self.state = "ZONE3_DONE"
+        self.current_step = "三区任务完成"
+        self.emit_state("三区行为树成功结束")
+
     def _monitor_system_process(self):
         proc = self.system_process
         if proc is None or proc.poll() is None:
@@ -773,6 +823,8 @@ finally:
             self.system_ready = False
             self.system_starting = False
             self.system_progress = 0
+            self.active_zone = None
+            self.active_profile = None
 
             if self.state not in ["IDLE", "STOPPED"]:
                 self.state = "SYSTEM_EXITED"
@@ -1016,6 +1068,7 @@ finally:
 
         if self.current_team == team:
             self.current_team = "UNKNOWN"
+            self.active_zone = None
             self.state = "IDLE"
             self.current_step = "-"
             self.system_step = "未启动"
@@ -1026,6 +1079,7 @@ finally:
             return
 
         self.current_team = team
+        self.active_zone = None
         self.state = "TEAM_SELECTED"
         self.current_step = f"已选择{'红方' if team == 'RED' else '蓝方'}"
         self.system_step = "等待启动系统"
@@ -1033,7 +1087,7 @@ finally:
         self.progress = 0
         self.emit_state(f"已选择{'红方' if team == 'RED' else '蓝方'}，请点击启动系统")
 
-    def start_system(self):
+    def start_system(self, zone="zone1"):
         if self.tree_running:
             self.error_emitted.emit("任务运行中不能启动系统")
             return
@@ -1046,28 +1100,33 @@ finally:
         if self.current_team not in ["RED", "BLUE"]:
             self.error_emitted.emit("请先选择红方或蓝方")
             return
+        if zone not in ["zone1", "zone3"]:
+            self.error_emitted.emit("系统区域只能是 zone1 或 zone3")
+            return
 
         team_name = "红方" if self.current_team == "RED" else "蓝方"
         profile_dir = "red" if self.current_team == "RED" else "blue"
+        zone_name = "一区" if zone == "zone1" else "三区"
 
-        ok, profile_msg = self.load_team_nav_profile()
+        ok, profile_msg = self.load_team_nav_profile(zone)
         if not ok:
             self.error_emitted.emit(profile_msg)
             self.emit_state("加载红蓝方导航配置失败")
             return
         self.log(profile_msg)
 
-        self.active_profile = profile_dir
+        self.active_zone = zone
+        self.active_profile = f"{profile_dir}.{zone}"
         self.system_started = True
         self.system_ready = False
         self.system_starting = True
-        self.system_step = f"正在启动 {team_name} 总系统"
+        self.system_step = f"正在启动 {team_name}{zone_name}总系统"
         self.state = "SYSTEM_STARTING"
-        self.current_task = "r2_task_real_bringup.launch.py"
+        self.current_task = "r2_task_mock_bringup.launch.py"
         self.current_step = self.system_step
         self.system_progress = 10
         self.progress = 10
-        self.emit_state(f"开始启动系统：team:={profile_dir}")
+        self.emit_state(f"开始启动系统：队伍={profile_dir}，区域={zone}")
 
         try:
             self.system_process = self.start_ros_process(
@@ -1086,6 +1145,8 @@ finally:
             self.system_progress = 0
             self.progress = 0
             self.current_task = "无"
+            self.active_zone = None
+            self.active_profile = None
             self.state = "IDLE"
             self.system_step = "启动失败"
             self.current_step = "启动失败"
@@ -1151,6 +1212,9 @@ finally:
         if not self.system_ready:
             self.error_emitted.emit("系统尚未准备完成，不能开始一区")
             return
+        if self.active_zone != "zone1":
+            self.error_emitted.emit("当前不是一区系统，不能开始一区任务")
+            return
         if not self.localization_ok:
             ok, msg = self.check_localization_tf_once(
                 target_frame="map",
@@ -1175,7 +1239,7 @@ finally:
             self.localization_status = "定位成功"
             self.localization_last_error = ""
 
-        xml_file_name = "gym_task.xml"
+        xml_file_name = ZONE1_COMPETITION_BT_XML
         ok, info = self.check_bt_xml_ready(xml_file_name)
         if not ok:
             self.error_emitted.emit(info)
@@ -1220,11 +1284,14 @@ finally:
         if not self.system_ready:
             self.error_emitted.emit("系统尚未准备完成，不能开始二区")
             return
+        if self.active_zone != "zone1":
+            self.error_emitted.emit("当前不是一区系统，不能开始二区任务")
+            return
         if not self.manual_block_sequence:
             self.error_emitted.emit("请先选择至少一个梅林方块")
             return
 
-        xml_file_name = "meilin_zone2_task.xml"
+        xml_file_name = ZONE2_COMPETITION_BT_XML
         ok, info = self.check_bt_xml_ready(xml_file_name)
         if not ok:
             self.error_emitted.emit(info)
@@ -1253,6 +1320,46 @@ finally:
             self.current_task = "无"
             self.error_emitted.emit(f"启动二区行为树失败：{e}")
 
+    def start_zone3(self):
+        if self.tree_running:
+            self.error_emitted.emit("当前已有任务正在运行")
+            return False
+        if self.current_team not in ["RED", "BLUE"]:
+            self.error_emitted.emit("请先在主页选择红方或蓝方")
+            return False
+        if not self.system_ready:
+            self.error_emitted.emit("系统尚未准备完成，不能开始三区")
+            return False
+        if self.active_zone != "zone3":
+            self.error_emitted.emit("当前不是三区系统，不能开始三区任务")
+            return False
+
+        xml_file_name = ZONE3_COMPETITION_BT_XML
+        ok, info = self.check_bt_xml_ready(xml_file_name)
+        if not ok:
+            self.error_emitted.emit(info)
+            return False
+
+        try:
+            self.last_bt_node_name = ""
+            self.zone3_bt_process = self.start_ros_process(
+                "zone3_bt",
+                f"ros2 launch r2_bt_bringup run_bt.launch.py xml_file_name:={xml_file_name}",
+            )
+            self.state = "RUNNING_ZONE3"
+            self.current_task = xml_file_name
+            self.tree_running = True
+            self.progress = 0
+            self.current_step = "三区行为树已启动"
+            self.emit_state(f"三区行为树已启动：{xml_file_name}")
+            return True
+        except Exception as e:
+            self.zone3_bt_process = None
+            self.tree_running = False
+            self.current_task = "无"
+            self.error_emitted.emit(f"启动三区行为树失败：{e}")
+            return False
+
     def _meilin_done(self):
         self.tree_running = False
         self.current_task = "无"
@@ -1272,8 +1379,10 @@ finally:
         self.log("执行急停：停止当前行为树")
         self.stop_process(self.meilin_bt_process, "meilin_bt_process")
         self.stop_process(self.gym_bt_process, "gym_bt_process")
+        self.stop_process(self.zone3_bt_process, "zone3_bt_process")
         self.meilin_bt_process = None
         self.gym_bt_process = None
+        self.zone3_bt_process = None
         self.tree_running = False
         self.system_starting = False
         self.current_task = "无"
@@ -1292,8 +1401,10 @@ finally:
         self.log("执行复位：停止行为树")
         self.stop_process(self.meilin_bt_process, "meilin_bt_process")
         self.stop_process(self.gym_bt_process, "gym_bt_process")
+        self.stop_process(self.zone3_bt_process, "zone3_bt_process")
         self.meilin_bt_process = None
         self.gym_bt_process = None
+        self.zone3_bt_process = None
         self.log("执行复位：Ctrl+C 总 launch")
         self.stop_process(self.system_process, "system_process")
         self.system_process = None
@@ -1301,6 +1412,7 @@ finally:
         self.state = "IDLE"
         self.current_task = "无"
         self.current_team = "UNKNOWN"
+        self.active_zone = None
         self.manual_block_sequence.clear()
         self.block_has_kfs = {i: False for i in range(1, 13)}
         self.edit_mode = "ROUTE"

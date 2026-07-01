@@ -65,6 +65,11 @@ routes:
     - B7
     - B10
     - EXIT_ZONE
+calibration_goals:
+  ZONE3_RETRY_POINT: 三区重试点位
+  NINE_GRID_PRESET: 九宫格预设点位
+  GYM_HEAD_PICK_PRESET: 一区端头夹取预设点
+  GYM_HEAD_AFTER_PICK_ALIGN: 一区端头夹取后对准点
 transitions:
   ENTRY->B1:
     edge_id: ENTRY_TO_B1

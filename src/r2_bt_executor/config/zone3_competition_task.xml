@@ -1,0 +1,11 @@
+<root BTCPP_format="4" main_tree_to_execute="Zone3CompetitionTree">
+  <BehaviorTree ID="Zone3CompetitionTree">
+    <Sequence name="Zone3_Competition_Task_Placeholder">
+      <!--
+        Placeholder for the official Zone 3 behavior tree.
+        It waits without commanding the robot and cannot report a false completion.
+      -->
+      <R2WaitForever name="Zone3_Formal_Task_Not_Configured" />
+    </Sequence>
+  </BehaviorTree>
+</root>

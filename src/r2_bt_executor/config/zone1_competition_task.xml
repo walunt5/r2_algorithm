@@ -1,0 +1,199 @@
+<root BTCPP_format="4" main_tree_to_execute="GymTaskTree">
+  <BehaviorTree ID="GymTaskTree">
+
+    <Sequence name="Gym_Task_Tree">
+
+      <Script code=" head_dock_done_count := 0 " />
+      <Script code=" target_head_dock_count := 1 " />
+      <Script code=" head_dock_success := 0 " />
+      <Script code=" gym_task_done := 0 " />
+
+      <ForceSuccess name="Head_Dock_Loop_Exit_As_Success">
+        <KeepRunningUntilFailure name="Head_Dock_Loop">
+
+          <Sequence name="Single_Head_Dock_Attempt">
+
+            <!-- 2.1 判断端头对接完成次数是否小于目标次数 -->
+            <ScriptCondition code=" head_dock_done_count &lt; target_head_dock_count " />
+
+            <Script code=" head_dock_success := 0 " />
+
+            <Fallback name="Single_Head_Dock_Fallback">
+
+              <Sequence name="Normal_Head_Pick_And_Dock">
+
+                <!-- <R2NavigateToPoseActionNode
+                  goal_name="GYM_HEAD_PICK_PRESET"
+                  timeout_sec="60.0"
+                  result_timeout_ms="70000" /> -->
+                <R2ForceSuccess name="Skip_Nav_To_GYM_HEAD_PICK_PRESET_In_Mock" />
+
+                <R2LiftControlNode
+                  target_h_mm="300"
+                  mask="7"
+                  timeout_sec="5.0"
+                  result_timeout_ms="8000" />
+
+                <R2VisionServoActionNode
+                  name="VisionServo_AlignHead"
+                  action_name="/r2_chassis/vision_servo"
+                  target_type="1"
+                  zone_id="1"
+                  use_class_id="true"
+                  class_id="100"
+                  use_color="false"
+                  color="0"
+                  desired_robot_x="0.300"
+                  desired_robot_y="0.000"
+                  desired_robot_z="1.400"
+                  tolerance_x="0.030"
+                  tolerance_y="0.020"
+                  tolerance_z="999.0"
+                  align_strategy="yaw_then_y_then_x"
+                  yaw_mode="hold_current_odin_yaw"
+                  target_yaw_rad="0.0"
+                  yaw_tolerance_rad="0.035"
+                  yaw_gate_rad="0.100"
+                  min_confidence="0.50"
+                  max_frame_age_sec="0.20"
+                  timeout_ms="6000"
+                  stable_required_frames="5"
+                  server_timeout_ms="3000"
+                  result_timeout_ms="8000" />
+
+                <R2ExecuteArmActionNode
+                  action_name="/r2_arm/execute_action"
+                  target_id="4"
+                  action_id="1026"
+                  timeout_ms="3000"
+                  param="0"
+                  flags="0"
+                  result_timeout_ms="5000" />
+
+                <R2ExecuteArmActionNode
+                  action_name="/r2_arm/execute_action"
+                  target_id="1"
+                  action_id="258"
+                  timeout_ms="8000"
+                  param="0"
+                  flags="0"
+                  result_timeout_ms="10000" />
+
+                <R2ForceSuccess name="Skip_Backward_CmdVel" />
+
+                <R2ForceSuccess name="Skip_Stop_Chassis" />
+
+                <R2LiftControlNode
+                  target_h_mm="100"
+                  mask="7"
+                  timeout_sec="5.0"
+                  result_timeout_ms="8000" />
+
+                <!-- <R2OdinPosePidAlignActionNode
+                  goal_name="GYM_HEAD_AFTER_PICK_ALIGN"
+                  use_goal_name="true"
+                  timeout_sec="5.0"
+                  result_timeout_ms="8000" /> -->
+                <R2ForceSuccess name="Skip_Odin_Align_In_Mock" />
+
+                <R2ForceSuccess name="Skip_Wait_Assembly_Done" />
+
+                <R2ExecuteArmActionNode
+                  action_name="/r2_arm/execute_action"
+                  target_id="4"
+                  action_id="1025"
+                  timeout_ms="3000"
+                  param="0"
+                  flags="0"
+                  result_timeout_ms="5000" />
+
+                <R2ExecuteArmActionNode
+                  action_name="/r2_arm/execute_action"
+                  target_id="1"
+                  action_id="259"
+                  timeout_ms="8000"
+                  param="0"
+                  flags="0"
+                  result_timeout_ms="10000" />
+
+                <Script code=" head_dock_success := 1 " />
+
+                <Script code=" head_dock_done_count += 1 " />
+
+              </Sequence>
+
+              <Sequence name="Head_Dock_Failure_Cleanup">
+
+                <R2ForceSuccess name="Skip_Stop_Chassis_OnFail" />
+
+                <R2ExecuteArmActionNode
+                  action_name="/r2_arm/execute_action"
+                  target_id="4"
+                  action_id="1025"
+                  timeout_ms="3000"
+                  param="0"
+                  flags="0"
+                  result_timeout_ms="5000" />
+
+                <R2LiftControlNode
+                  target_h_mm="100"
+                  mask="7"
+                  timeout_sec="5.0"
+                  result_timeout_ms="8000" />
+
+                <R2ExecuteArmActionNode
+                  action_name="/r2_arm/execute_action"
+                  target_id="1"
+                  action_id="257"
+                  timeout_ms="8000"
+                  param="0"
+                  flags="0"
+                  result_timeout_ms="10000" />
+
+                <Script code=" head_dock_success := 0 " />
+
+                <R2ForceSuccess name="Failure_Cleanup_Return_Success" />
+
+              </Sequence>
+
+            </Fallback>
+
+            <ScriptCondition code=" head_dock_success == 1 " />
+
+            <R2ForceSuccess name="Single_Head_Dock_Return_Success" />
+
+          </Sequence>
+
+        </KeepRunningUntilFailure>
+      </ForceSuccess>
+
+      <ScriptCondition code=" head_dock_done_count &gt;= target_head_dock_count " />
+
+      <R2ForceSuccess name="Skip_Final_Stop_Chassis" />
+
+      <R2ExecuteArmActionNode
+        action_name="/r2_arm/execute_action"
+        target_id="4"
+        action_id="1025"
+        timeout_ms="3000"
+        param="0"
+        flags="0"
+        result_timeout_ms="5000" />
+
+      <R2ExecuteArmActionNode
+        action_name="/r2_arm/execute_action"
+        target_id="1"
+        action_id="259"
+        timeout_ms="8000"
+        param="0"
+        flags="0"
+        result_timeout_ms="10000" />
+
+      <Script code=" gym_task_done := 1 " />
+
+      <R2ForceSuccess name="Gym_Task_Return_Success" />
+
+    </Sequence>
+
+  </BehaviorTree>
+</root>

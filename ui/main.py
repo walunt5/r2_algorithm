@@ -173,15 +173,19 @@ class HomePage(QWidget):
         self.team_card = InfoCard("当前队伍", "未选择"); left.addWidget(self.team_card)
         self.system_card = InfoCard("系统启动", "未启动：请选择队伍后点击“启动系统”"); left.addWidget(self.system_card)
         self.system_progress = QProgressBar(); self.system_progress.setRange(0, 100); self.system_progress.setFormat("系统准备进度 %p%"); left.addWidget(self.system_progress)
-        left.addWidget(InfoCard("操作流程", "1. 选择红/蓝方。\n2. 启动系统。\n3. 进入一区或二区任务。"), stretch=1)
+        left.addWidget(InfoCard("操作流程", "1. 选择红/蓝方。\n2. 启动一区或三区系统。\n3. 进入对应区域任务。"), stretch=1)
         right = QVBoxLayout(); right.setSpacing(8); body.addLayout(right, stretch=4)
         team_row = QHBoxLayout(); team_row.setSpacing(8)
         self.red_btn = TeamButton("RED\n红方", "red"); self.blue_btn = TeamButton("BLUE\n蓝方", "blue")
         self.red_btn.clicked.connect(lambda: ui.select_team("RED")); self.blue_btn.clicked.connect(lambda: ui.select_team("BLUE"))
         team_row.addWidget(self.red_btn); team_row.addWidget(self.blue_btn); right.addLayout(team_row)
-        self.start_system_btn = TouchButton("启动系统 / 加载配置", "boot", height=42, fixed_height=True); self.start_system_btn.clicked.connect(ui.start_system); right.addWidget(self.start_system_btn)
+        system_row = QHBoxLayout(); system_row.setSpacing(8)
+        self.start_zone1_system_btn = TouchButton("启动一区系统\n加载配置", "boot", height=46, fixed_height=True); self.start_zone1_system_btn.clicked.connect(ui.start_zone1_system)
+        self.start_zone3_system_btn = TouchButton("启动三区系统\n加载配置", "boot", height=46, fixed_height=True); self.start_zone3_system_btn.clicked.connect(ui.start_zone3_system)
+        system_row.addWidget(self.start_zone1_system_btn); system_row.addWidget(self.start_zone3_system_btn); right.addLayout(system_row)
         self.gym_btn = TouchButton("进入一区任务", "primary", height=48); self.gym_btn.clicked.connect(ui.goto_gym_prepare); right.addWidget(self.gym_btn)
         self.meilin_btn = TouchButton("进入二区任务", "primary", height=48); self.meilin_btn.clicked.connect(ui.goto_meilin_prepare); right.addWidget(self.meilin_btn)
+        self.zone3_btn = TouchButton("进入三区任务", "primary", height=48); self.zone3_btn.clicked.connect(ui.goto_zone3_prepare); right.addWidget(self.zone3_btn)
         row = QHBoxLayout(); row.setSpacing(8)
         btn_stop = SmallButton("急停", "danger"); btn_stop.clicked.connect(ui.stop_task)
         btn_reset = SmallButton("复位", "warning"); btn_reset.clicked.connect(ui.reset_all)
@@ -195,16 +199,21 @@ class HomePage(QWidget):
         team = data.get("current_team", "UNKNOWN")
         system_started = data.get("system_started", False); system_ready = data.get("system_ready", False); system_starting = data.get("system_starting", False)
         system_step = data.get("system_step", "未启动"); progress = int(data.get("system_progress", 0)); state = data.get("state", "IDLE")
+        active_zone = data.get("active_zone")
+        zone_text = "一区" if active_zone == "zone1" else ("三区" if active_zone == "zone3" else "未选择区域")
         self.system_progress.setValue(progress)
         if team == "UNKNOWN": self.system_card.set_body("未启动：请先选择红方或蓝方")
         elif system_starting: self.system_card.set_body(f"启动中：{system_step}")
-        elif system_ready: self.system_card.set_body("READY：服务端和红/蓝方配置已加载完成")
-        elif system_started: self.system_card.set_body("已启动，但尚未 ready，请检查日志")
-        else: self.system_card.set_body("未启动：请选择队伍后点击“启动系统”")
-        team_locked = system_started or system_starting or state in ["RUNNING_GYM", "RUNNING_MEILIN"]
+        elif system_ready: self.system_card.set_body(f"READY：{zone_text}系统和红/蓝方配置已加载完成")
+        elif system_started: self.system_card.set_body(f"{zone_text}系统已启动，但尚未 ready，请检查日志")
+        else: self.system_card.set_body("未启动：请选择队伍和一区/三区系统")
+        team_locked = system_started or system_starting or state in ["RUNNING_GYM", "RUNNING_MEILIN", "RUNNING_ZONE3"]
         self.red_btn.setEnabled(not team_locked); self.blue_btn.setEnabled(not team_locked)
-        self.start_system_btn.setEnabled((team != "UNKNOWN") and (not system_started) and (not system_starting))
-        self.gym_btn.setEnabled(system_ready); self.meilin_btn.setEnabled(system_ready)
+        can_start_system = (team != "UNKNOWN") and (not system_started) and (not system_starting)
+        self.start_zone1_system_btn.setEnabled(can_start_system); self.start_zone3_system_btn.setEnabled(can_start_system)
+        self.gym_btn.setEnabled(system_ready and active_zone == "zone1")
+        self.meilin_btn.setEnabled(system_ready and active_zone == "zone1")
+        self.zone3_btn.setEnabled(system_ready and active_zone == "zone3")
 
 
 class SimplePage(QWidget):
@@ -232,6 +241,20 @@ class GymRunningPage(QWidget):
         self.count_card = InfoCard("端头计数", "0 / 1"); left.addWidget(self.count_card)
         self.progress = QProgressBar(); self.progress.setRange(0,100); self.progress.setFormat("%p%"); left.addWidget(self.progress)
         stop_btn = TouchButton("停止任务", "danger"); stop_btn.clicked.connect(ui.stop_task); left.addWidget(stop_btn)
+        self.log_box = QTextEdit(); self.log_box.setObjectName("LogBox"); self.log_box.setReadOnly(True); body.addWidget(self.log_box, stretch=5)
+
+
+class Zone3RunningPage(QWidget):
+    def __init__(self, ui):
+        super().__init__()
+        root = QVBoxLayout(self); root.setContentsMargins(18,16,18,16); root.setSpacing(8)
+        title = QLabel("三区运行中"); title.setObjectName("MainTitle"); title.setAlignment(Qt.AlignCenter); root.addWidget(title)
+        body = QHBoxLayout(); root.addLayout(body, stretch=1)
+        left = QVBoxLayout(); body.addLayout(left, stretch=4)
+        self.step_card = InfoCard("当前步骤", "-"); left.addWidget(self.step_card)
+        self.progress = QProgressBar(); self.progress.setRange(0,100); self.progress.setFormat("%p%"); left.addWidget(self.progress)
+        stop_btn = TouchButton("停止任务", "danger"); stop_btn.clicked.connect(ui.stop_task); left.addWidget(stop_btn)
+        left.addStretch(1)
         self.log_box = QTextEdit(); self.log_box.setObjectName("LogBox"); self.log_box.setReadOnly(True); body.addWidget(self.log_box, stretch=5)
 
 
@@ -312,8 +335,8 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__(); self.setWindowTitle("R2 900x500 横屏控制台"); self.setFixedSize(SCREEN_W, SCREEN_H)
         self.manager=MissionManagerSim(); self.manager.state_changed.connect(self.on_state_changed); self.manager.log_emitted.connect(self.on_log); self.manager.error_emitted.connect(self.show_error)
-        self.stack=QStackedWidget(); self.home_page=HomePage(self); self.gym_prepare_page=SimplePage("一区任务","机器人在一区起点。\n点击开始后模拟一区任务。",self,self.start_gym); self.gym_running_page=GymRunningPage(self); self.gym_done_page=SimplePage("一区完成","请人工把机器人抬回重试区。",self,self.goto_meilin_prepare); self.meilin_prepare_page=MeilinPreparePage(self); self.meilin_running_page=MeilinRunningPage(self); self.finish_page=FinishPage(self)
-        for page in [self.home_page,self.gym_prepare_page,self.gym_running_page,self.gym_done_page,self.meilin_prepare_page,self.meilin_running_page,self.finish_page]: self.stack.addWidget(page)
+        self.stack=QStackedWidget(); self.home_page=HomePage(self); self.gym_prepare_page=SimplePage("一区任务","机器人在一区起点。\n点击开始后启动一区行为树。",self,self.start_gym); self.gym_running_page=GymRunningPage(self); self.gym_done_page=SimplePage("一区完成","请人工把机器人抬回重试区。",self,self.goto_meilin_prepare); self.meilin_prepare_page=MeilinPreparePage(self); self.meilin_running_page=MeilinRunningPage(self); self.finish_page=FinishPage(self); self.zone3_prepare_page=SimplePage("三区任务","机器人已使用三区地图完成定位。\n确认现场安全后点击开始。",self,self.start_zone3); self.zone3_running_page=Zone3RunningPage(self); self.zone3_done_page=SimplePage("三区完成","三区行为树已成功结束。",self)
+        for page in [self.home_page,self.gym_prepare_page,self.gym_running_page,self.gym_done_page,self.meilin_prepare_page,self.meilin_running_page,self.finish_page,self.zone3_prepare_page,self.zone3_running_page,self.zone3_done_page]: self.stack.addWidget(page)
         root=QVBoxLayout(self); root.setContentsMargins(0,0,0,0); root.addWidget(self.stack); self.apply_style(); self.manager.emit_state("空闲：请选择红方/蓝方，然后启动系统")
 
     def apply_style(self):
@@ -351,16 +374,25 @@ class MainWindow(QWidget):
     def goto_gym_prepare(self):
         if self.manager.current_team == "UNKNOWN": self.show_error("请先在主页选择红方或蓝方"); return
         if not self.manager.system_ready: self.show_error("请先点击“启动系统”，等待系统准备完成"); return
+        if self.manager.active_zone != "zone1": self.show_error("当前不是一区系统，不能进入一区任务"); return
         self.stack.setCurrentWidget(self.gym_prepare_page)
     def goto_meilin_prepare(self):
         if self.manager.current_team == "UNKNOWN": self.show_error("请先在主页选择红方或蓝方"); return
         if not self.manager.system_ready: self.show_error("请先点击“启动系统”，等待系统准备完成"); return
+        if self.manager.active_zone != "zone1": self.show_error("当前不是一区系统，不能进入二区任务"); return
         self.meilin_prepare_page.update_state(self.manager.current_team,self.manager.manual_block_sequence,self.manager.block_has_kfs,self.manager.edit_mode,self.manager.block_heights); self.stack.setCurrentWidget(self.meilin_prepare_page)
+    def goto_zone3_prepare(self):
+        if self.manager.current_team == "UNKNOWN": self.show_error("请先在主页选择红方或蓝方"); return
+        if not self.manager.system_ready: self.show_error("请先启动三区系统，并等待系统准备完成"); return
+        if self.manager.active_zone != "zone3": self.show_error("当前不是三区系统，不能进入三区任务"); return
+        self.stack.setCurrentWidget(self.zone3_prepare_page)
     def select_team(self, team):
         self.manager.select_team(team); self.home_page.update_team(self.manager.current_team); self.meilin_prepare_page.update_state(self.manager.current_team,self.manager.manual_block_sequence,self.manager.block_has_kfs,self.manager.edit_mode,self.manager.block_heights)
-    def start_system(self): self.manager.start_system()
+    def start_zone1_system(self): self.manager.start_system("zone1")
+    def start_zone3_system(self): self.manager.start_system("zone3")
     def start_gym(self):
         if not self.manager.system_ready: self.show_error("系统尚未准备完成，不能开始一区"); return
+        if self.manager.active_zone != "zone1": self.show_error("当前不是一区系统，不能开始一区任务"); return
         self.stack.setCurrentWidget(self.gym_running_page); self.gym_running_page.log_box.clear(); self.manager.start_gym()
     def toggle_block(self, block_id):
         self.manager.toggle_block(block_id); self.meilin_prepare_page.update_state(self.manager.current_team,self.manager.manual_block_sequence,self.manager.block_has_kfs,self.manager.edit_mode,self.manager.block_heights)
@@ -373,14 +405,21 @@ class MainWindow(QWidget):
     def start_meilin(self):
         if self.manager.current_team == "UNKNOWN": self.show_error("请先在主页选择红方或蓝方"); return
         if not self.manager.system_ready: self.show_error("系统尚未准备完成，不能开始二区"); return
+        if self.manager.active_zone != "zone1": self.show_error("当前不是一区系统，不能开始二区任务"); return
         if not self.manager.manual_block_sequence: self.show_error("请先选择至少一个梅林方块"); return
         self.stack.setCurrentWidget(self.meilin_running_page); self.meilin_running_page.log_box.clear(); self.manager.start_meilin()
+    def start_zone3(self):
+        if not self.manager.system_ready: self.show_error("系统尚未准备完成，不能开始三区"); return
+        if self.manager.active_zone != "zone3": self.show_error("当前不是三区系统，不能开始三区任务"); return
+        self.zone3_running_page.log_box.clear()
+        self.manager.start_zone3()
     def stop_task(self):
         # 如果行为树已经自己退出了，就不要再执行急停流程，避免 UI 卡顿。
         if (
             not self.manager.tree_running
             and self.manager.gym_bt_process is None
             and self.manager.meilin_bt_process is None
+            and self.manager.zone3_bt_process is None
         ):
             self.stack.setCurrentWidget(self.home_page)
             return
@@ -388,7 +427,7 @@ class MainWindow(QWidget):
         self.manager.stop()
         self.stack.setCurrentWidget(self.home_page)
     def reset_all(self):
-        self.manager.reset(); self.home_page.update_team("UNKNOWN"); self.home_page.update_system({"current_team":"UNKNOWN","system_started":False,"system_ready":False,"system_starting":False,"system_progress":0}); self.meilin_prepare_page.update_state("UNKNOWN", [], {}, "ROUTE", self.manager.block_heights); self.gym_running_page.log_box.clear(); self.meilin_running_page.log_box.clear(); self.stack.setCurrentWidget(self.home_page)
+        self.manager.reset(); self.home_page.update_team("UNKNOWN"); self.home_page.update_system({"current_team":"UNKNOWN","active_zone":None,"system_started":False,"system_ready":False,"system_starting":False,"system_progress":0}); self.meilin_prepare_page.update_state("UNKNOWN", [], {}, "ROUTE", self.manager.block_heights); self.gym_running_page.log_box.clear(); self.meilin_running_page.log_box.clear(); self.zone3_running_page.log_box.clear(); self.stack.setCurrentWidget(self.home_page)
     def closeEvent(self, event):
         """
         用户点击窗口右上角 X 时触发。
@@ -405,6 +444,7 @@ class MainWindow(QWidget):
             or self.manager.system_process is not None
             or self.manager.gym_bt_process is not None
             or self.manager.meilin_bt_process is not None
+            or self.manager.zone3_bt_process is not None
         )
 
         if has_running_process:
@@ -440,6 +480,7 @@ class MainWindow(QWidget):
         state=data.get("state","IDLE"); step=data.get("current_step","-"); progress=int(data.get("progress",0)); team=data.get("current_team","UNKNOWN"); route_text=data.get("manual_route_text","未选择"); kfs_text=data.get("kfs_text","未标记"); team_text="红方" if team=="RED" else ("蓝方" if team=="BLUE" else "未选择")
         self.home_page.status_card.set_body(data.get("message","空闲")); self.home_page.update_team(team); self.home_page.update_system(data)
         self.gym_running_page.step_card.set_body(step); self.gym_running_page.count_card.set_body(f'{data.get("assembly_count",0)} / {data.get("target_assembly_count",1)}'); self.gym_running_page.progress.setValue(progress)
+        self.zone3_running_page.step_card.set_body(step); self.zone3_running_page.progress.setValue(progress)
         self.meilin_prepare_page.update_state(team,data.get("manual_block_sequence",[]),data.get("block_has_kfs",{}),data.get("edit_mode","ROUTE"),data.get("block_heights",{}))
         self.meilin_running_page.team_card.set_body(team_text); self.meilin_running_page.route_card.set_body(route_text); self.meilin_running_page.kfs_card.set_body(kfs_text); self.meilin_running_page.step_card.set_body(step); self.meilin_running_page.odin_card.set_body("正常" if data.get("odin_ok") else "未稳定"); self.meilin_running_page.progress.setValue(progress)
         if state == "GYM_DONE_WAIT_LIFT":
@@ -450,6 +491,15 @@ class MainWindow(QWidget):
 
         elif state == "RUNNING_MEILIN":
             self.stack.setCurrentWidget(self.meilin_running_page)
+
+        elif state == "RUNNING_ZONE3":
+            self.stack.setCurrentWidget(self.zone3_running_page)
+
+        elif state == "ZONE3_DONE":
+            self.stack.setCurrentWidget(self.zone3_done_page)
+
+        elif state == "ZONE3_FAILED":
+            self.stack.setCurrentWidget(self.zone3_prepare_page)
 
         elif state == "MATCH_DONE":
             self.stack.setCurrentWidget(self.finish_page)
@@ -480,7 +530,7 @@ class MainWindow(QWidget):
 
         elif state == "SYSTEM_EXITED":
             self.stack.setCurrentWidget(self.home_page)
-    def on_log(self,text): self.gym_running_page.log_box.append(text); self.meilin_running_page.log_box.append(text)
+    def on_log(self,text): self.gym_running_page.log_box.append(text); self.meilin_running_page.log_box.append(text); self.zone3_running_page.log_box.append(text)
     def show_error(self,text): QMessageBox.warning(self,"提示",text)
 
 
