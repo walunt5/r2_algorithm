@@ -39,14 +39,14 @@ d1_controller:
     enable_lateral_motion: true
     tracking_target_mode: final_goal_direct
     translation_direction_mode: fixed_map
-    fixed_direction_max_speed: 2.0
+    fixed_direction_max_speed: 1.8
     fixed_direction_speed_gain: 1.9
     exclusive_motion_mode: false
     translate_then_final_yaw_mode: true
     rotate_only_heading_threshold: 0.25
     max_linear_speed: 2.0
     max_lateral_speed: 2.0
-    max_angular_speed: 0.7
+    max_angular_speed: 1.0
     linear_gain: 2.2
     lateral_gain: 2.2
     heading_gain: 1.0
