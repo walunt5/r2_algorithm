@@ -19,7 +19,7 @@ def generate_launch_description():
 
     launch_odin_pose_pid_arg = DeclareLaunchArgument(
         "launch_odin_pose_pid",
-        default_value="true",
+        default_value="false",
         description="Launch real odin pose pid align action server",
     )
 
