@@ -1,5 +1,5 @@
 maps:
-  relocalization_bin_file: /home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/test3/map_20260629_183751.bin
+  relocalization_bin_file: /home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/test/map_20260703_154723.bin
   relocalization_pcd_file: /home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/test3/Relocation
     Map4_edited.pcd
   map_package_dir: /home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/test3/Relocation
@@ -39,26 +39,26 @@ d1_controller:
     enable_lateral_motion: true
     tracking_target_mode: final_goal_direct
     translation_direction_mode: fixed_map
-    fixed_direction_max_speed: 1.8
+    fixed_direction_max_speed: 1.0
     fixed_direction_speed_gain: 1.9
     exclusive_motion_mode: false
     translate_then_final_yaw_mode: true
     rotate_only_heading_threshold: 0.25
-    max_linear_speed: 2.0
-    max_lateral_speed: 2.0
+    max_linear_speed: 1.0
+    max_lateral_speed: 1.0
     max_angular_speed: 1.0
     linear_gain: 2.2
     lateral_gain: 2.2
     heading_gain: 1.0
     cross_track_angular_gain: 0.5
     final_yaw_gain: 0.3
-    goal_position_tolerance: 0.09
-    goal_yaw_tolerance: 0.09
+    goal_position_tolerance: 0.06
+    goal_yaw_tolerance: 0.06
     tracking_point_reached_xy_tolerance: 0.1
     align_final_yaw: true
     linear_deadband: 0.03
     lateral_deadband: 0.03
-    angular_deadband: 0.03
+    angular_deadband: 0.005
     enable_tracking_debug_view: false
     tracking_debug_view_size_px: 640
     tracking_debug_view_pixels_per_meter: 80.0

@@ -241,16 +241,16 @@ goals:
     yaw: 0.0
   GYM_HEAD_PICK_PRESET:
     frame_id: map
-    x: 0.0
-    y: 0.0
-    z: 0.0
-    yaw: 0.0
+    x: 0.719405
+    y: 0.196648
+    z: -0.132143
+    yaw: -0.056518
   GYM_HEAD_AFTER_PICK_ALIGN:
     frame_id: map
-    x: 0.0
-    y: 0.0
-    z: 0.0
-    yaw: 0.0
+    x: 0.713225
+    y: -0.536783
+    z: -0.141983
+    yaw: -0.068782
   ZONE3_RETRY_POINT:
     frame_id: map
     x: 0.0
