@@ -17,7 +17,6 @@ find_package(geometry_msgs REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(r2_odin_interfaces REQUIRED)
-find_package(r2_vision_servo_interfaces REQUIRED)
 
 add_library(${PROJECT_NAME}
   src/basic_nodes.cpp
@@ -28,7 +27,6 @@ add_library(${PROJECT_NAME}
   src/odin_mock_nodes.cpp
   src/blackboard_nodes.cpp
   src/odin_nodes.cpp
-  src/vision_servo_nodes.cpp
   src/timed_cmd_vel_node.cpp
 )
 
@@ -48,7 +46,6 @@ ament_target_dependencies(${PROJECT_NAME}
   geometry_msgs
   ament_index_cpp
   r2_odin_interfaces
-  r2_vision_servo_interfaces
 )
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
@@ -84,7 +81,6 @@ ament_export_dependencies(
   geometry_msgs
   ament_index_cpp
   r2_odin_interfaces
-  r2_vision_servo_interfaces
 )
 
 if(BUILD_TESTING)
