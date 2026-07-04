@@ -17,6 +17,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(ament_index_cpp REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(r2_odin_interfaces REQUIRED)
+find_package(r2_light_interfaces REQUIRED)
 
 add_library(${PROJECT_NAME}
   src/basic_nodes.cpp
@@ -28,6 +29,7 @@ add_library(${PROJECT_NAME}
   src/blackboard_nodes.cpp
   src/odin_nodes.cpp
   src/timed_cmd_vel_node.cpp
+  src/light_signal_nodes.cpp
 )
 
 target_include_directories(${PROJECT_NAME}
@@ -46,6 +48,7 @@ ament_target_dependencies(${PROJECT_NAME}
   geometry_msgs
   ament_index_cpp
   r2_odin_interfaces
+  r2_light_interfaces
 )
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
@@ -73,7 +76,7 @@ ament_export_targets(export_${PROJECT_NAME} HAS_LIBRARY_TARGET)
 
 ament_export_dependencies(
   rclcpp
-  rclcpp_action 
+  rclcpp_action
   behaviortree_cpp
   techx_r2_arm_interfaces
   techx_r2_chassis_interfaces
@@ -81,6 +84,7 @@ ament_export_dependencies(
   geometry_msgs
   ament_index_cpp
   r2_odin_interfaces
+  r2_light_interfaces
 )
 
 if(BUILD_TESTING)

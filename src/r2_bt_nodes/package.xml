@@ -16,6 +16,7 @@
   <depend>techx_r2_chassis_interfaces</depend>
   <depend>r2_nav_interfaces</depend>
   <depend>r2_odin_interfaces</depend>
+  <depend>r2_light_interfaces</depend>
   <depend>geometry_msgs</depend>
   <depend>ament_index_cpp</depend>
   <depend>yaml-cpp</depend>

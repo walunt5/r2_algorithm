@@ -16,6 +16,7 @@
 #include "r2_bt_nodes/blackboard_nodes.hpp"
 #include "r2_bt_nodes/odin_nodes.hpp"
 #include "r2_bt_nodes/timed_cmd_vel_node.hpp"
+#include "r2_bt_nodes/light_signal_nodes.hpp"
 
 using namespace std::chrono_literals;
 
@@ -50,7 +51,7 @@ int main(int argc, char ** argv)
     "R2BuildKfsPickActionIdFromYamlNode");
 
   factory.registerNodeType<r2_bt_nodes::R2GetArmActionConfigFromYamlNode>(
-    "R2GetArmActionConfigFromYamlNode");  
+    "R2GetArmActionConfigFromYamlNode");
 
   factory.registerNodeType<r2_bt_nodes::R2BlackboardCheckStringNode>(
     "R2BlackboardCheckStringNode");
@@ -81,7 +82,7 @@ int main(int argc, char ** argv)
 
   factory.registerNodeType<r2_bt_nodes::R2PeekFirstManualBlockNode>(
     "R2PeekFirstManualBlockNode");
-  
+
   factory.registerNodeType<r2_bt_nodes::R2GetNextManualBlockNode>(
     "R2GetNextManualBlockNode");
 
@@ -96,16 +97,16 @@ int main(int argc, char ** argv)
 
   factory.registerNodeType<r2_bt_nodes::R2CheckOdinLocalizationOkMockNode>(
     "R2CheckOdinLocalizationOkMockNode");
-  
+
   factory.registerNodeType<r2_bt_nodes::R2OdinPosePidAlignMockNode>(
     "R2OdinPosePidAlignMockNode");
 
   factory.registerNodeType<r2_bt_nodes::R2SetBlackboardStringNode>(
     "R2SetBlackboardStringNode");
-  
+
   factory.registerNodeType<r2_bt_nodes::R2SetBlackboardIntNode>(
     "R2SetBlackboardIntNode");
-  
+
   factory.registerNodeType<r2_bt_nodes::R2IncrementIntNode>(
     "R2IncrementIntNode");
 
@@ -187,6 +188,15 @@ int main(int argc, char ** argv)
         node);
     });
 
+  factory.registerBuilder<r2_bt_nodes::R2WaitForLightSignalActionNode>(
+    "R2WaitForLightSignalActionNode",
+    [node](const std::string & name, const BT::NodeConfig & config) {
+      return std::make_unique<r2_bt_nodes::R2WaitForLightSignalActionNode>(
+        name,
+        config,
+        node);
+    });
+
   // 4. 从 ROS 参数读取 XML 文件路径
   node->declare_parameter<std::string>("xml_file_path", "");
   std::string xml_file_path;
@@ -204,7 +214,7 @@ int main(int argc, char ** argv)
   auto tree = factory.createTreeFromFile(xml_file_path);
 
   // 6. 启动 Groot2 发布器
-  BT::Groot2Publisher groot_publisher(tree,1667);
+  BT::Groot2Publisher groot_publisher(tree, 1667);
 
   // 7. 10Hz tick 行为树
   rclcpp::Rate rate(10);

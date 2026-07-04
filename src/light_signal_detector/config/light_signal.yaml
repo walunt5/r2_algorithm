@@ -1,0 +1,41 @@
+# Default parameters for the standalone light_signal_detector package.
+light_signal_detector:
+  ros__parameters:
+    color_topic: "/camera/color/image_raw"
+    signal_topic: "/light_signal/on"
+    debug_image_topic: "/light_signal/debug_image"
+    publish_debug_image: true
+
+    # OpenCV HSV ranges: H=[0, 179], S/V=[0, 255].
+    h_min: 5
+    # Keep this below the usual yellow range (approximately H=25..35).
+    h_max: 22
+    s_min: 80
+    v_min: 210
+
+    # Saturated white pixels are accepted only next to the orange mask.
+    # Warm overexposure can remain partly saturated instead of becoming pure white.
+    white_s_max: 160
+    white_v_min: 245
+    white_adjacency_kernel_size: 9
+
+    close_kernel_size: 7
+    close_iterations: 2
+    min_component_area: 600.0
+    # Candidate must also cover at least 1% of the complete image.
+    min_component_area_ratio: 0.01
+
+    # Require self-luminous evidence. Ordinary yellow/orange objects normally
+    # have no sufficiently large low-saturation, overexposed white core.
+    min_white_core_pixels: 50
+    min_white_core_ratio: 0.05
+
+    on_frames: 3
+    off_frames: 5
+    image_timeout_sec: 0.5
+
+light_signal_wait_action_server:
+  ros__parameters:
+    signal_topic: "/light_signal/on"
+    action_name: "/r2_light_signal/wait"
+    feedback_rate_hz: 10.0

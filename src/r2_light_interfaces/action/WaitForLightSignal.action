@@ -1,0 +1,12 @@
+# Goal
+float32 timeout_sec
+---
+# Result
+bool success
+bool last_signal
+string message
+---
+# Feedback
+bool signal_received
+bool detected
+float32 elapsed_sec
