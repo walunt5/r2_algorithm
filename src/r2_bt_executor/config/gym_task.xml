@@ -10,17 +10,27 @@
           vx="1.0"
           vy="0.00"
           wz="0.00"
-          duration_sec="4.5"
+          duration_sec="3.60"
+          rate_hz="30.0"
+          publish_stop="true" />
+
+        <R2TimedCmdVelNode
+          name="DeadMove_Forward_To_Pick"
+          cmd_vel_topic="/cmd_vel"
+          vx="0.0"
+          vy="0.00"
+          wz="0.00"
+          duration_sec="1.0"
           rate_hz="20.0"
           publish_stop="true" />
 
         <R2TimedCmdVelNode
           name="DeadMove_Forward_To_Pick"
           cmd_vel_topic="/cmd_vel"
-          vx="0.00"
+          vx="-0.5"
           vy="0.00"
           wz="0.00"
-          duration_sec="0.1"
+          duration_sec="1.0"
           rate_hz="20.0"
           publish_stop="true" />
 

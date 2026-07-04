@@ -1,0 +1,37 @@
+# Goal
+# Relative displacement in the robot's pose at action start.
+# Positive forward_m: forward; negative: backward.
+# Positive lateral_m: left; negative: right.
+float64 forward_m
+float64 lateral_m
+float64 timeout_sec
+
+---
+# Result
+uint8 SUCCESS=0
+uint8 ODOM_TIMEOUT=1
+uint8 ACTION_TIMEOUT=2
+uint8 CANCELED=3
+uint8 INTERNAL_ERROR=4
+
+uint8 code
+string message
+float64 final_forward_error_m
+float64 final_lateral_error_m
+
+---
+# Feedback
+uint8 WAITING_ODOM=0
+uint8 MOVING_FORWARD=1
+uint8 SETTLING_FORWARD=2
+uint8 MOVING_LATERAL=3
+uint8 SETTLING_LATERAL=4
+
+uint8 stage
+float64 moved_forward_m
+float64 moved_lateral_m
+float64 forward_error_m
+float64 lateral_error_m
+float64 command_vx_mps
+float64 command_vy_mps
+float64 elapsed_sec
