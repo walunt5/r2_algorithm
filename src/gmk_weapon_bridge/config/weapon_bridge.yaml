@@ -1,0 +1,6 @@
+weapon_bridge:
+  ros__parameters:
+    udp_bind: "0.0.0.0"
+    udp_port: 12345
+    topic: "/weapon_target"
+    publish_when_invalid: true

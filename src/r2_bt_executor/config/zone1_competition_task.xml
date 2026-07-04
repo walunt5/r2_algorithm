@@ -82,7 +82,7 @@
             rate_hz="20.0"
             publish_stop="true" />
 
-          <!-- 4. 底盘升高到 63 mm -->
+          <!-- 4. 底盘升高到 66 m -->
           <R2LiftControlNode
             name="Lift_To_63mm"
             target_h_mm="66"
