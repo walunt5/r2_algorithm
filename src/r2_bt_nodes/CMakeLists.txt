@@ -18,6 +18,7 @@ find_package(ament_index_cpp REQUIRED)
 find_package(yaml-cpp REQUIRED)
 find_package(r2_odin_interfaces REQUIRED)
 find_package(r2_light_interfaces REQUIRED)
+find_package(gmk_visual_servo_interfaces REQUIRED)
 
 add_library(${PROJECT_NAME}
   src/basic_nodes.cpp
@@ -30,6 +31,7 @@ add_library(${PROJECT_NAME}
   src/odin_nodes.cpp
   src/timed_cmd_vel_node.cpp
   src/light_signal_nodes.cpp
+  src/visual_servo_nodes.cpp
 )
 
 target_include_directories(${PROJECT_NAME}
@@ -49,6 +51,7 @@ ament_target_dependencies(${PROJECT_NAME}
   ament_index_cpp
   r2_odin_interfaces
   r2_light_interfaces
+  gmk_visual_servo_interfaces
 )
 
 target_compile_features(${PROJECT_NAME} PUBLIC cxx_std_17)
@@ -85,6 +88,7 @@ ament_export_dependencies(
   ament_index_cpp
   r2_odin_interfaces
   r2_light_interfaces
+  gmk_visual_servo_interfaces
 )
 
 if(BUILD_TESTING)

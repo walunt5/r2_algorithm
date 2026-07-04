@@ -17,6 +17,7 @@
 #include "r2_bt_nodes/odin_nodes.hpp"
 #include "r2_bt_nodes/timed_cmd_vel_node.hpp"
 #include "r2_bt_nodes/light_signal_nodes.hpp"
+#include "r2_bt_nodes/visual_servo_nodes.hpp"
 
 using namespace std::chrono_literals;
 
@@ -196,6 +197,16 @@ int main(int argc, char ** argv)
         config,
         node);
     });
+
+  factory.registerBuilder<r2_bt_nodes::R2WeaponVisualServoActionNode>(
+  "R2WeaponVisualServoActionNode",
+  [node](const std::string & name, const BT::NodeConfig & config) {
+    return std::make_unique<
+      r2_bt_nodes::R2WeaponVisualServoActionNode>(
+      name,
+      config,
+      node);
+  });
 
   // 4. 从 ROS 参数读取 XML 文件路径
   node->declare_parameter<std::string>("xml_file_path", "");

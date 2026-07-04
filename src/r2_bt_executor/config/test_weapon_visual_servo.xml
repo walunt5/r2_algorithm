@@ -1,0 +1,19 @@
+<root BTCPP_format="4" main_tree_to_execute="MainTree">
+  <BehaviorTree ID="MainTree">
+    <Sequence name="test_weapon_visual_servo">
+
+      <R2WeaponVisualServoActionNode
+        name="WeaponVisualServo"
+        action_name="/weapon_visual_servo"
+        target_distance_m="0.5"
+        timeout_sec="10.0"
+        server_timeout_ms="3000"
+        result_grace_ms="2000"
+        result_code="{servo_result_code}"
+        result_message="{servo_result_message}"
+        final_u_error_px="{servo_final_u_error_px}"
+        final_depth_error_m="{servo_final_depth_error_m}" />
+
+    </Sequence>
+  </BehaviorTree>
+</root>
