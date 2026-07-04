@@ -4,7 +4,7 @@ weapon_visual_servo:
     cmd_vel_topic: "/cmd_vel"
     action_name: "/weapon_visual_servo"
 
-    u_ref_px: 320.0
+    u_ref_px: 325.0
     u_tolerance_px: 8.0
     u_reentry_px: 16.0
     y_settle_time_sec: 0.3

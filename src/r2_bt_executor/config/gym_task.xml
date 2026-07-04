@@ -2,167 +2,34 @@
   <BehaviorTree ID="GymTaskTree">
 
     <Sequence name="Gym_Task_Tree">
+      <Sequence name="Normal_Gym_Head_Pick_And_Dock">
 
-      <Script code=" head_dock_done_count := 0 " />
-      <Script code=" target_head_dock_count := 1 " />
-      <Script code=" head_dock_success := 0 " />
-      <Script code=" gym_task_done := 0 " />
+        <R2TimedCmdVelNode
+          name="DeadMove_Forward_To_Pick"
+          cmd_vel_topic="/cmd_vel"
+          vx="1.0"
+          vy="0.00"
+          wz="0.00"
+          duration_sec="4.5"
+          rate_hz="20.0"
+          publish_stop="true" />
 
-      <ForceSuccess name="Head_Dock_Loop_Exit_As_Success">
-        <KeepRunningUntilFailure name="Head_Dock_Loop">
+        <R2TimedCmdVelNode
+          name="DeadMove_Forward_To_Pick"
+          cmd_vel_topic="/cmd_vel"
+          vx="0.00"
+          vy="0.00"
+          wz="0.00"
+          duration_sec="0.1"
+          rate_hz="20.0"
+          publish_stop="true" />
 
-          <Sequence name="Single_Head_Dock_Attempt">
+        <Script code=" head_dock_success := 1 " />
+        <Script code=" gym_task_done := 1 " />
 
-            <!-- 2.1 判断端头对接完成次数是否小于目标次数 -->
-            <ScriptCondition code=" head_dock_done_count &lt; target_head_dock_count " />
+      </Sequence>
 
-            <Script code=" head_dock_success := 0 " />
-
-            <Fallback name="Single_Head_Dock_Fallback">
-
-              <Sequence name="Normal_Head_Pick_And_Dock">
-
-                <!-- <R2NavigateToPoseActionNode
-                  goal_name="GYM_HEAD_PICK_PRESET"
-                  timeout_sec="60.0"
-                  result_timeout_ms="70000" /> -->
-                <R2ForceSuccess name="Skip_Nav_To_GYM_HEAD_PICK_PRESET_In_Mock" />
-
-                <R2LiftControlNode
-                  target_h_mm="300"
-                  mask="7"
-                  timeout_sec="5.0"
-                  result_timeout_ms="8000" />
-
-                <R2ExecuteArmActionNode
-                  action_name="/r2_arm/execute_action"
-                  target_id="4"
-                  action_id="1026"
-                  timeout_ms="3000"
-                  param="0"
-                  flags="0"
-                  result_timeout_ms="5000" />
-
-                <R2ExecuteArmActionNode
-                  action_name="/r2_arm/execute_action"
-                  target_id="1"
-                  action_id="258"
-                  timeout_ms="8000"
-                  param="0"
-                  flags="0"
-                  result_timeout_ms="10000" />
-
-                <R2ForceSuccess name="Skip_Backward_CmdVel" />
-
-                <R2ForceSuccess name="Skip_Stop_Chassis" />
-
-                <R2LiftControlNode
-                  target_h_mm="100"
-                  mask="7"
-                  timeout_sec="5.0"
-                  result_timeout_ms="8000" />
-
-                <!-- <R2OdinPosePidAlignActionNode
-                  goal_name="GYM_HEAD_AFTER_PICK_ALIGN"
-                  use_goal_name="true"
-                  timeout_sec="5.0"
-                  result_timeout_ms="8000" /> -->
-                <R2ForceSuccess name="Skip_Odin_Align_In_Mock" />
-
-                <R2ForceSuccess name="Skip_Wait_Assembly_Done" />
-
-                <R2ExecuteArmActionNode
-                  action_name="/r2_arm/execute_action"
-                  target_id="4"
-                  action_id="1025"
-                  timeout_ms="3000"
-                  param="0"
-                  flags="0"
-                  result_timeout_ms="5000" />
-
-                <R2ExecuteArmActionNode
-                  action_name="/r2_arm/execute_action"
-                  target_id="1"
-                  action_id="259"
-                  timeout_ms="8000"
-                  param="0"
-                  flags="0"
-                  result_timeout_ms="10000" />
-
-                <Script code=" head_dock_success := 1 " />
-
-                <Script code=" head_dock_done_count += 1 " />
-
-              </Sequence>
-
-              <Sequence name="Head_Dock_Failure_Cleanup">
-
-                <R2ForceSuccess name="Skip_Stop_Chassis_OnFail" />
-
-                <R2ExecuteArmActionNode
-                  action_name="/r2_arm/execute_action"
-                  target_id="4"
-                  action_id="1025"
-                  timeout_ms="3000"
-                  param="0"
-                  flags="0"
-                  result_timeout_ms="5000" />
-
-                <R2LiftControlNode
-                  target_h_mm="100"
-                  mask="7"
-                  timeout_sec="5.0"
-                  result_timeout_ms="8000" />
-
-                <R2ExecuteArmActionNode
-                  action_name="/r2_arm/execute_action"
-                  target_id="1"
-                  action_id="257"
-                  timeout_ms="8000"
-                  param="0"
-                  flags="0"
-                  result_timeout_ms="10000" />
-
-                <Script code=" head_dock_success := 0 " />
-
-                <R2ForceSuccess name="Failure_Cleanup_Return_Success" />
-
-              </Sequence>
-
-            </Fallback>
-
-            <ScriptCondition code=" head_dock_success == 1 " />
-
-            <R2ForceSuccess name="Single_Head_Dock_Return_Success" />
-
-          </Sequence>
-
-        </KeepRunningUntilFailure>
-      </ForceSuccess>
-
-      <ScriptCondition code=" head_dock_done_count &gt;= target_head_dock_count " />
-
-      <R2ForceSuccess name="Skip_Final_Stop_Chassis" />
-
-      <R2ExecuteArmActionNode
-        action_name="/r2_arm/execute_action"
-        target_id="4"
-        action_id="1025"
-        timeout_ms="3000"
-        param="0"
-        flags="0"
-        result_timeout_ms="5000" />
-
-      <R2ExecuteArmActionNode
-        action_name="/r2_arm/execute_action"
-        target_id="1"
-        action_id="259"
-        timeout_ms="8000"
-        param="0"
-        flags="0"
-        result_timeout_ms="10000" />
-
-      <Script code=" gym_task_done := 1 " />
+      <ScriptCondition code=" gym_task_done == 1 " />
 
       <R2ForceSuccess name="Gym_Task_Return_Success" />
 

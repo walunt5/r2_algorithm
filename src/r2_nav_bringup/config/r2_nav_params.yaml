@@ -7,8 +7,8 @@ maps:
 ui:
   show_rviz: true
   show_map_gui: false
-  launch_web: true
-  launch_rosbridge: true
+  launch_web: false
+  launch_rosbridge: false
   launch_serial: false
   web_http_port: '8080'
 frames:
@@ -52,8 +52,8 @@ d1_controller:
     heading_gain: 1.0
     cross_track_angular_gain: 0.5
     final_yaw_gain: 0.3
-    goal_position_tolerance: 0.06
-    goal_yaw_tolerance: 0.06
+    goal_position_tolerance: 0.07
+    goal_yaw_tolerance: 0.07
     tracking_point_reached_xy_tolerance: 0.1
     align_final_yaw: true
     linear_deadband: 0.03

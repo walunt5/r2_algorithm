@@ -34,7 +34,7 @@
             vx="0.00"
             vy="0.00"
             wz="0.00"
-            duration_sec="0.5"
+            duration_sec="2.0"
             rate_hz="20.0"
             publish_stop="true" />
 
