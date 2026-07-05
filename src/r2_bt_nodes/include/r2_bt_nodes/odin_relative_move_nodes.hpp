@@ -18,8 +18,11 @@ namespace r2_bt_nodes
 class R2OdinRelativeMoveActionNode : public BT::StatefulActionNode
 {
 public:
-  using RelativeMove = r2_odin_interfaces::action::OdinRelativeMove;
-  using GoalHandle = rclcpp_action::ClientGoalHandle<RelativeMove>;
+  using OdinRelativeMove =
+    r2_odin_interfaces::action::OdinRelativeMove;
+
+  using GoalHandle =
+    rclcpp_action::ClientGoalHandle<OdinRelativeMove>;
 
   R2OdinRelativeMoveActionNode(
     const std::string & name,
@@ -41,22 +44,35 @@ private:
   };
 
   bool isTimeout() const;
+
   void cancelActiveGoal();
+
   void resetOutputs();
-  void setFailureOutputs(const std::string & message);
+
+  void setFailureOutputs(
+    const std::string & message);
 
   rclcpp::Node::SharedPtr node_;
-  rclcpp_action::Client<RelativeMove>::SharedPtr client_;
+
+  rclcpp_action::Client<
+    OdinRelativeMove>::SharedPtr client_;
 
   std::string action_name_;
+
   Stage stage_{Stage::IDLE};
 
-  std::shared_future<GoalHandle::SharedPtr> goal_handle_future_;
+  std::shared_future<
+    GoalHandle::SharedPtr> goal_handle_future_;
+
   GoalHandle::SharedPtr goal_handle_;
-  std::shared_future<GoalHandle::WrappedResult> result_future_;
+
+  std::shared_future<
+    GoalHandle::WrappedResult> result_future_;
 
   std::chrono::steady_clock::time_point start_time_;
-  std::chrono::milliseconds result_timeout_{12000};
+
+  std::chrono::milliseconds result_timeout_{
+    std::chrono::milliseconds(12000)};
 };
 
 }  // namespace r2_bt_nodes

@@ -4,8 +4,8 @@ weapon_visual_servo:
     cmd_vel_topic: "/cmd_vel"
     action_name: "/weapon_visual_servo"
 
-    u_ref_px: 325.0
-    u_tolerance_px: 8.0
+    u_ref_px: 315.0
+    u_tolerance_px: 6.0
     u_reentry_px: 16.0
     y_settle_time_sec: 0.3
     y_reentry_time_sec: 0.1
@@ -14,8 +14,8 @@ weapon_visual_servo:
 
     vy_gain: 0.003
     vx_gain: 0.8
-    min_vy_mps: 0.05
-    min_vx_mps: 0.05
+    min_vy_mps: 0.08
+    min_vx_mps: 0.08
     max_vy_mps: 0.20
     max_vx_mps: 0.20
 
