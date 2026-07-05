@@ -1,9 +1,9 @@
 maps:
-  relocalization_bin_file: /home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/test/map_20260703_154723.bin
-  relocalization_pcd_file: /home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/test3/Relocation
-    Map4_edited.pcd
-  map_package_dir: /home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/test3/Relocation
-    Map4
+  relocalization_bin_file: /home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/red_zone1/map_20260614_154214.bin
+  relocalization_pcd_file: /home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/red_zone1/Relocation
+    Map.pcd
+  map_package_dir: /home/xie/techx_R2_algorithm/r2_algorithm/chassis_maps/red_zone1/Relocation
+    Map
 ui:
   show_rviz: true
   show_map_gui: false
