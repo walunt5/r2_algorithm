@@ -115,12 +115,12 @@ def generate_launch_description():
 
     return LaunchDescription(
         [
+            arm_serial_launch,
+            chassis_serial_launch,
             relative_move_config_name_arg,
             odin_driver_launch,
             weapon_visual_servo_launch,
             light_signal_launch,
-            arm_serial_launch,
-            chassis_serial_launch,
             relative_move_launch,
         ]
     )

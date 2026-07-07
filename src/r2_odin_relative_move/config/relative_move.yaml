@@ -13,10 +13,10 @@ odin_relative_move_server:
     forward_kp: 0.8
     lateral_kp: 0.8
     
-    min_forward_speed_mps: 0.4
+    min_forward_speed_mps: 0.6
     max_forward_speed_mps: 0.7
 
-    min_lateral_speed_mps: 0.4
+    min_lateral_speed_mps: 0.6
     max_lateral_speed_mps: 0.70
 
     position_tolerance_m: 0.05

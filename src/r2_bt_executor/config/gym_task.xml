@@ -4,14 +4,14 @@
     <Sequence name="Gym_Task_Tree">
       <Sequence name="Normal_Gym_Head_Pick_And_Dock">
           <!-- 红方 -->
-        <!-- <R2OdinRelativeMoveActionNode
+        <R2OdinRelativeMoveActionNode
             name="Odin_Move_Forward_1m"
             action_name="/r2_odin_relative_move"
-            forward_m="0.9"
+            forward_m="0.8"
             lateral_m="0.0"
-            timeout_sec="10.0"
+            timeout_sec="30.0"
             server_timeout_ms="3000"
-            result_grace_ms="2000" /> -->
+            result_grace_ms="2000" />
 
           <!-- 蓝方 -->
 
@@ -187,6 +187,73 @@
             mask="7"
             timeout_sec="15.0"
             result_timeout_ms="18000" />
+
+          <R2TimedCmdVelNode
+            name="DeadMove_Backward_After_Pick"
+            cmd_vel_topic="/cmd_vel"
+            vx="-0.5"
+            vy="0.00"
+            wz="0.00"
+            duration_sec="2.0"
+            rate_hz="20.0"
+            publish_stop="true" />
+
+          <!-- 12. 死动作：原地旋转一段时间 -->
+          <R2TimedCmdVelNode
+            name="DeadRotate_After_Lift_Down"
+            cmd_vel_topic="/cmd_vel"
+            vx="0.00"
+            vy="0.00"
+            wz="-1.5"
+            duration_sec="7.2"
+            rate_hz="20.0"
+            publish_stop="true" />
+
+          <R2TimedCmdVelNode
+            name="Wait_1s_After_Gripper_Close"
+            cmd_vel_topic="/cmd_vel"
+            vx="0.00"
+            vy="0.00"
+            wz="0.00"
+            duration_sec="0.30"
+            rate_hz="20.0"
+            publish_stop="true" />
+
+          <R2WaitForLightSignalActionNode
+            action_name="/r2_light_signal/wait"
+            timeout_sec="100.0"
+            server_timeout_ms="3000"
+            result_grace_ms="2000" />
+
+          <R2ExecuteArmActionNode
+            name="Gripper_Close"
+            action_name="/r2_arm/execute_action"
+            target_id="4"
+            action_id="1025"
+            timeout_ms="3000"
+            param="0"
+            flags="0"
+            result_timeout_ms="5000" />
+
+          <R2TimedCmdVelNode
+            name="Wait_1s_After_Gripper_Close"
+            cmd_vel_topic="/cmd_vel"
+            vx="0.00"
+            vy="0.00"
+            wz="0.00"
+            duration_sec="0.30"
+            rate_hz="20.0"
+            publish_stop="true" />
+          
+          <R2ExecuteArmActionNode
+            name="GripperArm_Flat"
+            action_name="/r2_arm/execute_action"
+            target_id="1"
+            action_id="257"
+            timeout_ms="8000"
+            param="0"
+            flags="0"
+            result_timeout_ms="10000" /> 
 
       </Sequence>
 
