@@ -113,6 +113,12 @@ def generate_launch_description():
         },
     )
 
+    relative_rotate_launch = include_launch(
+        "r2_odin_relative_rotate",
+        "launch",
+        "relative_rotate_server.launch.py",
+    )
+
     return LaunchDescription(
         [
             arm_serial_launch,
@@ -122,5 +128,6 @@ def generate_launch_description():
             weapon_visual_servo_launch,
             light_signal_launch,
             relative_move_launch,
+            relative_rotate_launch,
         ]
     )

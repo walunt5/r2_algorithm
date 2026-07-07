@@ -14,6 +14,7 @@ find_package(rosidl_default_generators REQUIRED)
 rosidl_generate_interfaces(${PROJECT_NAME}
   "action/OdinPosePidAlign.action"
   "action/OdinRelativeMove.action"
+  "action/OdinRelativeRotate.action"
   DEPENDENCIES builtin_interfaces geometry_msgs
 )
 

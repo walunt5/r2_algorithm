@@ -1,0 +1,29 @@
+# Goal
+# Relative yaw rotation from the robot's yaw at action start.
+# Positive target_yaw_rad: turn left; negative: turn right.
+float64 target_yaw_rad
+float64 timeout_sec
+
+---
+# Result
+uint8 SUCCESS=0
+uint8 ODOM_TIMEOUT=1
+uint8 ACTION_TIMEOUT=2
+uint8 CANCELED=3
+uint8 INTERNAL_ERROR=4
+
+uint8 code
+string message
+float64 final_yaw_error_rad
+
+---
+# Feedback
+uint8 WAITING_ODOM=0
+uint8 ROTATING=1
+uint8 SETTLING=2
+
+uint8 stage
+float64 rotated_yaw_rad
+float64 yaw_error_rad
+float64 command_wz_radps
+float64 elapsed_sec

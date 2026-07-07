@@ -19,6 +19,7 @@
 #include "r2_bt_nodes/light_signal_nodes.hpp"
 #include "r2_bt_nodes/visual_servo_nodes.hpp"
 #include "r2_bt_nodes/odin_relative_move_nodes.hpp"
+#include "r2_bt_nodes/odin_relative_rotate_nodes.hpp"
 
 using namespace std::chrono_literals;
 
@@ -218,6 +219,20 @@ int main(int argc, char ** argv)
   {
     return std::make_unique<
       r2_bt_nodes::R2OdinRelativeMoveActionNode>(
+      name,
+      config,
+      node);
+  });
+
+  factory.registerBuilder<
+  r2_bt_nodes::R2OdinRelativeRotateActionNode>(
+  "R2OdinRelativeRotateActionNode",
+  [node](
+    const std::string & name,
+    const BT::NodeConfig & config)
+  {
+    return std::make_unique<
+      r2_bt_nodes::R2OdinRelativeRotateActionNode>(
       name,
       config,
       node);

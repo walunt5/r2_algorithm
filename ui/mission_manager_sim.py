@@ -1001,6 +1001,8 @@ class MissionManagerSim(QObject):
                 "检查是否到达终点",
             "R2OdinRelativeMoveActionNode":
                 "执行 Odin 里程计相对移动",
+            "R2OdinRelativeRotateActionNode":
+                "执行 Odin 里程计相对旋转",
             "R2WeaponVisualServoActionNode":
                 "执行武器视觉伺服",
             "R2VisionServoActionNode":

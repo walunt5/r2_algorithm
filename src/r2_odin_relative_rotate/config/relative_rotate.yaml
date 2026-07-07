@@ -1,0 +1,16 @@
+odin_relative_rotate_server:
+  ros__parameters:
+    action_name: /r2_odin_relative_rotate
+    odom_topic: /odin1/odometry_highfreq
+    cmd_vel_topic: /cmd_vel
+
+    control_rate_hz: 30.0
+    initial_odom_wait_sec: 2.0
+    odom_timeout_sec: 0.30
+
+    yaw_kp: 1.2
+    min_wz_radps: 1.0
+    max_wz_radps: 2.0
+
+    yaw_tolerance_rad: 0.04
+    settle_time_sec: 0.25

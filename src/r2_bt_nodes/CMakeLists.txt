@@ -30,6 +30,7 @@ add_library(${PROJECT_NAME}
   src/blackboard_nodes.cpp
   src/odin_nodes.cpp
   src/odin_relative_move_nodes.cpp
+  src/odin_relative_rotate_nodes.cpp
   src/timed_cmd_vel_node.cpp
   src/light_signal_nodes.cpp
   src/visual_servo_nodes.cpp
