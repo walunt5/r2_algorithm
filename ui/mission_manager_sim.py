@@ -2198,11 +2198,6 @@ class MissionManagerSim(QObject):
 
     def stop(self):
         self.log(
-            "执行急停：调用底盘急停"
-        )
-        self.call_chassis_estop()
-
-        self.log(
             "执行急停：发布 /cmd_vel=0"
         )
         self.publish_zero_cmd_vel()
@@ -2270,11 +2265,6 @@ class MissionManagerSim(QObject):
         )
 
         if has_active_ros_process:
-            self.log(
-                "执行复位：调用底盘急停"
-            )
-            self.call_chassis_estop()
-
             self.log(
                 "执行复位：发布 /cmd_vel=0"
             )
