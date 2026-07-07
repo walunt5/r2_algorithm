@@ -221,7 +221,7 @@
 
           <R2WaitForLightSignalActionNode
             action_name="/r2_light_signal/wait"
-            timeout_sec="100.0"
+            timeout_sec="1000.0"
             server_timeout_ms="3000"
             result_grace_ms="2000" />
 
