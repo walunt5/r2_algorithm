@@ -18,23 +18,25 @@
         <!-- <R2OdinRelativeMoveActionNode
             name="Odin_Move_Forward_1m"
             action_name="/r2_odin_relative_move"
-            forward_m="0.9"
-            lateral_m="-0.5"
-            timeout_sec="10.0"
+            forward_m="0.8"
+            lateral_m="0.7"
+            timeout_sec="30.0"
             server_timeout_ms="3000"
             result_grace_ms="2000" /> -->
 
-          <R2WeaponVisualServoActionNode
-            name="WeaponVisualServo"
-            action_name="/weapon_visual_servo"
-            target_distance_m="0.5"
-            timeout_sec="15.0"
-            server_timeout_ms="3000"
-            result_grace_ms="2000"
-            result_code="{servo_result_code}"
-            result_message="{servo_result_message}"
-            final_u_error_px="{servo_final_u_error_px}"
-            final_depth_error_m="{servo_final_depth_error_m}" />
+          <RetryUntilSuccessful name="WeaponVisualServo_RetryUntilSuccess" num_attempts="-1">
+            <R2WeaponVisualServoActionNode
+              name="WeaponVisualServo"
+              action_name="/weapon_visual_servo"
+              target_distance_m="0.5"
+              timeout_sec="15.0"
+              server_timeout_ms="3000"
+              result_grace_ms="2000"
+              result_code="{servo_result_code}"
+              result_message="{servo_result_message}"
+              final_u_error_px="{servo_final_u_error_px}"
+              final_depth_error_m="{servo_final_depth_error_m}" />
+          </RetryUntilSuccessful>
 
         <!-- 4. 底盘升高到 64 mm -->
           <R2LiftControlNode
@@ -213,7 +215,7 @@
             name="Odin_Rotate_Left_90deg"
             action_name="/r2_odin_relative_rotate"
             target_yaw_rad="-3.139"
-            timeout_sec="12.0"
+            timeout_sec="30.0"
             server_timeout_ms="3000"
             result_grace_ms="2000"
             result_code="{rotate_result_code}"
