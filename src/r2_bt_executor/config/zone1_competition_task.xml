@@ -18,8 +18,8 @@
         <!-- <R2OdinRelativeMoveActionNode
             name="Odin_Move_Forward_1m"
             action_name="/r2_odin_relative_move"
-            forward_m="0.9"
-            lateral_m="-0.5"
+            forward_m="0.8"
+            lateral_m="0.7"
             timeout_sec="10.0"
             server_timeout_ms="3000"
             result_grace_ms="2000" /> -->
